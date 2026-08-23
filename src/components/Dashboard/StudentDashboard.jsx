@@ -135,7 +135,7 @@ export default function StudentDashboard({ onBackToHome }) {
             </div>
             <div className="kpi-details">
               <span>Cumulative SGPA / CGPA</span>
-              <h3>{gradeReport?.sgpa ? `${gradeReport.sgpa}` : (currentUser.cgpa || '8.80')}</h3>
+              <h3>{gradeReport?.sgpa ? `${gradeReport.sgpa}` : (currentUser.cgpa || 'N/A')}</h3>
             </div>
           </div>
 
@@ -146,7 +146,7 @@ export default function StudentDashboard({ onBackToHome }) {
             <div className="kpi-details">
               <span>Semester Fee Status</span>
               <h3 style={{ fontSize: '1.25rem', color: '#059669' }}>
-                {currentUser.feesStatus || 'Paid ✓'}
+                {currentUser.feesStatus || 'Verified'}
               </h3>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function StudentDashboard({ onBackToHome }) {
             </div>
             <div className="kpi-details">
               <span>Library Books</span>
-              <h3>2 Active (Catalog)</h3>
+              <h3>Library Portal</h3>
             </div>
           </div>
         </div>
@@ -199,11 +199,11 @@ export default function StudentDashboard({ onBackToHome }) {
               </div>
               <div className="profile-detail-item">
                 <span>Contact Phone</span>
-                <strong>{currentUser.phone || '+91 98765 43210'}</strong>
+                <strong>{currentUser.phone || 'N/A'}</strong>
               </div>
               <div className="profile-detail-item">
                 <span>College Roll Number</span>
-                <strong>{currentUser.rollNo || 'MCA-24-42'}</strong>
+                <strong>{currentUser.rollNo || 'Pending Assignment'}</strong>
               </div>
               <div className="profile-detail-item">
                 <span>Registration Date</span>
@@ -220,7 +220,7 @@ export default function StudentDashboard({ onBackToHome }) {
                 <h4>Official Department Approval Stamp</h4>
                 <p>
                   This student's identity and admission eligibility have been officially 
-                  verified and <strong>approved by {currentUser.approvedBy || 'HOD Dr. V. M. Thakare'}</strong>
+                  verified and <strong>approved by {currentUser.approvedBy || 'Head of Department'}</strong>
                   {currentUser.approvedAt ? ` on ${currentUser.approvedAt}` : ''}.
                 </p>
               </div>

@@ -204,7 +204,7 @@ export function StudentIDCardModal({ currentUser, onClose }) {
                   </div>
                   <div>
                     <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Roll No</span>
-                    <strong style={{ fontSize: '12px', color: 'var(--text-heading)' }}>{currentUser.rollNo || 'MCA-26-001'}</strong>
+                    <strong style={{ fontSize: '12px', color: 'var(--text-heading)' }}>{currentUser.rollNo || 'Pending'}</strong>
                   </div>
                 </div>
 
@@ -265,7 +265,7 @@ export function StudentIDCardModal({ currentUser, onClose }) {
               {/* Principal / CoE Stamp Seal */}
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '9px', fontWeight: 700, color: '#1e1b4b', marginBottom: '2px' }}>
-                  Dr. V. M. Thakare
+                  {currentUser.approvedBy || 'Head of Department'}
                 </div>
                 <div style={{ fontSize: '8px', color: 'var(--text-muted)' }}>
                   Head of Department / Issuing Authority

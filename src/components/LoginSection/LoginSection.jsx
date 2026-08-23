@@ -18,24 +18,10 @@ const roles = [
 const DEMO_ACCOUNTS = [
   {
     role: 'student',
-    label: 'Approved Student (Aarav Deshmukh - MCA)',
-    email: 'aarav.deshmukh.mca@dcpehvpm.org',
-    password: 'password123',
-    status: 'approved',
-  },
-  {
-    role: 'student',
-    label: 'Approved Student (Parth Deshmukh - BCA)',
+    label: 'Registered Student (Parth Deshmukh - BCA)',
     email: 'parth.deshmukh.bca@dcpehvpm.org',
     password: 'password123',
     status: 'approved',
-  },
-  {
-    role: 'student',
-    label: 'Pending Student (Sneha Gaikwad - B.P.Ed)',
-    email: 'sneha.gaikwad.bped@dcpehvpm.org',
-    password: 'password123',
-    status: 'pending',
   },
   {
     role: 'hod',
