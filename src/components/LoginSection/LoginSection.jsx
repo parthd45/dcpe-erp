@@ -313,7 +313,7 @@ export default function LoginSection() {
                   <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>
                       {selectedRole === 'student'
-                        ? 'College Email / Personal Email / Mobile No / PRN'
+                        ? 'College Email / Registered Mobile No / PRN'
                         : 'Official Staff Email Address'}
                     </span>
                     {selectedRole === 'student' && (

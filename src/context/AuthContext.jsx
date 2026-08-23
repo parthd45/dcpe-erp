@@ -342,12 +342,12 @@ export const AuthProvider = ({ children }) => {
         return { success: true, user: userObj };
       }
 
-      // ── STUDENT LOGIN (Email, PRN, Personal Email, or Registered Mobile Number)
+      // ── STUDENT LOGIN (College Email, PRN, or Registered Mobile Number)
       const rawInput = emailOrPrn.trim();
       const cleanQuery = rawInput.toLowerCase();
       const digitsOnly = rawInput.replace(/\D/g, '');
 
-      let orFilter = `email.eq.${cleanQuery},prn.ilike.${cleanQuery},enrollment_no.ilike.${cleanQuery},personal_email.eq.${cleanQuery}`;
+      let orFilter = `email.eq.${cleanQuery},prn.ilike.${cleanQuery},enrollment_no.ilike.${cleanQuery}`;
       if (digitsOnly.length >= 7) {
         const last10 = digitsOnly.slice(-10);
         orFilter += `,phone.ilike.%${last10}%,phone.eq.${rawInput}`;
