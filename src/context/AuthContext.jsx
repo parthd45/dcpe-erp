@@ -390,10 +390,16 @@ export const AuthProvider = ({ children }) => {
 
       return { success: false, message: 'Unable to authenticate account.' };
     } catch (err) {
-      console.error('[DCPE ERP] login error:', err.message);
+      console.error('[DCPE ERP] login error:', err);
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        return {
+          success: false,
+          message: 'Database not connected: Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your Vercel Project Settings and redeploy.',
+        };
+      }
       return {
         success: false,
-        message: 'A server error occurred. Please try again in a moment.',
+        message: err.message ? `Server error: ${err.message}` : 'A server error occurred. Please try again in a moment.',
       };
     }
   };
