@@ -240,9 +240,7 @@ CREATE POLICY "Public Read All Staff" ON public.staff FOR SELECT USING (true);
 CREATE POLICY "Public Write Staff" ON public.staff FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Update Staff" ON public.staff FOR UPDATE USING (true);
 
-CREATE POLICY "Public Read All Students" ON public.students FOR SELECT USING (true);
-CREATE POLICY "Public Write Students" ON public.students FOR INSERT WITH CHECK (true);
-CREATE POLICY "Public Update Students" ON public.students FOR UPDATE USING (true);
+CREATE POLICY "Public All Students" ON public.students FOR ALL USING (true);
 
 CREATE POLICY "Public Read All Subjects" ON public.subjects FOR SELECT USING (true);
 CREATE POLICY "Public Read All Attendance" ON public.attendance_logs FOR SELECT USING (true);
