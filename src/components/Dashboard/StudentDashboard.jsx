@@ -19,6 +19,7 @@ import { PlacementModal } from './PlacementModal';
 import { FeePaymentModal } from './FeePaymentModal';
 import { TimetableModal } from './TimetableModal';
 import { LibraryModal } from './LibraryModal';
+import { StudentLeaveModal } from './StudentLeaveModal';
 import './Dashboard.css';
 
 
@@ -38,6 +39,7 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showFeeModal, setShowFeeModal] = useState(false);
   const [showTimetableModal, setShowTimetableModal] = useState(false);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -336,6 +338,9 @@ export default function StudentDashboard({ onBackToHome }) {
               <button className="btn btn-white btn-sm" style={{ border: '1px solid #fbcfe8', color: '#be185d' }} onClick={() => setShowLibraryModal(true)}>
                 <Library size={15} color="#db2777" /> Library Services
               </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fed7aa', color: '#c2410c' }} onClick={() => setShowLeaveModal(true)}>
+                <Clock size={15} color="#ea580c" /> Leaves &amp; Grievances 📋
+              </button>
               <button
                 className="btn btn-primary btn-sm"
                 style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
@@ -506,6 +511,14 @@ export default function StudentDashboard({ onBackToHome }) {
           <LibraryModal
             currentUser={currentUser}
             onClose={() => setShowLibraryModal(false)}
+          />
+        )}
+
+        {/* ── Leave Application & Grievance Modal ── */}
+        {showLeaveModal && (
+          <StudentLeaveModal
+            currentUser={currentUser}
+            onClose={() => setShowLeaveModal(false)}
           />
         )}
 

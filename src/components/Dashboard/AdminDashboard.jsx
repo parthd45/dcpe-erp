@@ -7,15 +7,24 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { postNotice } from '../../lib/noticesService';
+import {
+  fetchPrincipalPendingApplications,
+  reviewLeaveApplication
+} from '../../lib/leaveService';
 import './Dashboard.css';
 
 export default function AdminDashboard({ onBackToHome }) {
   const { currentUser, students, logout } = useAuth();
 
-  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' | 'staff' | 'broadcast'
+  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' | 'staff' | 'broadcast' | 'sanctions'
   const [staffList, setStaffList] = useState([]);
   const [subjectsList, setSubjectsList] = useState([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(true);
+
+  // Principal Leaves State
+  const [principalLeaves, setPrincipalLeaves] = useState([]);
+  const [principalLeavesLoading, setPrincipalLeavesLoading] = useState(false);
+  const [principalLeaveToast, setPrincipalLeaveToast] = useState(null);
 
   // New Faculty Modal state
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
@@ -55,9 +64,42 @@ export default function AdminDashboard({ onBackToHome }) {
     }
   };
 
+  const loadPrincipalLeaves = async () => {
+    setPrincipalLeavesLoading(true);
+    const list = await fetchPrincipalPendingApplications();
+    setPrincipalLeaves(list);
+    setPrincipalLeavesLoading(false);
+  };
+
   useEffect(() => {
     loadStaffAndSubjects();
+    loadPrincipalLeaves();
   }, []);
+
+  const handlePrincipalReview = async (appId, decision) => {
+    const remarks = decision === 'approve'
+      ? 'Executive Institutional Sanction Granted by Principal / Registrar for Extended Absence.'
+      : 'Extended leave request rejected by Principal Executive Council.';
+
+    const res = await reviewLeaveApplication({
+      applicationId: appId,
+      stage: 'principal',
+      decision,
+      reviewerName: currentUser.name || 'Principal Dr. V. M. Thakare',
+      remarks,
+    });
+
+    if (res.success) {
+      setPrincipalLeaveToast({
+        type: 'success',
+        text: decision === 'approve'
+          ? '🎉 Official Principal Sanction Order generated and authorized for student!'
+          : '❌ Application rejected by Principal.',
+      });
+      await loadPrincipalLeaves();
+      setTimeout(() => setPrincipalLeaveToast(null), 4000);
+    }
+  };
 
   // ── Compute College-Wide Statistics
   const totalStudentsCount = students.length;
@@ -295,6 +337,18 @@ export default function AdminDashboard({ onBackToHome }) {
             <Megaphone size={16} />
             Principal Broadcast Circular
           </button>
+          <button
+            className={`hod-tab-btn ${activeTab === 'sanctions' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sanctions')}
+          >
+            <ShieldCheck size={16} />
+            Principal Sanctions (10+ Days)
+            {principalLeaves.length > 0 && (
+              <span className="tab-badge" style={{ background: '#dc2626' }}>
+                {principalLeaves.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* ═══════════════════════════════════════════ */}
@@ -523,16 +577,176 @@ export default function AdminDashboard({ onBackToHome }) {
                 </select>
               </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={isBroadcasting}
-                style={{ padding: '12px 28px' }}
-              >
-                <Send size={16} />
-                {isBroadcasting ? 'Broadcasting...' : 'Broadcast College-Wide Circular'}
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isBroadcasting}
+                  style={{ padding: '12px 28px' }}
+                >
+                  <Send size={16} />
+                  {isBroadcasting ? 'Broadcasting...' : 'Broadcast College-Wide Circular'}
+                </button>
+              </div>
             </form>
+          </div>
+        )}
+
+        {/* ═════════════════════════════════════════════════ */}
+        {/*  TAB 4: Principal Executive Sanctions (10+ Days) */}
+        {/* ═════════════════════════════════════════════════ */}
+        {activeTab === 'sanctions' && (
+          <div className="dashboard-panel">
+            <div className="panel-header">
+              <div>
+                <div className="panel-title">
+                  <ShieldCheck size={22} color="#dc2626" />
+                  Level-3 Executive Sanctions: Extended Student Leaves (10+ Days)
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                  Institutional governance for long-term absences and escalated grievances verified by <strong>Faculty Mentors</strong> and <strong>HODs</strong>.
+                </p>
+              </div>
+              <button className="btn btn-white btn-sm" onClick={loadPrincipalLeaves}>
+                <RefreshCw size={14} /> Refresh Requests
+              </button>
+            </div>
+
+            {principalLeaveToast && (
+              <div className={`alert-message ${principalLeaveToast.type}`} style={{ marginBottom: '16px' }}>
+                {principalLeaveToast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                <div>{principalLeaveToast.text}</div>
+              </div>
+            )}
+
+            {principalLeavesLoading ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                Loading pending executive sanctions...
+              </div>
+            ) : principalLeaves.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', background: 'var(--bg-body)', borderRadius: '16px', border: '1px dashed var(--border-light)' }}>
+                <CheckCircle2 size={40} color="#059669" style={{ marginBottom: '8px' }} />
+                <h4 style={{ fontSize: '15px', color: 'var(--text-heading)', margin: '0 0 4px' }}>Zero Pending Executive Sanctions</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                  All 10+ days leaves and escalated grievances have been reviewed and sanctioned by the Principal's office.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {principalLeaves.map((app) => (
+                  <div
+                    key={app.id}
+                    style={{
+                      background: 'white',
+                      border: '2px solid #fecaca',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      boxShadow: 'var(--shadow-md)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              background: '#fef2f2',
+                              color: '#991b1b',
+                              border: '1px solid #fecaca',
+                            }}
+                          >
+                            ⚠️ Extended Absence: {app.totalDays} Days
+                          </span>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            Filed {app.createdAt}
+                          </span>
+                        </div>
+
+                        <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-heading)', margin: '0 0 4px' }}>
+                          {app.studentName} <code style={{ fontSize: '12px', fontWeight: 600 }}>({app.prn} • Roll {app.rollNo})</code>
+                        </h4>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                          <strong>{app.course}</strong> • Department: <strong>{app.departmentName}</strong>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '16px', fontWeight: 900, color: '#dc2626' }}>
+                          {app.startDate} to {app.endDate}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          Purpose: <strong>{app.category}</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dual Verification Seals (Teacher & HOD) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '10px 14px', fontSize: '12px', color: '#166534' }}>
+                        <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <CheckCircle2 size={14} color="#16a34a" /> Level-1 Teacher Verified
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#15803d', marginTop: '2px' }}>
+                          "{app.teacherApproval?.remarks || 'Endorsed by Faculty'}"
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+                          By: {app.teacherApproval?.reviewedBy} ({app.teacherApproval?.reviewedAt})
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '10px 14px', fontSize: '12px', color: '#166534' }}>
+                        <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <CheckCircle2 size={14} color="#16a34a" /> Level-2 HOD Endorsed
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#15803d', marginTop: '2px' }}>
+                          "{app.hodApproval?.remarks || 'Recommended by HOD'}"
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+                          By: {app.hodApproval?.reviewedBy} ({app.hodApproval?.reviewedAt})
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'var(--bg-body)', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', marginBottom: '14px' }}>
+                      <div style={{ marginBottom: '4px' }}>
+                        <strong>Student Explanation:</strong> {app.reason}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '16px', marginTop: '6px' }}>
+                        <span>Parent / Emergency Contact: <strong>{app.emergencyContact}</strong></span>
+                        {app.attachmentName && (
+                          <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                            📎 Verified Certificate: {app.attachmentName}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-white btn-sm"
+                        style={{ color: '#b91c1c', border: '1px solid #fecaca' }}
+                        onClick={() => handlePrincipalReview(app.id, 'reject')}
+                      >
+                        <XCircle size={15} /> Reject Sanction
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)' }}
+                        onClick={() => handlePrincipalReview(app.id, 'approve')}
+                      >
+                        <ShieldCheck size={15} color="#67e8f9" /> Grant Principal Executive Sanction Order ✓
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

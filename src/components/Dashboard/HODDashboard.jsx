@@ -10,6 +10,10 @@ import {
 import {
   fetchStaffNotices, postNotice, archiveNotice, subscribeToNotices
 } from '../../lib/noticesService';
+import {
+  fetchHODPendingApplications,
+  reviewLeaveApplication
+} from '../../lib/leaveService';
 import StudentManager from './StudentManager';
 import PlacementManager from './PlacementManager';
 import { DocumentVerificationModal } from './StudentDocumentModals';
@@ -58,8 +62,56 @@ export default function HODDashboard({ onBackToHome }) {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // ── Tab switcher
-  const [activeTab, setActiveTab] = useState('approvals'); // 'approvals' | 'notices' | 'manage'
+  const [activeTab, setActiveTab] = useState('approvals'); // 'approvals' | 'notices' | 'manage' | 'placement' | 'leaves'
   const [selectedForManageId, setSelectedForManageId] = useState(null);
+
+  // ── HOD Leaves state
+  const [hodLeaves, setHodLeaves] = useState([]);
+  const [hodLeavesLoading, setHodLeavesLoading] = useState(false);
+  const [hodLeaveToast, setHodLeaveToast] = useState(null);
+
+  const loadHodLeaves = async () => {
+    setHodLeavesLoading(true);
+    const list = await fetchHODPendingApplications(currentUser?.department || 'cs');
+    setHodLeaves(list);
+    setHodLeavesLoading(false);
+  };
+
+  useEffect(() => {
+    loadHodLeaves();
+  }, [currentUser]);
+
+  const handleHodReview = async (appId, decision) => {
+    const app = hodLeaves.find((a) => a.id === appId);
+    const isLong = app && (app.requiresPrincipal || app.totalDays >= 10);
+
+    const remarks = decision === 'approve'
+      ? (isLong
+          ? 'Endorsed by HOD. Forwarded to Principal / Registrar for executive sanction (10+ days).'
+          : 'Verified and officially sanctioned by Head of Department.')
+      : 'Application rejected by Head of Department.';
+
+    const res = await reviewLeaveApplication({
+      applicationId: appId,
+      stage: 'hod',
+      decision,
+      reviewerName: currentUser.name || 'Head of Department',
+      remarks,
+    });
+
+    if (res.success) {
+      setHodLeaveToast({
+        type: 'success',
+        text: decision === 'approve'
+          ? (isLong
+              ? '⚠️ 10+ Days Leave: Endorsed and forwarded to Principal / Admin for executive sanction!'
+              : '✅ Leave officially sanctioned and approved!')
+          : '❌ Application rejected.',
+      });
+      await loadHodLeaves();
+      setTimeout(() => setHodLeaveToast(null), 4000);
+    }
+  };
 
   const handleOpenManager = (student) => {
     setSelectedForManageId(student.id);
@@ -319,6 +371,19 @@ export default function HODDashboard({ onBackToHome }) {
           >
             <Briefcase size={16} />
             T&amp;P Placements
+          </button>
+
+          <button
+            className={`hod-tab-btn ${activeTab === 'leaves' ? 'active' : ''}`}
+            onClick={() => setActiveTab('leaves')}
+          >
+            <Clock size={16} />
+            Leaves &amp; Grievances
+            {hodLeaves.length > 0 && (
+              <span className="tab-badge" style={{ background: '#d97706' }}>
+                {hodLeaves.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -892,6 +957,160 @@ export default function HODDashboard({ onBackToHome }) {
                 </div>
               </form>
             </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════ */}
+        {/*  TAB 5: Student Leaves & Grievances         */}
+        {/* ═══════════════════════════════════════════ */}
+        {activeTab === 'leaves' && (
+          <div className="dashboard-panel">
+            <div className="panel-header">
+              <div>
+                <div className="panel-title">
+                  <Clock size={22} color="var(--primary)" />
+                  Level-2 HOD Endorsements: Student Leaves &amp; Grievance Applications
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                  Review teacher-endorsed applications. Approving leaves &lt;10 days sanctions them immediately; leaves of 10+ days automatically route to the <strong>Principal / Registrar</strong> for final executive sanction.
+                </p>
+              </div>
+              <button className="btn btn-white btn-sm" onClick={loadHodLeaves}>
+                Refresh List
+              </button>
+            </div>
+
+            {hodLeaveToast && (
+              <div className={`alert-message ${hodLeaveToast.type}`} style={{ marginBottom: '16px' }}>
+                {hodLeaveToast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                <div>{hodLeaveToast.text}</div>
+              </div>
+            )}
+
+            {hodLeavesLoading ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                Loading pending HOD applications...
+              </div>
+            ) : hodLeaves.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', background: 'var(--bg-body)', borderRadius: '16px', border: '1px dashed var(--border-light)' }}>
+                <CheckCircle2 size={40} color="#059669" style={{ marginBottom: '8px' }} />
+                <h4 style={{ fontSize: '15px', color: 'var(--text-heading)', margin: '0 0 4px' }}>All Clear! No Pending HOD Endorsements</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                  There are currently no student applications awaiting department HOD endorsement.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {hodLeaves.map((app) => {
+                  const isLong = app.requiresPrincipal || app.totalDays >= 10;
+                  return (
+                    <div
+                      key={app.id}
+                      style={{
+                        background: 'white',
+                        border: isLong ? '1px solid #fecaca' : '1px solid var(--border-light)',
+                        borderRadius: '16px',
+                        padding: '20px',
+                        boxShadow: 'var(--shadow-sm)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                background: app.type === 'leave' ? '#e0e7ff' : '#fef3c7',
+                                color: app.type === 'leave' ? '#3730a3' : '#92400e',
+                              }}
+                            >
+                              {app.type === 'leave' ? '🏖️ Leave Application' : '📢 Grievance / Complaint'}
+                            </span>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                              Submitted {app.createdAt}
+                            </span>
+                            {isLong ? (
+                              <span style={{ fontSize: '11px', fontWeight: 800, background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '2px 8px', borderRadius: '6px' }}>
+                                ⚠️ 10+ Days Leave (Principal Final Sanction Required)
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '11px', fontWeight: 700, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '6px' }}>
+                                Standard &lt; 10 Days (Finalized by HOD)
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-heading)', margin: '0 0 4px' }}>
+                            {app.studentName} <code style={{ fontSize: '12px', fontWeight: 600 }}>({app.prn} • Roll {app.rollNo})</code>
+                          </h4>
+                          <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                            <strong>{app.course}</strong> • Category: <strong>{app.category}</strong>
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--primary)' }}>
+                            {app.totalDays} Day(s)
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            {app.startDate} to {app.endDate}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Teacher Endorsement Badge */}
+                      <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '10px 14px', fontSize: '12px', color: '#065f46', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CheckCircle2 size={16} color="#059669" style={{ flexShrink: 0 }} />
+                        <div>
+                          <strong>Level-1 Teacher Verified:</strong> {app.teacherApproval?.reviewedBy || 'Faculty Class Mentor'} on {app.teacherApproval?.reviewedAt || 'Earlier'}
+                          <div style={{ fontSize: '11px', color: '#047857' }}>
+                            "{app.teacherApproval?.remarks || 'Recommended by Faculty'}"
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ background: 'var(--bg-body)', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', marginBottom: '14px' }}>
+                        <div style={{ marginBottom: '4px' }}>
+                          <strong>Reason:</strong> {app.reason}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '16px', marginTop: '6px' }}>
+                          <span>Emergency Contact: <strong>{app.emergencyContact}</strong></span>
+                          {app.attachmentName && (
+                            <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                              📎 Document Attached: {app.attachmentName}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                        <button
+                          type="button"
+                          className="btn btn-white btn-sm"
+                          style={{ color: '#b91c1c', border: '1px solid #fecaca' }}
+                          onClick={() => handleHodReview(app.id, 'reject')}
+                        >
+                          <XCircle size={15} /> Reject
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: isLong ? 'linear-gradient(135deg, #b91c1c, #991b1b)' : undefined }}
+                          onClick={() => handleHodReview(app.id, 'approve')}
+                        >
+                          <CheckCircle2 size={15} />
+                          {isLong ? 'Approve & Forward to Principal (10+ Days) →' : 'Approve & Sanction Leave ✓'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

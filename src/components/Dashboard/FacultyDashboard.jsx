@@ -16,14 +16,23 @@ import {
   fetchSubjectMarks,
   saveBatchStudentMarks
 } from '../../lib/marksService';
+import {
+  fetchTeacherPendingApplications,
+  reviewLeaveApplication
+} from '../../lib/leaveService';
 import { TimetableModal } from './TimetableModal';
 import './Dashboard.css';
 
 export default function FacultyDashboard({ onBackToHome }) {
   const { currentUser, logout } = useAuth();
 
-  const [activeFacultyTab, setActiveFacultyTab] = useState('attendance'); // 'attendance' | 'marks'
+  const [activeFacultyTab, setActiveFacultyTab] = useState('attendance'); // 'attendance' | 'marks' | 'leaves'
   const [showTimetableModal, setShowTimetableModal] = useState(false);
+
+  // Teacher Leaves State
+  const [pendingLeaves, setPendingLeaves] = useState([]);
+  const [leavesLoading, setLeavesLoading] = useState(false);
+  const [leaveToast, setLeaveToast] = useState(null);
 
   const [assignedSubjects, setAssignedSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -237,6 +246,43 @@ export default function FacultyDashboard({ onBackToHome }) {
 
   if (!currentUser) return null;
 
+  // Load teacher pending leaves
+  const loadLeaves = async () => {
+    setLeavesLoading(true);
+    const list = await fetchTeacherPendingApplications(currentUser?.department || 'cs');
+    setPendingLeaves(list);
+    setLeavesLoading(false);
+  };
+
+  useEffect(() => {
+    loadLeaves();
+  }, [currentUser]);
+
+  const handleTeacherReview = async (appId, decision) => {
+    const remarks = decision === 'approve'
+      ? 'Verified student attendance & record. Endorsed by Faculty Class Mentor and forwarded to HOD.'
+      : 'Application rejected by Faculty Class Mentor due to upcoming examination schedule.';
+
+    const res = await reviewLeaveApplication({
+      applicationId: appId,
+      stage: 'teacher',
+      decision,
+      reviewerName: currentUser.name || 'Faculty Teacher',
+      remarks,
+    });
+
+    if (res.success) {
+      setLeaveToast({
+        type: 'success',
+        text: decision === 'approve'
+          ? '✅ Application approved and successfully forwarded to Head of Department (HOD)!'
+          : '❌ Application marked as rejected.',
+      });
+      await loadLeaves();
+      setTimeout(() => setLeaveToast(null), 4000);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <div className="container">
@@ -284,55 +330,64 @@ export default function FacultyDashboard({ onBackToHome }) {
           </div>
         )}
 
-        {/* Assigned Subjects Cards Bar */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Select Assigned Subject / Class:
+        {leaveToast && (
+          <div className={`alert-message ${leaveToast.type}`} style={{ marginBottom: '24px' }}>
+            {leaveToast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+            <div>{leaveToast.text}</div>
           </div>
+        )}
 
-          {isLoadingSubjects ? (
-            <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading assigned subjects...</div>
-          ) : assignedSubjects.length === 0 ? (
-            <div className="alert-message warning">
-              <AlertCircle size={20} />
-              <div>No subjects allocated to your account yet. Contact department administrator.</div>
+        {/* Assigned Subjects Cards Bar */}
+        {activeFacultyTab !== 'leaves' && (
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Select Assigned Subject / Class:
             </div>
-          ) : (
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              {assignedSubjects.map((sub) => {
-                const isSelected = selectedSubject?.id === sub.id;
-                return (
-                  <button
-                    key={sub.id}
-                    onClick={() => setSelectedSubject(sub)}
-                    style={{
-                      padding: '14px 20px',
-                      borderRadius: 'var(--radius-xl)',
-                      background: isSelected ? 'var(--primary)' : 'var(--bg-white)',
-                      color: isSelected ? 'white' : 'var(--text-heading)',
-                      border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-light)',
-                      boxShadow: isSelected ? '0 4px 12px rgba(217,35,79,0.25)' : 'var(--shadow-sm)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      transition: 'all 0.2s ease',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <BookOpen size={20} color={isSelected ? 'white' : 'var(--primary)'} />
-                    <div>
-                      <strong style={{ fontSize: '14px', display: 'block' }}>{sub.name}</strong>
-                      <span style={{ fontSize: '11px', opacity: 0.85 }}>
-                        Code: <code>{sub.code}</code> • {sub.course}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+
+            {isLoadingSubjects ? (
+              <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading assigned subjects...</div>
+            ) : assignedSubjects.length === 0 ? (
+              <div className="alert-message warning">
+                <AlertCircle size={20} />
+                <div>No subjects allocated to your account yet. Contact department administrator.</div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                {assignedSubjects.map((sub) => {
+                  const isSelected = selectedSubject?.id === sub.id;
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => setSelectedSubject(sub)}
+                      style={{
+                        padding: '14px 20px',
+                        borderRadius: 'var(--radius-xl)',
+                        background: isSelected ? 'var(--primary)' : 'var(--bg-white)',
+                        color: isSelected ? 'white' : 'var(--text-heading)',
+                        border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-light)',
+                        boxShadow: isSelected ? '0 4px 12px rgba(217,35,79,0.25)' : 'var(--shadow-sm)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        transition: 'all 0.2s ease',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <BookOpen size={20} color={isSelected ? 'white' : 'var(--primary)'} />
+                      <div>
+                        <strong style={{ fontSize: '14px', display: 'block' }}>{sub.name}</strong>
+                        <span style={{ fontSize: '11px', opacity: 0.85 }}>
+                          Code: <code>{sub.code}</code> • {sub.course}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Faculty Sub-Tab Switcher */}
         <div className="hod-tab-bar" style={{ marginBottom: '20px' }}>
@@ -349,6 +404,18 @@ export default function FacultyDashboard({ onBackToHome }) {
           >
             <Award size={16} />
             Examination &amp; Internal Marks Entry
+          </button>
+          <button
+            className={`hod-tab-btn ${activeFacultyTab === 'leaves' ? 'active' : ''}`}
+            onClick={() => setActiveFacultyTab('leaves')}
+          >
+            <Clock size={16} />
+            Student Leaves &amp; Grievances
+            {pendingLeaves.length > 0 && (
+              <span style={{ background: '#dc2626', color: 'white', fontSize: '10px', padding: '2px 7px', borderRadius: '10px', marginLeft: '4px' }}>
+                {pendingLeaves.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -736,6 +803,134 @@ export default function FacultyDashboard({ onBackToHome }) {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* ═════════════════════════════════════════════════ */}
+        {/*  TAB 3: STUDENT LEAVES & GRIEVANCES REVIEW PANEL */}
+        {/* ═════════════════════════════════════════════════ */}
+        {activeFacultyTab === 'leaves' && (
+          <div className="dashboard-panel">
+            <div className="panel-header">
+              <div>
+                <div className="panel-title">
+                  <Clock size={22} color="var(--primary)" />
+                  Level-1 Faculty Review: Student Leave &amp; Grievance Applications
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                  Review and verify student requests. Approving will forward the request to the <strong>Head of Department (HOD)</strong>.
+                </p>
+              </div>
+              <button className="btn btn-white btn-sm" onClick={loadLeaves}>
+                Refresh List
+              </button>
+            </div>
+
+            {leavesLoading ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                Loading pending applications...
+              </div>
+            ) : pendingLeaves.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', background: 'var(--bg-body)', borderRadius: '16px', border: '1px dashed var(--border-light)' }}>
+                <CheckCircle2 size={40} color="#059669" style={{ marginBottom: '8px' }} />
+                <h4 style={{ fontSize: '15px', color: 'var(--text-heading)', margin: '0 0 4px' }}>All Clear! No Pending Applications</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                  There are currently no student leave or grievance submissions awaiting your faculty endorsement.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {pendingLeaves.map((app) => (
+                  <div
+                    key={app.id}
+                    style={{
+                      background: 'white',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      boxShadow: 'var(--shadow-sm)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              background: app.type === 'leave' ? '#e0e7ff' : '#fef3c7',
+                              color: app.type === 'leave' ? '#3730a3' : '#92400e',
+                            }}
+                          >
+                            {app.type === 'leave' ? '🏖️ Leave Application' : '📢 Grievance / Complaint'}
+                          </span>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            Submitted on {app.createdAt}
+                          </span>
+                          {app.totalDays >= 10 && (
+                            <span style={{ fontSize: '10px', fontWeight: 800, background: '#fef2f2', color: '#b91c1c', padding: '2px 6px', borderRadius: '4px', border: '1px solid #fecaca' }}>
+                              ⚠️ 10+ Days Leave (Requires Principal Sanction)
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-heading)', margin: '0 0 4px' }}>
+                          {app.studentName} <code style={{ fontSize: '12px', fontWeight: 600 }}>({app.prn} • Roll {app.rollNo})</code>
+                        </h4>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                          <strong>{app.course}</strong> • Category: <strong>{app.category}</strong>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--primary)' }}>
+                          {app.totalDays} Day(s) Leave
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {app.startDate} to {app.endDate}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'var(--bg-body)', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', marginBottom: '14px' }}>
+                      <div style={{ marginBottom: '4px' }}>
+                        <strong>Student Explanation:</strong> {app.reason}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '16px', marginTop: '6px' }}>
+                        <span>Emergency Phone: <strong>{app.emergencyContact}</strong></span>
+                        {app.attachmentName && (
+                          <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                            📎 Proof Attached: {app.attachmentName}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-white btn-sm"
+                        style={{ color: '#b91c1c', border: '1px solid #fecaca' }}
+                        onClick={() => handleTeacherReview(app.id, 'reject')}
+                      >
+                        <XCircle size={15} /> Reject
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        onClick={() => handleTeacherReview(app.id, 'approve')}
+                      >
+                        <CheckCircle2 size={15} /> Approve &amp; Forward to HOD →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
