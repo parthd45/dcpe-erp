@@ -342,13 +342,21 @@ export const AuthProvider = ({ children }) => {
         return { success: true, user: userObj };
       }
 
-      // ── STUDENT LOGIN
+      // ── STUDENT LOGIN (Email, PRN, Personal Email, or Registered Mobile Number)
+      const rawInput = emailOrPrn.trim();
+      const cleanQuery = rawInput.toLowerCase();
+      const digitsOnly = rawInput.replace(/\D/g, '');
+
+      let orFilter = `email.eq.${cleanQuery},prn.ilike.${cleanQuery},enrollment_no.ilike.${cleanQuery},personal_email.eq.${cleanQuery}`;
+      if (digitsOnly.length >= 7) {
+        const last10 = digitsOnly.slice(-10);
+        orFilter += `,phone.ilike.%${last10}%,phone.eq.${rawInput}`;
+      }
+
       const { data: studentRows, error: stuErr } = await supabase
         .from('students')
         .select('*')
-        .or(
-          `email.eq.${cleanQuery},prn.ilike.${cleanQuery},enrollment_no.ilike.${cleanQuery},personal_email.eq.${cleanQuery}`
-        );
+        .or(orFilter);
 
       if (stuErr) throw stuErr;
 
@@ -357,7 +365,7 @@ export const AuthProvider = ({ children }) => {
       if (!student) {
         return {
           success: false,
-          message: 'No student account found with this Email / PRN. Check your credentials.',
+          message: 'No student account found with this Email, Mobile Number, or PRN. Check your credentials.',
         };
       }
 

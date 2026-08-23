@@ -310,15 +310,30 @@ export default function LoginSection() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">
-                    {selectedRole === 'student' ? 'Email ID / PRN Number' : 'Institutional Email'}
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>
+                      {selectedRole === 'student'
+                        ? 'College Email / Personal Email / Mobile No / PRN'
+                        : 'Official Staff Email Address'}
+                    </span>
+                    {selectedRole === 'student' && (
+                      <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
+                        📱 Mobile Login Enabled
+                      </span>
+                    )}
                   </label>
                   <div className="form-input-wrap">
-                    <span className="form-input-icon"><Mail size={16} /></span>
+                    <span className="form-input-icon">
+                      {selectedRole === 'student' ? <User size={16} /> : <Mail size={16} />}
+                    </span>
                     <input
                       type="text"
                       className="form-input"
-                      placeholder={selectedRole === 'student' ? 'e.g. aarav.mca@dcpehvpm.org or PRN' : 'e.g. hod.cs@dcpehvpm.org'}
+                      placeholder={
+                        selectedRole === 'student'
+                          ? 'e.g. 7028030836 or parth.deshmukh.bca@dcpehvpm.org or DCPE/BCA/...'
+                          : 'e.g. hod.cs@dcpehvpm.org or admin@dcpehvpm.org'
+                      }
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
