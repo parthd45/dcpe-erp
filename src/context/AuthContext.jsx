@@ -284,35 +284,71 @@ export const AuthProvider = ({ children }) => {
       // 3. Hash password
       const passwordHash = await hashPassword(studentData.password);
 
-      // 4. Insert student row
-      const { data: newRow, error: insertErr } = await supabase
+      // 4. Prepare insert payloads
+      const baseInsertPayload = {
+        name: studentData.name.trim(),
+        email: autoEmail,
+        personal_email: studentData.personalEmail || '',
+        password_hash: passwordHash,
+        prn: autoEnrollmentNo,
+        enrollment_no: autoEnrollmentNo,
+        branch_code: branchCode,
+        department_id: studentData.department,
+        department_name: studentData.departmentName,
+        course: studentData.course,
+        year: studentData.year,
+        phone: studentData.phone || 'N/A',
+        status: 'pending',
+        roll_no: `${branchCode}-26-${String(currentSeq).padStart(3, '0')}`,
+      };
+
+      const fullInsertPayload = {
+        ...baseInsertPayload,
+        gender: studentData.gender || 'Male',
+        dob: studentData.dob || '',
+        blood_group: studentData.bloodGroup || '',
+        category: studentData.category || 'OPEN / General',
+        aadhaar_no: studentData.aadhaarNo || '',
+        guardian_name: studentData.guardianName || '',
+        guardian_phone: studentData.guardianPhone || '',
+        permanent_address: studentData.permanentAddress || '',
+      };
+
+      let newRow = null;
+      let insertErr = null;
+
+      // Try full payload first
+      const firstAttempt = await supabase
         .from('students')
-        .insert({
-          name: studentData.name.trim(),
-          email: autoEmail,
-          personal_email: studentData.personalEmail || '',
-          gender: studentData.gender || 'Male',
-          dob: studentData.dob || '',
-          blood_group: studentData.bloodGroup || '',
-          category: studentData.category || 'OPEN / General',
-          aadhaar_no: studentData.aadhaarNo || '',
-          guardian_name: studentData.guardianName || '',
-          guardian_phone: studentData.guardianPhone || '',
-          permanent_address: studentData.permanentAddress || '',
-          password_hash: passwordHash,
-          prn: autoEnrollmentNo,
-          enrollment_no: autoEnrollmentNo,
-          branch_code: branchCode,
-          department_id: studentData.department,
-          department_name: studentData.departmentName,
-          course: studentData.course,
-          year: studentData.year,
-          phone: studentData.phone || 'N/A',
-          status: 'pending',
-          roll_no: `${branchCode}-26-${String(currentSeq).padStart(3, '0')}`,
-        })
+        .insert(fullInsertPayload)
         .select()
         .single();
+
+      if (firstAttempt.error) {
+        // If optional new columns don't exist yet in Supabase table, fallback gracefully to core fields!
+        if (
+          firstAttempt.error.message?.includes('column') ||
+          firstAttempt.error.message?.includes('schema cache') ||
+          firstAttempt.error.code === 'PGRST204'
+        ) {
+          console.warn('[DCPE ERP] Extra columns missing in Supabase students table. Falling back to core fields insert.');
+          const secondAttempt = await supabase
+            .from('students')
+            .insert(baseInsertPayload)
+            .select()
+            .single();
+
+          if (secondAttempt.error) {
+            insertErr = secondAttempt.error;
+          } else {
+            newRow = secondAttempt.data;
+          }
+        } else {
+          insertErr = firstAttempt.error;
+        }
+      } else {
+        newRow = firstAttempt.data;
+      }
 
       if (insertErr) {
         if (insertErr.code === '23505') {
