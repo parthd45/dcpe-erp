@@ -16,11 +16,14 @@ import {
   StudentDocumentUploadModal
 } from './StudentDocumentModals';
 import { PlacementModal } from './PlacementModal';
+import { FeePaymentModal } from './FeePaymentModal';
+import { TimetableModal } from './TimetableModal';
+import { LibraryModal } from './LibraryModal';
 import './Dashboard.css';
 
 
 export default function StudentDashboard({ onBackToHome }) {
-  const { currentUser, updateStudentDocuments, logout } = useAuth();
+  const { currentUser, updateStudentDocuments, updateStudentAcademicRecord, logout } = useAuth();
   const [deptNotices, setDeptNotices] = useState([]);
   const [noticesLoading, setNoticesLoading] = useState(true);
   const [attendanceStats, setAttendanceStats] = useState(null);
@@ -32,6 +35,9 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showMarksheetModal, setShowMarksheetModal] = useState(false);
   const [showDocUploadModal, setShowDocUploadModal] = useState(false);
   const [showPlacementModal, setShowPlacementModal] = useState(false);
+  const [showFeeModal, setShowFeeModal] = useState(false);
+  const [showTimetableModal, setShowTimetableModal] = useState(false);
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -111,7 +117,7 @@ export default function StudentDashboard({ onBackToHome }) {
 
         {/* KPI Cards */}
         <div className="kpi-grid">
-          <div className="kpi-card">
+          <div className="kpi-card" onClick={() => setShowMarksheetModal(true)} style={{ cursor: 'pointer' }} title="Click to view full academic marksheet">
             <div className="kpi-icon success">
               <TrendingUp size={24} />
             </div>
@@ -121,7 +127,7 @@ export default function StudentDashboard({ onBackToHome }) {
             </div>
           </div>
 
-          <div className="kpi-card">
+          <div className="kpi-card" onClick={() => setShowMarksheetModal(true)} style={{ cursor: 'pointer' }} title="Click to view SGPA / CGPA Grade Card">
             <div className="kpi-icon primary">
               <Award size={24} />
             </div>
@@ -131,7 +137,7 @@ export default function StudentDashboard({ onBackToHome }) {
             </div>
           </div>
 
-          <div className="kpi-card">
+          <div className="kpi-card" onClick={() => setShowFeeModal(true)} style={{ cursor: 'pointer' }} title="Click to view fee breakdown & print receipt">
             <div className="kpi-icon blue">
               <CreditCard size={24} />
             </div>
@@ -143,13 +149,13 @@ export default function StudentDashboard({ onBackToHome }) {
             </div>
           </div>
 
-          <div className="kpi-card">
+          <div className="kpi-card" onClick={() => setShowLibraryModal(true)} style={{ cursor: 'pointer' }} title="Click to open Library Catalog & Issued Books">
             <div className="kpi-icon purple">
               <Library size={24} />
             </div>
             <div className="kpi-details">
               <span>Library Books</span>
-              <h3>2 Active</h3>
+              <h3>2 Active (Catalog)</h3>
             </div>
           </div>
         </div>
@@ -324,6 +330,12 @@ export default function StudentDashboard({ onBackToHome }) {
               <button className="btn btn-white btn-sm" style={{ border: '1px solid #a7f3d0', color: '#047857' }} onClick={() => setShowDocUploadModal(true)}>
                 <Camera size={15} color="#059669" /> Photo &amp; Documents
               </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #bfdbfe', color: '#1d4ed8' }} onClick={() => setShowFeeModal(true)}>
+                <CreditCard size={15} color="#2563eb" /> Fees &amp; Receipt
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fbcfe8', color: '#be185d' }} onClick={() => setShowLibraryModal(true)}>
+                <Library size={15} color="#db2777" /> Library Services
+              </button>
               <button
                 className="btn btn-primary btn-sm"
                 style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
@@ -340,27 +352,35 @@ export default function StudentDashboard({ onBackToHome }) {
               <div className="panel-header">
                 <div className="panel-title">
                   <Calendar size={18} color="var(--primary)" />
-                  Today's Schedule
+                  Today's Class Schedule
                 </div>
+                <button
+                  type="button"
+                  className="btn btn-white btn-sm"
+                  style={{ fontSize: '11px', padding: '4px 10px' }}
+                  onClick={() => setShowTimetableModal(true)}
+                >
+                  Full Weekly Timetable →
+                </button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ padding: '12px', background: 'var(--bg-body)', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-                  <strong style={{ display: 'block', fontSize: '13px' }}>10:00 AM - 11:00 AM</strong>
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-heading)' }}>Cloud Computing & DevOps</span>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>Lab 3 • Prof. S. Sharma</p>
+                  <strong style={{ display: 'block', fontSize: '13px' }}>09:00 AM - 10:00 AM</strong>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-heading)' }}>Cloud Computing & Virtualization</span>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>Lab 4 (CS Building) • Prof. S. Sharma</p>
                 </div>
 
                 <div style={{ padding: '12px', background: 'var(--bg-body)', borderRadius: '8px', borderLeft: '4px solid #2563eb' }}>
-                  <strong style={{ display: 'block', fontSize: '13px' }}>11:15 AM - 12:15 PM</strong>
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-heading)' }}>Advanced Database Systems</span>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>Room 204 • Dr. R. Kulkarni</p>
+                  <strong style={{ display: 'block', fontSize: '13px' }}>10:00 AM - 11:00 AM</strong>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-heading)' }}>Machine Learning & Neural Networks</span>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>Room 204 • Dr. V. M. Thakare</p>
                 </div>
 
                 <div style={{ padding: '12px', background: 'var(--bg-body)', borderRadius: '8px', borderLeft: '4px solid #059669' }}>
-                  <strong style={{ display: 'block', fontSize: '13px' }}>02:00 PM - 04:00 PM</strong>
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-heading)' }}>Major Project Lab Review</span>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>Software Lab • HOD Panel</p>
+                  <strong style={{ display: 'block', fontSize: '13px' }}>11:30 AM - 01:30 PM</strong>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-heading)' }}>AI & Data Science Laboratory</span>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>Advanced Computing Lab 2 • Prof. S. Sharma</p>
                 </div>
               </div>
             </div>
@@ -457,6 +477,35 @@ export default function StudentDashboard({ onBackToHome }) {
           <PlacementModal
             currentUser={currentUser}
             onClose={() => setShowPlacementModal(false)}
+          />
+        )}
+
+        {/* ── Semester Fee Payment & Receipt Modal ── */}
+        {showFeeModal && (
+          <FeePaymentModal
+            currentUser={currentUser}
+            onClose={() => setShowFeeModal(false)}
+            onPaymentSuccess={(newStatus) => {
+              if (updateStudentAcademicRecord) {
+                updateStudentAcademicRecord(currentUser.id, { feesStatus: newStatus });
+              }
+            }}
+          />
+        )}
+
+        {/* ── Weekly Class Timetable Modal ── */}
+        {showTimetableModal && (
+          <TimetableModal
+            currentUser={currentUser}
+            onClose={() => setShowTimetableModal(false)}
+          />
+        )}
+
+        {/* ── Central Library & Catalog Modal ── */}
+        {showLibraryModal && (
+          <LibraryModal
+            currentUser={currentUser}
+            onClose={() => setShowLibraryModal(false)}
           />
         )}
 

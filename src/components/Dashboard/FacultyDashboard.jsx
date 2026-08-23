@@ -16,12 +16,14 @@ import {
   fetchSubjectMarks,
   saveBatchStudentMarks
 } from '../../lib/marksService';
+import { TimetableModal } from './TimetableModal';
 import './Dashboard.css';
 
 export default function FacultyDashboard({ onBackToHome }) {
   const { currentUser, logout } = useAuth();
 
   const [activeFacultyTab, setActiveFacultyTab] = useState('attendance'); // 'attendance' | 'marks'
+  const [showTimetableModal, setShowTimetableModal] = useState(false);
 
   const [assignedSubjects, setAssignedSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -257,6 +259,14 @@ export default function FacultyDashboard({ onBackToHome }) {
           </div>
 
           <div className="dashboard-actions">
+            <button
+              className="btn btn-outline-dark btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => setShowTimetableModal(true)}
+            >
+              <Calendar size={15} color="var(--primary)" />
+              Teaching Schedule
+            </button>
             <button className="btn btn-outline-dark btn-sm" onClick={onBackToHome}>
               College Website
             </button>
@@ -727,6 +737,14 @@ export default function FacultyDashboard({ onBackToHome }) {
               </div>
             </form>
           </div>
+        )}
+
+        {/* ── Weekly Teaching Timetable Modal ── */}
+        {showTimetableModal && (
+          <TimetableModal
+            currentUser={currentUser}
+            onClose={() => setShowTimetableModal(false)}
+          />
         )}
 
       </div>
