@@ -1,4 +1,5 @@
-import { Shield, Globe, Cpu, Award } from 'lucide-react';
+import React from 'react';
+import { Shield, Globe, Cpu, Award, CheckCircle2, Server, FileCheck, QrCode, Lock } from 'lucide-react';
 import './About.css';
 
 const highlights = [
@@ -60,72 +61,62 @@ export default function About() {
           </div>
 
           <div className="about-visual">
-            <div className="about-card-stack">
-              {/* Card 1: Student Profile Preview */}
-              <div className="about-card about-card-1">
-                <div className="about-card-header">
-                  <div className="about-card-avatar indigo">SP</div>
-                  <div className="about-card-info">
-                    <h3>Student Profile</h3>
-                    <span>BCA — 3rd Year • Roll: 2024031</span>
+            <div className="about-showcase-card">
+              <div className="showcase-card-header">
+                <div className="showcase-badge">
+                  <Server size={18} color="var(--primary)" />
+                  <span>DCPE ERP Cloud System</span>
+                </div>
+                <span className="showcase-status-live">
+                  <span className="live-dot"></span> Live
+                </span>
+              </div>
+
+              <div className="showcase-features-list">
+                <div className="showcase-feature-item">
+                  <div className="feature-icon-wrap green">
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div>
+                    <h4>3-Tier Leave & Grievance Approval</h4>
+                    <p>Teacher Verification ➔ HOD Endorsement ➔ Principal Sanction (10+ Days)</p>
                   </div>
                 </div>
-                <div className="about-card-body">
-                  <div className="about-card-row">
-                    <span className="about-card-row-label">Attendance</span>
-                    <span className="about-card-row-value success">87.5%</span>
+
+                <div className="showcase-feature-item">
+                  <div className="feature-icon-wrap blue">
+                    <QrCode size={18} />
                   </div>
-                  <div className="about-card-row">
-                    <span className="about-card-row-label">Current CGPA</span>
-                    <span className="about-card-row-value primary">8.42</span>
+                  <div>
+                    <h4>Digital Gate Pass & QR Security</h4>
+                    <p>Instant QR tokens generated upon official executive approval</p>
                   </div>
-                  <div className="about-card-row">
-                    <span className="about-card-row-label">Fees Status</span>
-                    <span className="about-card-row-value success">✓ Paid</span>
+                </div>
+
+                <div className="showcase-feature-item">
+                  <div className="feature-icon-wrap purple">
+                    <FileCheck size={18} />
                   </div>
-                  <div className="about-card-row">
-                    <span className="about-card-row-label">Library Books</span>
-                    <span className="about-card-row-value warning">2 Issued</span>
+                  <div>
+                    <h4>Autonomous SGBAU Grading Engine</h4>
+                    <p>Automated SGPA/CGPA calculation and internal marks verification</p>
+                  </div>
+                </div>
+
+                <div className="showcase-feature-item">
+                  <div className="feature-icon-wrap amber">
+                    <Lock size={18} />
+                  </div>
+                  <div>
+                    <h4>Role-Based Access & Security</h4>
+                    <p>Isolated student credentials & staff authentication</p>
                   </div>
                 </div>
               </div>
 
-              {/* Card 2: Faculty Profile */}
-              <div className="about-card about-card-2">
-                <div className="about-card-header">
-                  <div className="about-card-avatar amber">FK</div>
-                  <div className="about-card-info">
-                    <h3>Faculty Dashboard</h3>
-                    <span>Dept. of Computer Science</span>
-                  </div>
-                </div>
-                <div className="about-card-body">
-                  <div className="about-card-row">
-                    <span className="about-card-row-label">Today's Classes</span>
-                    <span className="about-card-row-value primary">4 Lectures</span>
-                  </div>
-                  <div className="about-card-row">
-                    <span className="about-card-row-label">Pending Reviews</span>
-                    <span className="about-card-row-value warning">12</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 3: Admin */}
-              <div className="about-card about-card-3">
-                <div className="about-card-header">
-                  <div className="about-card-avatar emerald">AD</div>
-                  <div className="about-card-info">
-                    <h3>Admin Overview</h3>
-                    <span>College Administration</span>
-                  </div>
-                </div>
-                <div className="about-card-body">
-                  <div className="about-card-row">
-                    <span className="about-card-row-label">Total Students</span>
-                    <span className="about-card-row-value primary">1,248</span>
-                  </div>
-                </div>
+              <div className="showcase-card-footer">
+                <span>Sant Gadge Baba Amravati University Affiliated</span>
+                <span className="footer-tag">Official ERP Platform</span>
               </div>
             </div>
           </div>
