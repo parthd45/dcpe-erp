@@ -146,18 +146,19 @@ export default function HODDashboard({ onBackToHome }) {
   if (!currentUser) return null;
 
   // ── Dept filtering for student table
+  const safeStudents = students || [];
   const deptStudents = deptScope === 'all'
-    ? students
+    ? safeStudents
     : deptScope === 'mine'
-      ? students.filter((s) => s.department === currentUser.department)
-      : students.filter((s) => s.department === deptScope);
+      ? safeStudents.filter((s) => s.department === currentUser?.department)
+      : safeStudents.filter((s) => s.department === deptScope);
 
   const pendingCount  = deptStudents.filter((s) => s.status === 'pending').length;
   const approvedCount = deptStudents.filter((s) => s.status === 'approved').length;
   const rejectedCount = deptStudents.filter((s) => s.status === 'rejected').length;
 
-  const totalCollegePending = students.filter((s) => s.status === 'pending').length;
-  const otherDeptsPending = totalCollegePending - (students.filter((s) => s.department === currentUser.department && s.status === 'pending').length);
+  const totalCollegePending = safeStudents.filter((s) => s.status === 'pending').length;
+  const otherDeptsPending = totalCollegePending - (safeStudents.filter((s) => s.department === currentUser?.department && s.status === 'pending').length);
 
   const filteredList = deptStudents.filter((s) => {
     const matchesStatus = filterStatus === 'all' || s.status === filterStatus;

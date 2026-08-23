@@ -1,4 +1,6 @@
-import bcrypt from 'bcryptjs';
+import * as bcryptModule from 'bcryptjs';
+
+const bcrypt = bcryptModule?.default || bcryptModule;
 
 /**
  * Browser-safe password hashing and verification
@@ -6,26 +8,33 @@ import bcrypt from 'bcryptjs';
 export async function hashPassword(plainText) {
   if (!plainText) return '';
   try {
-    return await bcrypt.hash(plainText, 10);
+    if (bcrypt && typeof bcrypt.hashSync === 'function') {
+      return bcrypt.hashSync(plainText, 10);
+    }
+    if (bcrypt && typeof bcrypt.hash === 'function') {
+      return await bcrypt.hash(plainText, 10);
+    }
   } catch (err) {
     console.error('Error hashing password:', err);
-    return plainText;
   }
+  return plainText;
 }
 
 export async function comparePassword(plainText, hashOrPlain) {
   if (!plainText || !hashOrPlain) return false;
-  
-  // If plain text matches directly (fallback)
   if (plainText === hashOrPlain) return true;
 
   try {
-    // If it looks like a bcrypt hash ($2a$, $2b$, $2y$)
-    if (typeof hashOrPlain === 'string' && hashOrPlain.startsWith('$2')) {
-      return await bcrypt.compare(plainText, hashOrPlain);
+    if (typeof hashOrPlain === 'string' && (hashOrPlain.startsWith('$2a$') || hashOrPlain.startsWith('$2b$') || hashOrPlain.startsWith('$2y$'))) {
+      if (bcrypt && typeof bcrypt.compareSync === 'function') {
+        return bcrypt.compareSync(plainText, hashOrPlain);
+      }
+      if (bcrypt && typeof bcrypt.compare === 'function') {
+        return await bcrypt.compare(plainText, hashOrPlain);
+      }
     }
   } catch (err) {
-    console.warn('bcrypt compare error, falling back to direct compare:', err);
+    console.warn('Password comparison fallback error:', err);
   }
   
   return plainText === hashOrPlain;
