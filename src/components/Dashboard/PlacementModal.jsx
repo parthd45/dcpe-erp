@@ -42,46 +42,54 @@ export function PlacementModal({ currentUser, onClose }) {
   const isEligible = (drive) => {
     const meetsCgpa = studentCgpa >= (parseFloat(drive.minCgpa) || 0);
 
-    const studentCourseLower = (currentUser?.course || '').toLowerCase().trim();
-    const studentDeptLower = (currentUser?.department || currentUser?.departmentName || '').toLowerCase().trim();
+    const studentCourse = (currentUser?.course || '').toUpperCase();
+    const studentDeptId = (currentUser?.department || currentUser?.departmentName || '').toLowerCase();
 
-    // Check if course matches any eligible course abbreviation or full name
-    const matchesCourseList =
-      !drive.eligibleCourses ||
-      drive.eligibleCourses.length === 0 ||
-      drive.eligibleCourses.some((c) => {
-        const cLower = c.toLowerCase().trim();
-        if (!cLower) return false;
-        return (
-          studentCourseLower.includes(cLower) ||
-          cLower.includes(studentCourseLower) ||
-          (cLower.includes('mca') && (studentCourseLower.includes('mca') || studentCourseLower.includes('computer'))) ||
-          (cLower.includes('bca') && (studentCourseLower.includes('bca') || studentCourseLower.includes('computer'))) ||
-          (cLower.includes('b.tech') && (studentCourseLower.includes('b.tech') || studentCourseLower.includes('tech') || studentCourseLower.includes('engineering'))) ||
-          (cLower.includes('b.p.ed') && (studentCourseLower.includes('b.p.ed') || studentCourseLower.includes('bped') || studentCourseLower.includes('physical'))) ||
-          (cLower.includes('m.p.ed') && (studentCourseLower.includes('m.p.ed') || studentCourseLower.includes('mped') || studentCourseLower.includes('physical')))
-        );
+    // 1. Course Match: check if student's course matches any of drive's eligible courses
+    let meetsCourse = true;
+    if (Array.isArray(drive.eligibleCourses) && drive.eligibleCourses.length > 0) {
+      meetsCourse = drive.eligibleCourses.some((c) => {
+        const cUpper = c.toUpperCase().trim();
+        if (!cUpper) return false;
+        if (cUpper.includes('MCA') && studentCourse.includes('MCA')) return true;
+        if (cUpper.includes('BCA') && studentCourse.includes('BCA')) return true;
+        if (cUpper.includes('B.P.ED') && (studentCourse.includes('B.P.ED') || studentCourse.includes('BPED'))) return true;
+        if (cUpper.includes('M.P.ED') && (studentCourse.includes('M.P.ED') || studentCourse.includes('MPED'))) return true;
+        if (cUpper.includes('B.TECH') && (studentCourse.includes('B.TECH') || studentCourse.includes('BTECH'))) return true;
+        if (cUpper.includes('M.SC') && studentCourse.includes('M.SC')) return true;
+        if (cUpper.includes('B.SC') && (studentCourse.includes('B.SC') || studentCourse.includes('BSC')) && !cUpper.includes('B.P.ED')) return true;
+        return false;
       });
+    }
 
-    // Check if department matches
-    const matchesDeptList =
-      drive.eligibleDepartments &&
-      drive.eligibleDepartments.some((d) => {
-        const dLower = d.toLowerCase().trim();
-        return (
-          studentDeptLower.includes(dLower) ||
-          dLower.includes(studentDeptLower) ||
-          (dLower.includes('computer') && (studentDeptLower.includes('computer') || studentDeptLower.includes('cs') || studentDeptLower.includes('it'))) ||
-          (dLower.includes('physical') && (studentDeptLower.includes('physical') || studentDeptLower.includes('sports') || studentDeptLower.includes('bped')))
-        );
+    // 2. Department Match: check department alignment
+    let meetsDept = true;
+    if (Array.isArray(drive.eligibleDepartments) && drive.eligibleDepartments.length > 0) {
+      meetsDept = drive.eligibleDepartments.some((d) => {
+        const dUpper = d.toUpperCase().trim();
+        if (studentDeptId.includes('cs') || studentDeptId.includes('science')) {
+          return dUpper.includes('COMPUTER') || dUpper.includes('SCIENCE & IT') || dUpper.includes('INFORMATION');
+        }
+        if (studentDeptId.includes('phy') || studentDeptId.includes('ed') || studentDeptId.includes('sports')) {
+          return dUpper.includes('PHYSICAL') || (dUpper.includes('SPORTS') && !dUpper.includes('SCIENCE & IT'));
+        }
+        if (studentDeptId.includes('commerce')) {
+          return dUpper.includes('COMMERCE') || dUpper.includes('MANAGEMENT') || dUpper.includes('BBA');
+        }
+        if (studentDeptId.includes('yoga')) {
+          return dUpper.includes('YOGA') || dUpper.includes('WELLNESS') || dUpper.includes('NATUROPATHY');
+        }
+        return true;
       });
+    }
 
-    const meetsCourse = matchesCourseList || matchesDeptList;
+    const eligible = meetsCgpa && meetsCourse && meetsDept;
 
     return {
-      eligible: meetsCgpa && meetsCourse,
+      eligible,
       meetsCgpa,
       meetsCourse,
+      meetsDept,
     };
   };
 
