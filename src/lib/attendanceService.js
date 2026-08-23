@@ -63,8 +63,24 @@ export const fetchSubjectStudents = async (departmentId, course) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// 3. Submit a new lecture attendance sheet
+// 3. Submit a new lecture attendance sheet & sync student records
 // ─────────────────────────────────────────────────────────────
+export const syncStudentAttendance = async (studentId, departmentId, course) => {
+  try {
+    const stats = await calculateStudentAttendanceStats(studentId, departmentId, course);
+    if (stats && stats.overallPercentage !== null) {
+      await supabase
+        .from('students')
+        .update({ attendance: stats.overallPercentage })
+        .eq('id', studentId);
+      return stats.overallPercentage;
+    }
+  } catch (err) {
+    console.error('[DCPE ERP] syncStudentAttendance error:', err);
+  }
+  return '0.0%';
+};
+
 export const submitAttendanceSheet = async ({
   subjectId,
   facultyId,
@@ -88,6 +104,29 @@ export const submitAttendanceSheet = async ({
       .single();
 
     if (error) throw error;
+
+    // Fetch subject details to get department_id and course
+    const { data: subjectData } = await supabase
+      .from('subjects')
+      .select('department_id, course')
+      .eq('id', subjectId)
+      .single();
+
+    if (subjectData) {
+      // Get all approved students in this department and course
+      const { data: stuList } = await supabase
+        .from('students')
+        .select('id')
+        .eq('department_id', subjectData.department_id)
+        .eq('course', subjectData.course);
+
+      if (stuList && stuList.length > 0) {
+        for (const s of stuList) {
+          await syncStudentAttendance(s.id, subjectData.department_id, subjectData.course);
+        }
+      }
+    }
+
     return { success: true, log: data };
   } catch (err) {
     console.error('[DCPE ERP] submitAttendanceSheet error:', err.message);

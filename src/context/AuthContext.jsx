@@ -140,7 +140,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [currentUser]);
 
-  // ── Load all students from Supabase (for HOD dashboard)
+  // ── Load all students from Supabase (for HOD dashboard & Student portal)
   const loadStudents = useCallback(async () => {
     setIsLoadingStudents(true);
     try {
@@ -150,7 +150,36 @@ export const AuthProvider = ({ children }) => {
         .order('registered_at', { ascending: false });
 
       if (error) throw error;
-      const mapped = (data || []).map(mapStudent);
+
+      // Fetch all attendance logs & subjects to compute live attendance percentages
+      const { data: logs } = await supabase.from('attendance_logs').select('*');
+      const { data: subjects } = await supabase.from('subjects').select('*');
+
+      const mapped = (data || []).map((row) => {
+        let calculatedAttendance = row.attendance;
+
+        if (logs && subjects && row.department_id && row.course) {
+          const deptSubjects = (subjects || []).filter(
+            (sub) => sub.department_id === row.department_id && sub.course === row.course
+          );
+          const subIds = deptSubjects.map((sub) => sub.id);
+          const studentLogs = (logs || []).filter((l) => subIds.includes(l.subject_id));
+          const totalConducted = studentLogs.length;
+
+          if (totalConducted > 0) {
+            let attendedCount = 0;
+            studentLogs.forEach((l) => {
+              if (Array.isArray(l.present_student_ids) && l.present_student_ids.includes(row.id)) {
+                attendedCount++;
+              }
+            });
+            calculatedAttendance = ((attendedCount / totalConducted) * 100).toFixed(1) + '%';
+          }
+        }
+
+        return mapStudent({ ...row, attendance: calculatedAttendance || '0.0%' });
+      });
+
       setStudents(mapped);
 
       // Auto-update currentUser if a student is logged in and their record changed
@@ -166,19 +195,21 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ── Initial load + real-time subscription for student changes
+  // ── Initial load + real-time subscription for student & attendance changes
   useEffect(() => {
     loadStudents();
 
     const channel = supabase
-      .channel('students_realtime')
+      .channel('erp_students_attendance_realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'students' },
-        () => {
-          // Re-fetch when any change happens in students table
-          loadStudents();
-        }
+        () => loadStudents()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'attendance_logs' },
+        () => loadStudents()
       )
       .subscribe();
 
