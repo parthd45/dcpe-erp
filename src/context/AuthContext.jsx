@@ -344,7 +344,6 @@ export const AuthProvider = ({ children }) => {
 
       // ── STUDENT LOGIN (College Email, PRN, or Registered Mobile Number)
       const rawInput = emailOrPrn.trim();
-      const cleanQuery = rawInput.toLowerCase();
       const digitsOnly = rawInput.replace(/\D/g, '');
 
       let orFilter = `email.eq.${cleanQuery},prn.ilike.${cleanQuery},enrollment_no.ilike.${cleanQuery}`;
