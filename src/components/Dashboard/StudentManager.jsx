@@ -324,6 +324,18 @@ export default function StudentManager({
                   </code>
                 </div>
               </div>
+
+              {/* Comprehensive Student Demographic Details Grid */}
+              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.2)', fontSize: '12px' }}>
+                <div><span style={{ opacity: 0.75, display: 'block', fontSize: '10px' }}>GENDER</span> <strong>{selectedStudent.gender || 'Male'}</strong></div>
+                <div><span style={{ opacity: 0.75, display: 'block', fontSize: '10px' }}>DATE OF BIRTH</span> <strong>{selectedStudent.dob || 'N/A'}</strong></div>
+                <div><span style={{ opacity: 0.75, display: 'block', fontSize: '10px' }}>BLOOD GROUP</span> <strong>{selectedStudent.bloodGroup || 'N/A'}</strong></div>
+                <div><span style={{ opacity: 0.75, display: 'block', fontSize: '10px' }}>RESERVATION CATEGORY</span> <strong>{selectedStudent.category || 'OPEN / General'}</strong></div>
+                <div><span style={{ opacity: 0.75, display: 'block', fontSize: '10px' }}>AADHAAR CARD NO</span> <strong>{selectedStudent.aadhaarNo || 'N/A'}</strong></div>
+                <div><span style={{ opacity: 0.75, display: 'block', fontSize: '10px' }}>PARENT / GUARDIAN</span> <strong>{selectedStudent.guardianName || 'N/A'}</strong></div>
+                <div><span style={{ opacity: 0.75, display: 'block', fontSize: '10px' }}>GUARDIAN PHONE</span> <strong>{selectedStudent.guardianPhone || 'N/A'}</strong></div>
+                <div style={{ gridColumn: 'span 2' }}><span style={{ opacity: 0.75, display: 'block', fontSize: '10px' }}>PERMANENT ADDRESS</span> <strong>{selectedStudent.permanentAddress || 'N/A'}</strong></div>
+              </div>
             </div>
 
             {/* Save Notification Toast */}

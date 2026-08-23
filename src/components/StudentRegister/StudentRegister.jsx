@@ -3,7 +3,8 @@ import { useAuth, getBranchCode } from '../../context/AuthContext';
 import {
   UserPlus, Mail, Lock, User, Hash, Phone, Building2,
   BookOpen, Calendar, ShieldAlert, CheckCircle2, AlertCircle,
-  ArrowRight, Sparkles, Tag, AtSign, ShieldCheck
+  ArrowRight, Sparkles, Tag, AtSign, ShieldCheck, Heart, FileText,
+  CreditCard, MapPin, Users
 } from 'lucide-react';
 import './StudentRegister.css';
 
@@ -66,13 +67,35 @@ const YEARS = [
   'Final Year',
 ];
 
+const GENDERS = ['Male', 'Female', 'Other'];
+
+const BLOOD_GROUPS = ['A+', 'B+', 'O+', 'AB+', 'A-', 'B-', 'O-', 'AB-'];
+
+const CATEGORIES = [
+  'OPEN / General',
+  'OBC (Other Backward Class)',
+  'SC (Scheduled Caste)',
+  'ST (Scheduled Tribe)',
+  'NT (Nomadic Tribes)',
+  'VJNT',
+  'EWS (Economically Weaker Section)',
+  'SBC (Special Backward Class)',
+];
+
 export default function StudentRegister({ onSwitchToLogin }) {
   const { registerStudent, getNextEnrollmentNumberForBranch, getAutoCollegeEmail } = useAuth();
 
   const [formData, setFormData] = useState({
     name: '',
+    gender: 'Male',
+    dob: '',
+    bloodGroup: 'O+',
+    category: 'OPEN / General',
     phone: '',
-    personalEmail: '',
+    aadhaarNo: '',
+    guardianName: '',
+    guardianPhone: '',
+    permanentAddress: '',
     department: 'cs',
     course: 'MCA (Master of Computer Applications)',
     year: '1st Year (Semester I & II)',
@@ -128,10 +151,10 @@ export default function StudentRegister({ onSwitchToLogin }) {
     setStatusMessage(null);
 
     // Form validations
-    if (!formData.name.trim() || !formData.password) {
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.password) {
       setStatusMessage({
         type: 'error',
-        text: 'Please fill in all mandatory fields (*)',
+        text: 'Please fill in all mandatory fields marked with (*)',
       });
       return;
     }
@@ -158,8 +181,15 @@ export default function StudentRegister({ onSwitchToLogin }) {
 
     const payload = {
       name: formData.name.trim(),
+      gender: formData.gender,
+      dob: formData.dob,
+      bloodGroup: formData.bloodGroup,
+      category: formData.category,
       phone: formData.phone.trim(),
-      personalEmail: formData.personalEmail.trim(),
+      aadhaarNo: formData.aadhaarNo.trim(),
+      guardianName: formData.guardianName.trim(),
+      guardianPhone: formData.guardianPhone.trim(),
+      permanentAddress: formData.permanentAddress.trim(),
       department: formData.department,
       departmentName: selectedDept ? selectedDept.name : formData.department,
       course: formData.course,
@@ -180,11 +210,18 @@ export default function StudentRegister({ onSwitchToLogin }) {
       // Reset form
       setFormData({
         name: '',
+        gender: 'Male',
+        dob: '',
+        bloodGroup: 'O+',
+        category: 'OPEN / General',
         phone: '',
-        personalEmail: '',
+        aadhaarNo: '',
+        guardianName: '',
+        guardianPhone: '',
+        permanentAddress: '',
         department: 'cs',
-        course: DEPARTMENTS[0].courses[0],
-        year: YEARS[0],
+        course: 'MCA (Master of Computer Applications)',
+        year: '1st Year (Semester I & II)',
         password: '',
         confirmPassword: '',
       });
@@ -209,10 +246,10 @@ export default function StudentRegister({ onSwitchToLogin }) {
       <div className="approval-notice-banner">
         <ShieldAlert size={20} className="icon" />
         <p>
-          <strong>Auto-Generated Credentials & HOD Verification:</strong> Your 
+          <strong>Auto-Generated Credentials &amp; HOD Verification:</strong> Your 
           <strong> College Email ID</strong> (<code>[name].[branch]@dcpehvpm.org</code>) and 
-          <strong> Enrollment Number</strong> (<code>DCPE/{activeBranchCode}/2026/XXXX</code>) are 
-          automatically generated with guaranteed uniqueness. Registration requires 
+          <strong> Permanent Enrollment Number</strong> (<code>DCPE/{activeBranchCode}/2026/XXXX</code>) are 
+          automatically generated. Registration requires 
           <strong> HOD approval</strong> before login access is activated.
         </p>
       </div>
@@ -249,7 +286,15 @@ export default function StudentRegister({ onSwitchToLogin }) {
 
       <form onSubmit={handleSubmit} className="register-form">
         <div className="register-form-grid">
-          {/* Department Selection First */}
+          
+          {/* ── SECTION 1: ACADEMIC PROGRAM ── */}
+          <div className="full-width" style={{ marginTop: '8px', paddingBottom: '4px', borderBottom: '1px solid var(--border-light)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <BookOpen size={16} /> 1. Academic Program &amp; Branch Selection
+            </span>
+          </div>
+
+          {/* Department Selection */}
           <div className="form-group">
             <label className="form-label">Department *</label>
             <div className="form-input-wrap">
@@ -295,7 +340,7 @@ export default function StudentRegister({ onSwitchToLogin }) {
           <div className="form-group full-width">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
               <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={16} /> Auto-Generated Branch Enrollment Number *
+                <Sparkles size={16} /> Auto-Generated Permanent Enrollment Number *
               </label>
               <span
                 style={{
@@ -335,87 +380,8 @@ export default function StudentRegister({ onSwitchToLogin }) {
             </div>
           </div>
 
-          {/* Full Name */}
-          <div className="form-group full-width">
-            <label className="form-label">Full Name (As per College Records) *</label>
-            <div className="form-input-wrap">
-              <span className="form-input-icon"><User size={16} /></span>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="e.g. Ramesh Vijay Deshmukh"
-                required
-              />
-            </div>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
-              💡 Your official college email will be automatically crafted from your name and branch.
-            </span>
-          </div>
-
-          {/* Auto-Generated Unique College Email ID (Live Preview) */}
-          <div className="form-group full-width">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <label className="form-label" style={{ fontWeight: 700, color: '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <AtSign size={16} /> Auto-Generated College Email ID (Login ID) *
-              </label>
-              <span
-                style={{
-                  fontSize: '11px',
-                  background: '#ecfdf5',
-                  color: '#059669',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontWeight: 600,
-                  border: '1px solid #a7f3d0',
-                }}
-              >
-                🔒 Guaranteed Unique Institutional ID
-              </span>
-            </div>
-            <div className="form-input-wrap">
-              <span className="form-input-icon"><Mail size={16} color="#059669" /></span>
-              <input
-                type="text"
-                value={autoCollegeEmail || 'Type your name above to generate institutional email...'}
-                readOnly
-                disabled
-                className="form-input"
-                style={{
-                  background: '#f0fdf4',
-                  borderColor: '#a7f3d0',
-                  color: autoCollegeEmail ? '#065f46' : 'var(--text-muted)',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  cursor: 'not-allowed',
-                }}
-              />
-            </div>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
-              ✨ Unique collision-free email ending in <code>@dcpehvpm.org</code>. If names match, an automatic counter is appended.
-            </span>
-          </div>
-
-          {/* Mobile Phone */}
-          <div className="form-group">
-            <label className="form-label">Mobile Number</label>
-            <div className="form-input-wrap">
-              <span className="form-input-icon"><Phone size={16} /></span>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="+91 98765 43210"
-              />
-            </div>
-          </div>
-
           {/* Academic Year */}
-          <div className="form-group">
+          <div className="form-group full-width">
             <label className="form-label">Current Academic Year *</label>
             <div className="form-input-wrap">
               <span className="form-input-icon"><Calendar size={16} /></span>
@@ -433,6 +399,242 @@ export default function StudentRegister({ onSwitchToLogin }) {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* ── SECTION 2: PERSONAL & DEMOGRAPHIC DETAILS ── */}
+          <div className="full-width" style={{ marginTop: '16px', paddingBottom: '4px', borderBottom: '1px solid var(--border-light)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <User size={16} /> 2. Personal &amp; Demographic Information
+            </span>
+          </div>
+
+          {/* Full Name */}
+          <div className="form-group full-width">
+            <label className="form-label">Full Name (As per SSC / College Certificate) *</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><User size={16} /></span>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="e.g. Ramesh Vijay Deshmukh"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Auto-Generated Unique College Email ID (Live Preview) */}
+          <div className="form-group full-width">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <label className="form-label" style={{ fontWeight: 700, color: '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AtSign size={16} /> Auto-Generated Official College Email ID (Login ID) *
+              </label>
+              <span
+                style={{
+                  fontSize: '11px',
+                  background: '#ecfdf5',
+                  color: '#059669',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontWeight: 600,
+                  border: '1px solid #a7f3d0',
+                }}
+              >
+                🔒 Institutional Email
+              </span>
+            </div>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><Mail size={16} color="#059669" /></span>
+              <input
+                type="text"
+                value={autoCollegeEmail || 'Type full name above to generate college email...'}
+                readOnly
+                disabled
+                className="form-input"
+                style={{
+                  background: '#f0fdf4',
+                  borderColor: '#a7f3d0',
+                  color: autoCollegeEmail ? '#065f46' : 'var(--text-muted)',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  cursor: 'not-allowed',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Gender Selection */}
+          <div className="form-group">
+            <label className="form-label">Gender *</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><Users size={16} /></span>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="form-select"
+                required
+              >
+                {GENDERS.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Date of Birth */}
+          <div className="form-group">
+            <label className="form-label">Date of Birth</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><Calendar size={16} /></span>
+              <input
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
+          </div>
+
+          {/* Blood Group */}
+          <div className="form-group">
+            <label className="form-label">Blood Group</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><Heart size={16} color="#dc2626" /></span>
+              <select
+                name="bloodGroup"
+                value={formData.bloodGroup}
+                onChange={handleChange}
+                className="form-select"
+              >
+                {BLOOD_GROUPS.map((bg) => (
+                  <option key={bg} value={bg}>
+                    {bg}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Category */}
+          <div className="form-group">
+            <label className="form-label">Reservation Category</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><Tag size={16} /></span>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="form-select"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* ── SECTION 3: CONTACT & IDENTIFICATION ── */}
+          <div className="full-width" style={{ marginTop: '16px', paddingBottom: '4px', borderBottom: '1px solid var(--border-light)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Phone size={16} /> 3. Contact &amp; Parent / Guardian Details
+            </span>
+          </div>
+
+          {/* Mobile Phone */}
+          <div className="form-group">
+            <label className="form-label">Student Mobile Number *</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><Phone size={16} /></span>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="+91 98765 43210"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Aadhaar Number */}
+          <div className="form-group">
+            <label className="form-label">Aadhaar Card Number (12 Digits)</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><CreditCard size={16} /></span>
+              <input
+                type="text"
+                name="aadhaarNo"
+                maxLength={12}
+                value={formData.aadhaarNo}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="12-digit UIDAI number"
+              />
+            </div>
+          </div>
+
+          {/* Parent Name */}
+          <div className="form-group">
+            <label className="form-label">Parent / Guardian Full Name</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><User size={16} /></span>
+              <input
+                type="text"
+                name="guardianName"
+                value={formData.guardianName}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="Parent or Guardian name"
+              />
+            </div>
+          </div>
+
+          {/* Parent Phone */}
+          <div className="form-group">
+            <label className="form-label">Parent / Emergency Phone</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><Phone size={16} /></span>
+              <input
+                type="tel"
+                name="guardianPhone"
+                value={formData.guardianPhone}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="+91 98234 56789"
+              />
+            </div>
+          </div>
+
+          {/* Permanent Address */}
+          <div className="form-group full-width">
+            <label className="form-label">Permanent Residential Address</label>
+            <div className="form-input-wrap">
+              <span className="form-input-icon"><MapPin size={16} /></span>
+              <input
+                type="text"
+                name="permanentAddress"
+                value={formData.permanentAddress}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="House No, Street Name, City, District, Pincode"
+              />
+            </div>
+          </div>
+
+          {/* ── SECTION 4: SECURITY ── */}
+          <div className="full-width" style={{ marginTop: '16px', paddingBottom: '4px', borderBottom: '1px solid var(--border-light)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Lock size={16} /> 4. Account Security
+            </span>
           </div>
 
           {/* Password */}
@@ -463,30 +665,38 @@ export default function StudentRegister({ onSwitchToLogin }) {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className="form-input"
-                placeholder="Re-type password"
+                placeholder="Re-enter password"
                 required
               />
             </div>
           </div>
+
         </div>
 
-        <button
-          className="btn btn-primary register-btn"
-          type="submit"
-          disabled={isSubmitting || !autoCollegeEmail}
-        >
-          <UserPlus size={18} />
-          {isSubmitting ? 'Submitting to HOD...' : `Submit Application (${autoCollegeEmail || 'Enter Name'})`}
-          <ArrowRight size={16} />
-        </button>
-
-        <div className="switch-mode-text">
-          Already registered?{' '}
-          <button type="button" onClick={onSwitchToLogin}>
-            Go to Login
+        <div className="form-actions-bar">
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            disabled={isSubmitting}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 700 }}
+          >
+            {isSubmitting ? (
+              <>Submitting Registration to HOD Portal...</>
+            ) : (
+              <>
+                <UserPlus size={18} /> Submit Registration for Verification
+              </>
+            )}
           </button>
         </div>
       </form>
+
+      <div className="register-footer-switch">
+        <span>Already have an approved student account?</span>{' '}
+        <button className="btn-link" onClick={onSwitchToLogin}>
+          Sign In to Student Portal
+        </button>
+      </div>
     </div>
   );
 }

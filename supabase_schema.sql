@@ -43,6 +43,14 @@ CREATE TABLE IF NOT EXISTS public.students (
     cgpa TEXT DEFAULT 'N/A',
     fees_status TEXT DEFAULT 'Pending',
     roll_no TEXT DEFAULT '',
+    gender TEXT DEFAULT 'Male',
+    dob TEXT DEFAULT '',
+    blood_group TEXT DEFAULT '',
+    category TEXT DEFAULT 'OPEN / General',
+    aadhaar_no TEXT DEFAULT '',
+    guardian_name TEXT DEFAULT '',
+    guardian_phone TEXT DEFAULT '',
+    permanent_address TEXT DEFAULT '',
     photo_url TEXT,
     doc_marksheet_10th TEXT,
     doc_marksheet_12th TEXT,
@@ -251,6 +259,16 @@ CREATE POLICY "Public Insert/Update Marks" ON public.marks FOR ALL USING (true);
 
 CREATE POLICY "Public Read All Notices" ON public.notices FOR SELECT USING (true);
 CREATE POLICY "Public Insert Notices" ON public.notices FOR INSERT WITH CHECK (true);
+
+-- 16. SAFE COLUMN MIGRATIONS (For existing databases)
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT 'Male';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS dob TEXT DEFAULT '';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS blood_group TEXT DEFAULT '';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'OPEN / General';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS aadhaar_no TEXT DEFAULT '';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS guardian_name TEXT DEFAULT '';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS guardian_phone TEXT DEFAULT '';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS permanent_address TEXT DEFAULT '';
 
 CREATE POLICY "Public All Placement Drives" ON public.placement_drives FOR ALL USING (true);
 CREATE POLICY "Public All Placement Apps" ON public.placement_applications FOR ALL USING (true);

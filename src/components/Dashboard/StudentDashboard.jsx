@@ -182,6 +182,10 @@ export default function StudentDashboard({ onBackToHome }) {
                 <strong>{currentUser.name}</strong>
               </div>
               <div className="profile-detail-item">
+                <span>Gender</span>
+                <strong>{currentUser.gender || 'Male'}</strong>
+              </div>
+              <div className="profile-detail-item">
                 <span>PRN / Enrollment Number</span>
                 <strong>{currentUser.prn}</strong>
               </div>
@@ -190,20 +194,48 @@ export default function StudentDashboard({ onBackToHome }) {
                 <strong>{currentUser.departmentName}</strong>
               </div>
               <div className="profile-detail-item">
-                <span>Course & Program</span>
+                <span>Course &amp; Program</span>
                 <strong>{currentUser.course}</strong>
               </div>
               <div className="profile-detail-item">
-                <span>Email Address</span>
+                <span>Date of Birth</span>
+                <strong>{currentUser.dob || 'N/A'}</strong>
+              </div>
+              <div className="profile-detail-item">
+                <span>Blood Group</span>
+                <strong>{currentUser.bloodGroup || 'N/A'}</strong>
+              </div>
+              <div className="profile-detail-item">
+                <span>Reservation Category</span>
+                <strong>{currentUser.category || 'OPEN / General'}</strong>
+              </div>
+              <div className="profile-detail-item">
+                <span>Official College Email</span>
                 <strong>{currentUser.email}</strong>
               </div>
               <div className="profile-detail-item">
-                <span>Contact Phone</span>
+                <span>Student Phone</span>
                 <strong>{currentUser.phone || 'N/A'}</strong>
+              </div>
+              <div className="profile-detail-item">
+                <span>Aadhaar Number</span>
+                <strong>{currentUser.aadhaarNo || 'N/A'}</strong>
               </div>
               <div className="profile-detail-item">
                 <span>College Roll Number</span>
                 <strong>{currentUser.rollNo || 'Pending Assignment'}</strong>
+              </div>
+              <div className="profile-detail-item">
+                <span>Parent / Guardian Name</span>
+                <strong>{currentUser.guardianName || 'N/A'}</strong>
+              </div>
+              <div className="profile-detail-item">
+                <span>Parent / Emergency Phone</span>
+                <strong>{currentUser.guardianPhone || 'N/A'}</strong>
+              </div>
+              <div className="profile-detail-item" style={{ gridColumn: 'span 2' }}>
+                <span>Permanent Address</span>
+                <strong>{currentUser.permanentAddress || 'N/A'}</strong>
               </div>
               <div className="profile-detail-item">
                 <span>Registration Date</span>
