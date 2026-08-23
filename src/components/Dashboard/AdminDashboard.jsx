@@ -11,6 +11,7 @@ import {
   fetchPrincipalPendingApplications,
   reviewLeaveApplication
 } from '../../lib/leaveService';
+import { hashPassword } from '../../lib/authCrypto';
 import './Dashboard.css';
 
 export default function AdminDashboard({ onBackToHome }) {
@@ -153,9 +154,7 @@ export default function AdminDashboard({ onBackToHome }) {
     setIsAddingStaff(true);
     try {
       const deptObj = DEPARTMENTS.find((d) => d.id === newStaffForm.departmentId);
-      // Hash password using bcrypt JS or store hash
-      const bcrypt = (await import('bcryptjs')).default;
-      const hash = await bcrypt.hash(newStaffForm.password, 10);
+      const hash = await hashPassword(newStaffForm.password);
 
       const { data, error } = await supabase
         .from('staff')

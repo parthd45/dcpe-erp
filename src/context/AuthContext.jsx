@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import bcrypt from 'bcryptjs';
+import { hashPassword, comparePassword } from '../lib/authCrypto';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext();
@@ -242,8 +242,8 @@ export const AuthProvider = ({ children }) => {
 
       if (!autoEmail) throw new Error('Could not generate college email. Please enter your full name.');
 
-      // 3. Hash password with bcrypt
-      const passwordHash = await bcrypt.hash(studentData.password, 10);
+      // 3. Hash password
+      const passwordHash = await hashPassword(studentData.password);
 
       // 4. Insert student row
       const { data: newRow, error: insertErr } = await supabase
@@ -331,7 +331,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         // Verify password
-        const passwordMatch = await bcrypt.compare(password, staffUser.password_hash);
+        const passwordMatch = await comparePassword(password, staffUser.password_hash);
         if (!passwordMatch) {
           return { success: false, message: 'Incorrect password. Please try again.' };
         }
@@ -370,7 +370,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Verify password
-      const passwordMatch = await bcrypt.compare(password, student.password_hash);
+      const passwordMatch = await comparePassword(password, student.password_hash);
       if (!passwordMatch) {
         return { success: false, message: 'Incorrect password. Please try again.' };
       }
