@@ -1,0 +1,195 @@
+/* ============================================
+   Notices Section — Light theme
+   ============================================ */
+.notices {
+  position: relative;
+  background: var(--bg-body);
+}
+
+.notices-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+}
+
+.notices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.notice-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-base);
+  cursor: default;
+}
+
+.notice-item:hover {
+  border-color: var(--primary-200);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.notice-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 56px;
+  background: var(--primary-50);
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+
+.notice-date-day {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.notice-date-month {
+  font-size: 10px;
+  color: var(--primary-600);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.notice-content h4 {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.notice-content p {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.notice-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.notice-tag {
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.notice-tag.exam { background: #fef2f2; color: #dc2626; }
+.notice-tag.event { background: #eef2ff; color: #4f46e5; }
+.notice-tag.admin { background: #fef3c7; color: #b45309; }
+.notice-tag.placement { background: #dcfce7; color: #16a34a; }
+.notice-tag.sports { background: #fce7f3; color: #db2777; }
+.notice-tag.urgent { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+/* Events sidebar */
+.events-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.events-sidebar-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-card {
+  padding: 16px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.event-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.event-card.purple::before { background: #7c3aed; }
+.event-card.amber::before { background: #d97706; }
+.event-card.green::before { background: #16a34a; }
+.event-card.blue::before { background: #2563eb; }
+
+.event-card:hover {
+  border-color: var(--border-default);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.event-card h4 {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 4px;
+}
+
+.event-card p {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.event-card .event-date-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: var(--text-xs);
+  color: var(--text-body);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .notices-layout { grid-template-columns: 1fr; }
+}
+
+/* Skeleton loading animation */
+.skeleton-box {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.notice-skeleton {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* General tag fallback */
+.notice-tag.general { background: #f1f5f9; color: #475569; }
+

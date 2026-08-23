@@ -1,0 +1,187 @@
+/* ============================================
+   About Section — Light theme
+   ============================================ */
+.about {
+  position: relative;
+  background: var(--bg-white);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.about-content {
+  animation: slideInLeft 0.8s ease-out forwards;
+}
+
+.about-text {
+  color: var(--text-body);
+  font-size: var(--text-base);
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+.about-text strong {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.about-highlights {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.about-highlight {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-body);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+}
+
+.about-highlight:hover {
+  border-color: var(--primary-200);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.about-highlight-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.about-highlight-icon.purple { background: #f3e8ff; color: #7c3aed; }
+.about-highlight-icon.blue { background: #dbeafe; color: #2563eb; }
+.about-highlight-icon.amber { background: #fef3c7; color: #d97706; }
+.about-highlight-icon.green { background: #dcfce7; color: #16a34a; }
+
+.about-highlight-text h4 {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: var(--text-heading);
+}
+
+.about-highlight-text p {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Visual cards stack */
+.about-visual {
+  animation: slideInRight 0.8s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.about-card-stack {
+  position: relative;
+  height: 420px;
+}
+
+.about-card {
+  position: absolute;
+  padding: 24px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-slow);
+}
+
+.about-card:hover {
+  transform: translateY(-8px) !important;
+  box-shadow: var(--shadow-xl);
+}
+
+.about-card-1 { top: 0; left: 0; right: 30px; z-index: 3; }
+.about-card-2 { top: 60px; left: 30px; right: 0; z-index: 2; opacity: 0.9; }
+.about-card-3 { top: 120px; left: 15px; right: 15px; z-index: 1; opacity: 0.7; }
+
+.about-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.about-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-base);
+  font-weight: 800;
+  color: white;
+}
+
+.about-card-avatar.indigo { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+.about-card-avatar.amber { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.about-card-avatar.emerald { background: linear-gradient(135deg, #10b981, #14b8a6); }
+
+.about-card-info h3 {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.about-card-info span {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.about-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.about-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.about-card-row:last-child { border-bottom: none; }
+
+.about-card-row-label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.about-card-row-value {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.about-card-row-value.success { color: #16a34a; }
+.about-card-row-value.warning { color: #d97706; }
+.about-card-row-value.primary { color: var(--primary); }
+
+@media (max-width: 900px) {
+  .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  .about-highlights { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .about-card-stack { height: 300px; }
+  .about-card { padding: 16px; }
+}
