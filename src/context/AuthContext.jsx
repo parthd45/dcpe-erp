@@ -280,6 +280,9 @@ export const AuthProvider = ({ children }) => {
         .update({ next_seq: currentSeq + 1 })
         .eq('branch_code', branchCode);
 
+      // 6. Reload student records in memory immediately
+      await loadStudents();
+
       return {
         success: true,
         student: mapStudent(newRow),
@@ -335,6 +338,7 @@ export const AuthProvider = ({ children }) => {
 
         const userObj = mapStaff(staffUser);
         setCurrentUser(userObj);
+        await loadStudents();
         return { success: true, user: userObj };
       }
 
@@ -570,6 +574,8 @@ export const AuthProvider = ({ children }) => {
         students,
         currentUser,
         isLoadingStudents,
+        loadStudents,
+        refreshStudents: loadStudents,
         getNextEnrollmentNumberForBranch,
         getAutoCollegeEmail,
         registerStudent,

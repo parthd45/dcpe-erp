@@ -32,6 +32,7 @@ export default function HODDashboard({ onBackToHome }) {
   const {
     currentUser,
     students,
+    refreshStudents,
     approveStudent,
     rejectStudent,
     updateStudentAcademicRecord,
@@ -41,11 +42,23 @@ export default function HODDashboard({ onBackToHome }) {
 
   // ── Student approval state
   const [filterStatus, setFilterStatus] = useState('all');
+  const [deptScope, setDeptScope] = useState('all'); // 'all' | 'mine' | specific dept_id
   const [searchTerm, setSearchTerm] = useState('');
   const [rejectModalStudent, setRejectModalStudent] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [actionSuccessToast, setActionSuccessToast] = useState(null);
   const [isActionPending, setIsActionPending] = useState(false);
+  const [isRefreshingStudents, setIsRefreshingStudents] = useState(false);
+
+  const handleRefreshRecords = async () => {
+    setIsRefreshingStudents(true);
+    if (refreshStudents) await refreshStudents();
+    setIsRefreshingStudents(false);
+  };
+
+  useEffect(() => {
+    if (refreshStudents) refreshStudents();
+  }, [refreshStudents]);
 
   // Document verification modal state
   const [verificationStudent, setVerificationStudent] = useState(null);
@@ -133,14 +146,18 @@ export default function HODDashboard({ onBackToHome }) {
   if (!currentUser) return null;
 
   // ── Dept filtering for student table
-  const isSuperHOD = currentUser.department === 'admin';
-  const deptStudents = isSuperHOD
+  const deptStudents = deptScope === 'all'
     ? students
-    : students.filter((s) => s.department === currentUser.department);
+    : deptScope === 'mine'
+      ? students.filter((s) => s.department === currentUser.department)
+      : students.filter((s) => s.department === deptScope);
 
   const pendingCount  = deptStudents.filter((s) => s.status === 'pending').length;
   const approvedCount = deptStudents.filter((s) => s.status === 'approved').length;
   const rejectedCount = deptStudents.filter((s) => s.status === 'rejected').length;
+
+  const totalCollegePending = students.filter((s) => s.status === 'pending').length;
+  const otherDeptsPending = totalCollegePending - (students.filter((s) => s.department === currentUser.department && s.status === 'pending').length);
 
   const filteredList = deptStudents.filter((s) => {
     const matchesStatus = filterStatus === 'all' || s.status === filterStatus;
@@ -392,7 +409,7 @@ export default function HODDashboard({ onBackToHome }) {
         {/* ═══════════════════════════════════════════ */}
         {activeTab === 'approvals' && (
           <div className="dashboard-panel">
-            <div className="panel-header">
+            <div className="panel-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <div className="panel-title">
                   <UserCheck size={22} color="var(--primary)" />
@@ -403,7 +420,69 @@ export default function HODDashboard({ onBackToHome }) {
                 </p>
               </div>
 
-              {/* Filter Tabs */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                {/* Department Selector */}
+                <select
+                  className="form-select"
+                  style={{ width: 'auto', fontSize: '12px', padding: '6px 12px', fontWeight: 600 }}
+                  value={deptScope}
+                  onChange={(e) => setDeptScope(e.target.value)}
+                >
+                  <option value="all">🏫 All College Departments ({students.length})</option>
+                  <option value="mine">📌 My Department ({students.filter((s) => s.department === currentUser.department).length})</option>
+                  <option value="cs">💻 P.G. Dept. of Computer Science &amp; Tech</option>
+                  <option value="science">🔬 Department of Science (BCA)</option>
+                  <option value="phy-ed">🏅 Dept. of Physical Education (B.P.Ed)</option>
+                  <option value="commerce">📊 Department of Commerce (BBA)</option>
+                  <option value="yoga">🧘 Department of Yoga &amp; Naturopathy</option>
+                  <option value="vocational">🛠️ Dept. of Vocational &amp; Skill Ed</option>
+                </select>
+
+                <button
+                  type="button"
+                  className="btn btn-white btn-sm"
+                  onClick={handleRefreshRecords}
+                  disabled={isRefreshingStudents}
+                  title="Reload students from database"
+                >
+                  <RefreshCw size={14} className={isRefreshingStudents ? 'spin-anim' : ''} />
+                  {isRefreshingStudents ? 'Refreshing...' : 'Refresh 🔄'}
+                </button>
+              </div>
+            </div>
+
+            {/* Other Departments Pending Notification */}
+            {otherDeptsPending > 0 && deptScope === 'mine' && (
+              <div
+                style={{
+                  background: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '12px',
+                  color: '#92400e',
+                }}
+              >
+                <span>
+                  💡 <strong>Cross-Department Notice:</strong> There are <strong>{otherDeptsPending} student(s)</strong> awaiting approval in other college departments (e.g. Science / Physical Ed).
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  style={{ fontSize: '11px', padding: '3px 8px' }}
+                  onClick={() => setDeptScope('all')}
+                >
+                  View All Departments →
+                </button>
+              </div>
+            )}
+
+            {/* Filter Tabs & Search Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {[
                   { key: 'all',      label: `All (${deptStudents.length})` },
@@ -424,11 +503,8 @@ export default function HODDashboard({ onBackToHome }) {
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Search bar */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-              <div className="form-input-wrap" style={{ flex: 1 }}>
+              <div className="form-input-wrap" style={{ flex: 1, minWidth: '240px' }}>
                 <span className="form-input-icon"><Search size={16} /></span>
                 <input
                   type="text"

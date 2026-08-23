@@ -39,8 +39,15 @@ const DEMO_ACCOUNTS = [
   },
   {
     role: 'hod',
-    label: 'HOD Computer Science (Dr. V. M. Thakare)',
+    label: 'HOD Computer Science (Dr. V. M. Thakare - MCA)',
     email: 'hod.cs@dcpehvpm.org',
+    password: 'password123',
+    status: 'hod',
+  },
+  {
+    role: 'hod',
+    label: 'HOD Science (Prof. R. S. Kulkarni - BCA / B.Sc)',
+    email: 'hod.science@dcpehvpm.org',
     password: 'password123',
     status: 'hod',
   },
