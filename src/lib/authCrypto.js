@@ -1,18 +1,25 @@
-import * as bcryptModule from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 
-const bcrypt = bcryptModule?.default || bcryptModule;
+function getBcrypt() {
+  try {
+    if (typeof bcrypt !== 'undefined' && bcrypt) {
+      return bcrypt.default || bcrypt;
+    }
+  } catch (e) {
+    console.warn('bcrypt loading:', e);
+  }
+  return null;
+}
 
 /**
  * Browser-safe password hashing and verification
  */
-export async function hashPassword(plainText) {
+export function hashPassword(plainText) {
   if (!plainText) return '';
   try {
-    if (bcrypt && typeof bcrypt.hashSync === 'function') {
-      return bcrypt.hashSync(plainText, 10);
-    }
-    if (bcrypt && typeof bcrypt.hash === 'function') {
-      return await bcrypt.hash(plainText, 10);
+    const b = getBcrypt();
+    if (b && typeof b.hashSync === 'function') {
+      return b.hashSync(plainText, 10);
     }
   } catch (err) {
     console.error('Error hashing password:', err);
@@ -20,17 +27,15 @@ export async function hashPassword(plainText) {
   return plainText;
 }
 
-export async function comparePassword(plainText, hashOrPlain) {
+export function comparePassword(plainText, hashOrPlain) {
   if (!plainText || !hashOrPlain) return false;
   if (plainText === hashOrPlain) return true;
 
   try {
     if (typeof hashOrPlain === 'string' && (hashOrPlain.startsWith('$2a$') || hashOrPlain.startsWith('$2b$') || hashOrPlain.startsWith('$2y$'))) {
-      if (bcrypt && typeof bcrypt.compareSync === 'function') {
-        return bcrypt.compareSync(plainText, hashOrPlain);
-      }
-      if (bcrypt && typeof bcrypt.compare === 'function') {
-        return await bcrypt.compare(plainText, hashOrPlain);
+      const b = getBcrypt();
+      if (b && typeof b.compareSync === 'function') {
+        return b.compareSync(plainText, hashOrPlain);
       }
     }
   } catch (err) {
