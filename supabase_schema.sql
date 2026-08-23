@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- DCPE ERP (Degree College of Physical Education HVPM)
--- Complete Production Database Schema & Realtime Tables
+-- Complete Production Database Schema & Safe Idempotent SQL Script
 -- ==============================================================================
 
 -- 1. EXTENSIONS
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS public.notices (
     title TEXT NOT NULL,
     body TEXT NOT NULL,
     tag TEXT DEFAULT 'general',
-    scope TEXT DEFAULT 'all', -- 'all' or department_id
+    scope TEXT DEFAULT 'all',
     publisher_id UUID REFERENCES public.staff(id),
     publisher_name TEXT NOT NULL,
     publisher_role TEXT NOT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS public.placement_applications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 10. STUDENT LEAVES & GRIEVANCES TABLE (3-Tier Workflow)
+-- 10. STUDENT LEAVES & GRIEVANCES TABLE
 CREATE TABLE IF NOT EXISTS public.student_leaves (
     id TEXT PRIMARY KEY,
     student_id UUID REFERENCES public.students(id) ON DELETE CASCADE,
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS public.library_issues (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 13. ENABLE ROW LEVEL SECURITY & PUBLIC ACCESS POLICIES
+-- 13. ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.staff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
@@ -209,7 +209,33 @@ ALTER TABLE public.student_leaves ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.library_books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.library_issues ENABLE ROW LEVEL SECURITY;
 
--- Allow anon read/write access for all ERP application clients
+-- 14. DROP EXISTING POLICIES BEFORE RE-CREATING (PREVENTS "ALREADY EXISTS" ERROR)
+DROP POLICY IF EXISTS "Public Read All Staff" ON public.staff;
+DROP POLICY IF EXISTS "Public Write Staff" ON public.staff;
+DROP POLICY IF EXISTS "Public Update Staff" ON public.staff;
+
+DROP POLICY IF EXISTS "Public Read All Students" ON public.students;
+DROP POLICY IF EXISTS "Public Write Students" ON public.students;
+DROP POLICY IF EXISTS "Public Update Students" ON public.students;
+
+DROP POLICY IF EXISTS "Public Read All Subjects" ON public.subjects;
+DROP POLICY IF EXISTS "Public Read All Attendance" ON public.attendance_logs;
+DROP POLICY IF EXISTS "Public Insert Attendance" ON public.attendance_logs;
+
+DROP POLICY IF EXISTS "Public Read All Marks" ON public.marks;
+DROP POLICY IF EXISTS "Public Insert/Update Marks" ON public.marks;
+
+DROP POLICY IF EXISTS "Public Read All Notices" ON public.notices;
+DROP POLICY IF EXISTS "Public Insert Notices" ON public.notices;
+
+DROP POLICY IF EXISTS "Public All Placement Drives" ON public.placement_drives;
+DROP POLICY IF EXISTS "Public All Placement Apps" ON public.placement_applications;
+
+DROP POLICY IF EXISTS "Public All Student Leaves" ON public.student_leaves;
+DROP POLICY IF EXISTS "Public All Library Books" ON public.library_books;
+DROP POLICY IF EXISTS "Public All Library Issues" ON public.library_issues;
+
+-- 15. RE-CREATE RLS ACCESS POLICIES
 CREATE POLICY "Public Read All Staff" ON public.staff FOR SELECT USING (true);
 CREATE POLICY "Public Write Staff" ON public.staff FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Update Staff" ON public.staff FOR UPDATE USING (true);
@@ -234,6 +260,3 @@ CREATE POLICY "Public All Placement Apps" ON public.placement_applications FOR A
 CREATE POLICY "Public All Student Leaves" ON public.student_leaves FOR ALL USING (true);
 CREATE POLICY "Public All Library Books" ON public.library_books FOR ALL USING (true);
 CREATE POLICY "Public All Library Issues" ON public.library_issues FOR ALL USING (true);
-
--- Enable Realtime publication
-ALTER PUBLICATION supabase_realtime ADD TABLE public.students, public.notices, public.attendance_logs, public.student_leaves;
