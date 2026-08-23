@@ -4,105 +4,66 @@ import {
   AlertCircle, X, Bookmark, ExternalLink, Sparkles, Filter,
   ShieldCheck, ArrowRight, Hash, BookmarkCheck
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import './Dashboard.css';
-
-const INITIAL_ISSUED_BOOKS = [
-  {
-    id: 'b1',
-    accessionNo: 'DCPE-LIB-8842',
-    title: 'Design Patterns: Elements of Reusable Object-Oriented Software',
-    author: 'Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides',
-    issuedDate: '10 Feb 2026',
-    dueDate: '28 Feb 2026',
-    shelfLocation: 'Stack Area 4 - Shelf B2',
-    status: 'active',
-    fine: 0,
-  },
-  {
-    id: 'b2',
-    accessionNo: 'DCPE-LIB-9120',
-    title: 'Cloud Computing: Concepts, Technology & Architecture',
-    author: 'Thomas Erl, Zaigham Mahmood, Ricardo Puttini',
-    issuedDate: '14 Feb 2026',
-    dueDate: '02 Mar 2026',
-    shelfLocation: 'CS Dept Section - Rack 1A',
-    status: 'active',
-    fine: 0,
-  },
-];
-
-const LIBRARY_CATALOG = [
-  {
-    id: 'c1',
-    isbn: '978-0131103627',
-    title: 'The C Programming Language (2nd Edition)',
-    author: 'Brian W. Kernighan, Dennis M. Ritchie',
-    category: 'Computer Science',
-    copiesAvailable: 5,
-    totalCopies: 8,
-    shelf: 'Rack 2A (CS Section)',
-  },
-  {
-    id: 'c2',
-    isbn: '978-0262033848',
-    title: 'Introduction to Algorithms (4th Edition)',
-    author: 'Thomas H. Cormen, Charles E. Leiserson',
-    category: 'Computer Science',
-    copiesAvailable: 3,
-    totalCopies: 6,
-    shelf: 'Rack 3B (CS Section)',
-  },
-  {
-    id: 'c3',
-    isbn: '978-0736083720',
-    title: 'Physiology of Sport and Exercise',
-    author: 'W. Larry Kenney, Jack H. Wilmore, David L. Costill',
-    category: 'Physical Education',
-    copiesAvailable: 4,
-    totalCopies: 10,
-    shelf: 'Rack 1C (Sports Science)',
-  },
-  {
-    id: 'c4',
-    isbn: '978-0321573513',
-    title: 'Algorithms in C++ (Parts 1-4: Fundamentals)',
-    author: 'Robert Sedgewick',
-    category: 'Computer Science',
-    copiesAvailable: 2,
-    totalCopies: 4,
-    shelf: 'Rack 2B (CS Section)',
-  },
-  {
-    id: 'c5',
-    isbn: '978-0073523583',
-    title: 'Foundations of Physical Education, Exercise Science & Sport',
-    author: 'Jennifer L. Walton-Fisette, Deborah A. Wuest',
-    category: 'Physical Education',
-    copiesAvailable: 6,
-    totalCopies: 7,
-    shelf: 'Rack 4A (Sports Science)',
-  },
-  {
-    id: 'c6',
-    isbn: '978-0134685991',
-    title: 'Effective Java (3rd Edition)',
-    author: 'Joshua Bloch',
-    category: 'Computer Science',
-    copiesAvailable: 4,
-    totalCopies: 5,
-    shelf: 'Rack 3A (CS Section)',
-  },
-];
 
 export function LibraryModal({ currentUser, onClose }) {
   if (!currentUser) return null;
 
   const [activeTab, setActiveTab] = useState('issued'); // 'issued' | 'catalog' | 'eresources'
-  const [issuedBooks, setIssuedBooks] = useState(INITIAL_ISSUED_BOOKS);
+  const [issuedBooks, setIssuedBooks] = useState([
+    {
+      id: 'b1',
+      accessionNo: 'DCPE-LIB-8842',
+      title: 'The C Programming Language (2nd Edition)',
+      author: 'Brian W. Kernighan, Dennis M. Ritchie',
+      issuedDate: '10 Feb 2026',
+      dueDate: '28 Feb 2026',
+      shelfLocation: 'Rack 2A (CS Section)',
+      status: 'active',
+      fine: 0,
+    },
+    {
+      id: 'b2',
+      accessionNo: 'DCPE-LIB-9120',
+      title: 'Physiology of Sport and Exercise',
+      author: 'W. Larry Kenney, Jack H. Wilmore',
+      issuedDate: '14 Feb 2026',
+      dueDate: '02 Mar 2026',
+      shelfLocation: 'Rack 1C (Sports Science)',
+      status: 'active',
+      fine: 0,
+    },
+  ]);
+  const [catalog, setCatalog] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [reservedIds, setReservedIds] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
+
+  useEffect(() => {
+    const loadBooks = async () => {
+      try {
+        const { data, error } = await supabase.from('library_books').select('*');
+        if (data && data.length > 0) {
+          const mapped = data.map((b) => ({
+            id: b.id,
+            isbn: b.isbn,
+            title: b.title,
+            author: b.author,
+            category: b.category,
+            copiesAvailable: b.copies_available,
+            totalCopies: b.total_copies,
+            shelf: b.shelf,
+          }));
+          setCatalog(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching library books:', err);
+      }
+    };
+    loadBooks();
+  }, []);
 
   const handleRenew = (bookId) => {
     setIssuedBooks((prev) =>
@@ -119,7 +80,7 @@ export function LibraryModal({ currentUser, onClose }) {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const filteredCatalog = LIBRARY_CATALOG.filter((book) => {
+  const filteredCatalog = catalog.filter((book) => {
     const matchesSearch =
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
