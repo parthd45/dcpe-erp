@@ -94,6 +94,7 @@ export async function submitLeaveApplication(payload) {
     reason: payload.reason,
     emergencyContact: payload.emergencyContact || '+91 98765 43210',
     attachmentName: payload.attachmentName || null,
+    attachmentUrl: payload.attachmentUrl || null, // Base64 data URL of the uploaded file
     requiresHOD,
     requiresPrincipal,
     stage: 'teacher', // Starts with teacher

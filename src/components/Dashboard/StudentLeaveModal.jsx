@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FileText, Calendar, Clock, User, CheckCircle2, XCircle,
   AlertCircle, ChevronRight, ShieldCheck, Printer, X, Plus,
@@ -45,8 +45,62 @@ export function StudentLeaveModal({ currentUser, onClose }) {
   const [reason, setReason] = useState('');
   const [emergencyContact, setEmergencyContact] = useState(currentUser.phone || '+91 98765 43210');
   const [attachmentName, setAttachmentName] = useState(null);
+  const [attachmentFile, setAttachmentFile] = useState(null);   // File object
+  const [attachmentDataUrl, setAttachmentDataUrl] = useState(null); // base64 for storage
+  const [isReadingFile, setIsReadingFile] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitToast, setSubmitToast] = useState(null);
+
+  // Ref for hidden file input
+  const fileInputRef = useRef(null);
+
+  // Accepted file types
+  const ACCEPTED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  const MAX_SIZE_MB = 5;
+
+  const processFile = (file) => {
+    if (!file) return;
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setSubmitToast({ type: 'error', text: '❌ Unsupported file type. Please upload PDF, PNG, JPG, or DOC.' });
+      setTimeout(() => setSubmitToast(null), 4000);
+      return;
+    }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      setSubmitToast({ type: 'error', text: `❌ File too large. Maximum allowed size is ${MAX_SIZE_MB}MB.` });
+      setTimeout(() => setSubmitToast(null), 4000);
+      return;
+    }
+    setIsReadingFile(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setAttachmentFile(file);
+      setAttachmentName(file.name);
+      setAttachmentDataUrl(ev.target.result);
+      setIsReadingFile(false);
+    };
+    reader.onerror = () => {
+      setIsReadingFile(false);
+      setSubmitToast({ type: 'error', text: '❌ Failed to read file. Please try again.' });
+      setTimeout(() => setSubmitToast(null), 4000);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    processFile(file);
+    // Reset input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const clearAttachment = () => {
+    setAttachmentFile(null);
+    setAttachmentName(null);
+    setAttachmentDataUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   // Calculate day difference (excluding Sundays as official holiday)
   const { totalDays: diffDays, sundaysCount } = calculateLeaveDays(startDate, endDate);
@@ -91,6 +145,7 @@ export function StudentLeaveModal({ currentUser, onClose }) {
       reason,
       emergencyContact,
       attachmentName,
+      attachmentUrl: attachmentDataUrl || null,
     };
 
     const res = await submitLeaveApplication(payload);
@@ -104,7 +159,7 @@ export function StudentLeaveModal({ currentUser, onClose }) {
           : `🎉 Application submitted! It will route through your Teacher Mentor ➔ HOD for verification.`,
       });
       setReason('');
-      setAttachmentName(null);
+      clearAttachment();
       await loadData();
       setTimeout(() => {
         setSubmitToast(null);
@@ -675,27 +730,71 @@ export function StudentLeaveModal({ currentUser, onClose }) {
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-heading)', marginBottom: '6px' }}>
                     Optional Proof / Medical Certificate
                   </label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      type="button"
-                      className="btn btn-white"
-                      style={{ flex: 1, fontSize: '12px', height: '42px', border: '1px dashed var(--border-light)' }}
-                      onClick={() => {
-                        const fakeName = appType === 'leave' ? 'Doctor_Certificate.pdf' : 'Grievance_Proof.png';
-                        setAttachmentName(fakeName);
-                      }}
-                    >
-                      <Upload size={14} /> {attachmentName ? attachmentName : 'Attach Document (PDF/PNG)'}
-                    </button>
-                    {attachmentName && (
-                      <button
-                        type="button"
-                        className="btn btn-white btn-sm"
-                        style={{ color: '#dc2626' }}
-                        onClick={() => setAttachmentName(null)}
-                      >
-                        <X size={14} />
-                      </button>
+                  {/* Hidden real file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                    style={{ display: 'none' }}
+                    onChange={handleFileSelect}
+                  />
+
+                  {/* File drop zone */}
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                    onDragLeave={() => setIsDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragOver(false);
+                      const file = e.dataTransfer.files?.[0];
+                      processFile(file);
+                    }}
+                    style={{
+                      border: isDragOver ? '2px dashed #2563eb' : attachmentName ? '2px solid #16a34a' : '2px dashed #cbd5e1',
+                      borderRadius: '10px',
+                      padding: '14px 12px',
+                      background: isDragOver ? '#eff6ff' : attachmentName ? '#f0fdf4' : '#f8fafc',
+                      transition: 'all 0.2s',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                    }}
+                    onClick={() => !attachmentName && fileInputRef.current?.click()}
+                  >
+                    {isReadingFile ? (
+                      <div style={{ fontSize: '12px', color: '#2563eb', fontWeight: 600 }}>
+                        ⏳ Reading file, please wait...
+                      </div>
+                    ) : attachmentName ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                          <Paperclip size={16} color="#16a34a" style={{ flexShrink: 0 }} />
+                          <div style={{ overflow: 'hidden' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#15803d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {attachmentName}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>
+                              {attachmentFile ? `${(attachmentFile.size / 1024).toFixed(1)} KB – Attached ✓` : 'Attached ✓'}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); clearAttachment(); }}
+                          style={{ background: '#fee2e2', border: 'none', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}
+                        >
+                          × Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <Upload size={18} color="#94a3b8" style={{ marginBottom: '4px' }} />
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+                          Click to browse or drag &amp; drop
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                          PDF, PNG, JPG, DOC – Max {MAX_SIZE_MB}MB
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>

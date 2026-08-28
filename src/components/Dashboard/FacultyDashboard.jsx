@@ -919,12 +919,22 @@ export default function FacultyDashboard({ onBackToHome }) {
                       <div style={{ marginBottom: '4px' }}>
                         <strong>Student Explanation:</strong> {app.reason}
                       </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '16px', marginTop: '6px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '16px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span>Emergency Phone: <strong>{app.emergencyContact}</strong></span>
                         {app.attachmentName && (
-                          <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                            📎 Proof Attached: {app.attachmentName}
-                          </span>
+                          app.attachmentUrl ? (
+                            <a
+                              href={app.attachmentUrl}
+                              download={app.attachmentName}
+                              style={{ color: '#2563eb', fontWeight: 700, fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                            >
+                              📎 Download Proof: {app.attachmentName}
+                            </a>
+                          ) : (
+                            <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                              📎 Proof: {app.attachmentName}
+                            </span>
+                          )
                         )}
                       </div>
                     </div>
