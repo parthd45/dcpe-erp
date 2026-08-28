@@ -259,8 +259,16 @@ export default function FacultyDashboard({ onBackToHome }) {
   }, [currentUser]);
 
   const handleTeacherReview = async (appId, decision) => {
+    const all = await import('../../lib/leaveService').then(() => null); // no-op, just to get app
+    // Find app to check totalDays for routing message
+    const appList = pendingLeaves;
+    const app = appList.find((a) => a.id === appId);
+    const isShortLeave = app && app.totalDays < 3;
+
     const remarks = decision === 'approve'
-      ? 'Verified student attendance & record. Endorsed by Faculty Class Mentor and forwarded to HOD.'
+      ? (isShortLeave
+          ? 'Verified & directly sanctioned by Faculty Class Mentor. Short leave (< 3 days) — no HOD escalation required.'
+          : 'Verified student attendance & record. Endorsed by Faculty Class Mentor and forwarded to HOD.')
       : 'Application rejected by Faculty Class Mentor due to upcoming examination schedule.';
 
     const res = await reviewLeaveApplication({
@@ -275,7 +283,9 @@ export default function FacultyDashboard({ onBackToHome }) {
       setLeaveToast({
         type: 'success',
         text: decision === 'approve'
-          ? '✅ Application approved and successfully forwarded to Head of Department (HOD)!'
+          ? (isShortLeave
+              ? '✅ Short leave (< 3 days) directly sanctioned and approved by you!'
+              : '✅ Application approved and forwarded to Head of Department (HOD)!')
           : '❌ Application marked as rejected.',
       });
       await loadLeaves();
@@ -818,7 +828,7 @@ export default function FacultyDashboard({ onBackToHome }) {
                   Level-1 Faculty Review: Student Leave &amp; Grievance Applications
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-                  Review and verify student requests. Approving will forward the request to the <strong>Head of Department (HOD)</strong>.
+                  Review and verify student requests. Leaves under 3 working days are <strong>directly approved</strong> by you. Leaves of 3+ days are forwarded to the <strong>Head of Department (HOD)</strong>.
                 </p>
               </div>
               <button className="btn btn-white btn-sm" onClick={loadLeaves}>
@@ -875,6 +885,16 @@ export default function FacultyDashboard({ onBackToHome }) {
                               ⚠️ 10+ Days Leave (Requires Principal Sanction)
                             </span>
                           )}
+                          {app.totalDays < 3 && (
+                            <span style={{ fontSize: '10px', fontWeight: 800, background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '4px', border: '1px solid #bbf7d0' }}>
+                              ✅ Short Leave — You Can Directly Approve
+                            </span>
+                          )}
+                          {app.totalDays >= 3 && app.totalDays < 10 && (
+                            <span style={{ fontSize: '10px', fontWeight: 800, background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: '4px', border: '1px solid #bfdbfe' }}>
+                              📋 3+ Days — Will Route to HOD
+                            </span>
+                          )}
                         </div>
 
                         <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-heading)', margin: '0 0 4px' }}>
@@ -924,7 +944,8 @@ export default function FacultyDashboard({ onBackToHome }) {
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                         onClick={() => handleTeacherReview(app.id, 'approve')}
                       >
-                        <CheckCircle2 size={15} /> Approve &amp; Forward to HOD →
+                        <CheckCircle2 size={15} />
+                        {app.totalDays < 3 ? 'Approve & Directly Sanction ✓' : 'Approve & Forward to HOD →'}
                       </button>
                     </div>
                   </div>

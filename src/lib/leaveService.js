@@ -74,6 +74,8 @@ export async function submitLeaveApplication(payload) {
     ? Math.max(0, parseInt(payload.totalDays))
     : calculated.totalDays;
   const requiresPrincipal = totalDays >= 10 || payload.isEscalatedGrievance === true;
+  // Leaves of 3+ working days must go to HOD; under 3 days teacher can directly approve
+  const requiresHOD = totalDays >= 3;
 
   const newApp = {
     id: `leave-${Date.now()}`,
@@ -92,6 +94,7 @@ export async function submitLeaveApplication(payload) {
     reason: payload.reason,
     emergencyContact: payload.emergencyContact || '+91 98765 43210',
     attachmentName: payload.attachmentName || null,
+    requiresHOD,
     requiresPrincipal,
     stage: 'teacher', // Starts with teacher
     status: 'pending_teacher',
@@ -219,15 +222,26 @@ export async function reviewLeaveApplication({
     app.rejectedBy = reviewerName;
     app.rejectedAt = now;
   } else if (stage === 'teacher') {
-    // Teacher Approved -> Moves to HOD
     app.teacherApproval = {
       approved: true,
       reviewedBy: reviewerName || 'Class Faculty Mentor',
       reviewedAt: now,
-      remarks: remarks || 'Endorsed and forwarded to Head of Department.',
+      remarks: remarks || (app.requiresHOD
+        ? 'Endorsed and forwarded to Head of Department.'
+        : 'Directly sanctioned by Class Faculty Mentor (Short leave < 3 days).'),
     };
-    app.stage = 'hod';
-    app.status = 'pending_hod';
+
+    if (app.requiresHOD || app.totalDays >= 3) {
+      // 3+ days: forward to HOD
+      app.stage = 'hod';
+      app.status = 'pending_hod';
+    } else {
+      // < 3 days: teacher directly approves — no HOD needed
+      app.stage = 'completed';
+      app.status = 'approved';
+      app.sanctionedAt = now;
+      app.sanctionNumber = `DCPE/SANCTION/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+    }
   } else if (stage === 'hod') {
     app.hodApproval = {
       approved: true,

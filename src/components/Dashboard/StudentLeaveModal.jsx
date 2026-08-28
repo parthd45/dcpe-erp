@@ -604,42 +604,42 @@ export function StudentLeaveModal({ currentUser, onClose }) {
                 </div>
               </div>
 
-              {/* 10+ DAYS EXECUTIVE RULE ALERT BANNER */}
-              <div
-                style={{
-                  background: isLongLeave ? '#fef2f2' : '#eff6ff',
-                  border: isLongLeave ? '1px solid #fecaca' : '1px solid #bfdbfe',
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                  marginBottom: '16px',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                  fontSize: '13px',
-                  color: isLongLeave ? '#991b1b' : '#1e40af',
-                }}
-              >
-                {isLongLeave ? (
-                  <AlertTriangle size={20} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
-                ) : (
-                  <ShieldCheck size={20} color="#2563eb" style={{ flexShrink: 0, marginTop: '2px' }} />
-                )}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <strong>Calculated Duration: {diffDays} Working Day(s)</strong>
-                    {sundaysCount > 0 && (
-                      <span style={{ fontSize: '11px', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
-                        ({sundaysCount} Sunday{sundaysCount > 1 ? 's' : ''} Excluded - Official Holiday)
-                      </span>
+              {/* LEAVE ROUTING RULE ALERT BANNER */}
+              {(() => {
+                const isShort = diffDays < 3;
+                const isMedium = diffDays >= 3 && !isLongLeave;
+                const bg = isLongLeave ? '#fef2f2' : isShort ? '#f0fdf4' : '#eff6ff';
+                const border = isLongLeave ? '1px solid #fecaca' : isShort ? '1px solid #bbf7d0' : '1px solid #bfdbfe';
+                const color = isLongLeave ? '#991b1b' : isShort ? '#15803d' : '#1e40af';
+                return (
+                  <div style={{ background: bg, border, borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color }}>
+                    {isLongLeave ? (
+                      <AlertTriangle size={20} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    ) : isShort ? (
+                      <ShieldCheck size={20} color="#16a34a" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    ) : (
+                      <ShieldCheck size={20} color="#2563eb" style={{ flexShrink: 0, marginTop: '2px' }} />
                     )}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <strong>Calculated Duration: {diffDays} Working Day(s)</strong>
+                        {sundaysCount > 0 && (
+                          <span style={{ fontSize: '11px', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                            ({sundaysCount} Sunday{sundaysCount > 1 ? 's' : ''} Excluded - Official Holiday)
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ margin: '4px 0 0', fontSize: '12px' }}>
+                        {isLongLeave
+                          ? '⚠️ Extended Leave Rule: Leaves of 10 or more working days strictly require Level-1 (Teacher) ➔ Level-2 (HOD) ➔ Level-3 (Principal / Admin Executive Sanction) before being approved.'
+                          : isShort
+                            ? '✅ Short Leave Rule: Under 3 working days — your Teacher / Faculty Mentor can directly sanction without HOD escalation.'
+                            : 'ℹ️ Standard Leave Rule: 3 to 9 working days will be sanctioned upon Level-1 (Teacher) endorsement ➔ Level-2 (HOD) final approval.'}
+                      </p>
+                    </div>
                   </div>
-                  <p style={{ margin: '4px 0 0', fontSize: '12px' }}>
-                    {isLongLeave
-                      ? '⚠️ Extended Leave Rule: Leaves of 10 or more working days strictly require Level-1 (Teacher) ➔ Level-2 (HOD) ➔ Level-3 (Principal / Admin Executive Sanction) before being approved.'
-                      : 'ℹ️ Standard Leave Rule: Under 10 working days leaves will be sanctioned upon Level-1 (Teacher) and Level-2 (HOD) verification.'}
-                  </p>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Reason Description */}
               <div style={{ marginBottom: '16px' }}>
