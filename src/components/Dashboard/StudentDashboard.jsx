@@ -13,7 +13,8 @@ import {
   StudentIDCardModal,
   ExamHallTicketModal,
   DigitalMarksheetModal,
-  StudentDocumentUploadModal
+  StudentDocumentUploadModal,
+  AcademicPredictorModal
 } from './StudentDocumentModals';
 import { PlacementModal } from './PlacementModal';
 import { FeePaymentModal } from './FeePaymentModal';
@@ -40,6 +41,7 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showTimetableModal, setShowTimetableModal] = useState(false);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showPredictorModal, setShowPredictorModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -374,6 +376,13 @@ export default function StudentDashboard({ onBackToHome }) {
                 <Clock size={15} color="#ea580c" /> Leaves &amp; Grievances 📋
               </button>
               <button
+                className="btn btn-white btn-sm"
+                style={{ border: '1px solid #c084fc', color: '#7c3aed', background: '#faf5ff' }}
+                onClick={() => setShowPredictorModal(true)}
+              >
+                🔮 CGPA Predictor
+              </button>
+              <button
                 className="btn btn-primary btn-sm"
                 style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 onClick={() => setShowPlacementModal(true)}
@@ -551,6 +560,14 @@ export default function StudentDashboard({ onBackToHome }) {
           <StudentLeaveModal
             currentUser={currentUser}
             onClose={() => setShowLeaveModal(false)}
+          />
+        )}
+
+        {/* ── Academic SGPA/CGPA Predictor Modal ── */}
+        {showPredictorModal && (
+          <AcademicPredictorModal
+            currentUser={currentUser}
+            onClose={() => setShowPredictorModal(false)}
           />
         )}
 

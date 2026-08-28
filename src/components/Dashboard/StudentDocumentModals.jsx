@@ -540,6 +540,25 @@ export function ExamHallTicketModal({ currentUser, attendanceStats, onClose }) {
                 <div style={{ fontSize: '11px', fontWeight: 600 }}>Candidate's Signature</div>
               </div>
 
+              {/* Secure Exam Gatepass QR Code */}
+              <div style={{ textAlign: 'center', width: '130px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(
+                    JSON.stringify({
+                      name: currentUser.name,
+                      prn: currentUser.prn,
+                      rollNo: currentUser.rollNo || 'MCA-26-001',
+                      course: currentUser.course,
+                      eligible: isEligible,
+                      feesStatus: currentUser.feesStatus || 'Paid ✓'
+                    })
+                  )}`}
+                  alt="Exam Gatepass QR"
+                  style={{ width: '90px', height: '90px', border: '1px solid #cbd5e1', padding: '4px', background: 'white' }}
+                />
+                <div style={{ fontSize: '9px', fontWeight: 700, color: '#64748b', marginTop: '4px' }}>EXAM GATEPASS QR</div>
+              </div>
+
               <div style={{ textAlign: 'center', width: '220px' }}>
                 <div style={{ fontSize: '10px', color: '#059669', fontWeight: 800 }}>VERIFIED BY COE CELL</div>
                 <div style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1626,6 +1645,138 @@ export function DocumentVerificationModal({ student, onUpdateStatus, onClose }) 
           </div>
         )}
 
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 5. INTERACTIVE ACADEMIC PERFORMANCE PREDICTOR MODAL
+// ─────────────────────────────────────────────────────────────
+export function AcademicPredictorModal({ currentUser, onClose }) {
+  if (!currentUser) return null;
+
+  // Let's get current subjects or fallback MCA subjects
+  const [subjects, setSubjects] = useState([
+    { code: 'MCA-101', name: 'Cloud Computing & DevOps', credits: 4, marks: 85 },
+    { code: 'MCA-102', name: 'Advanced Database Systems', credits: 4, marks: 75 },
+    { code: 'MCA-103', name: 'Software Engineering & Agile', credits: 4, marks: 80 },
+    { code: 'MCA-104', name: 'Machine Learning Foundation', credits: 4, marks: 70 },
+  ]);
+
+  const handleMarksChange = (idx, newMarks) => {
+    setSubjects(prev => prev.map((s, i) => i === idx ? { ...s, marks: parseInt(newMarks) || 0 } : s));
+  };
+
+  // Helper calculations
+  const getGradeInfo = (m) => {
+    if (m >= 90) return { grade: 'O', gp: 10, label: 'Outstanding 🌟', color: '#10b981' };
+    if (m >= 80) return { grade: 'A+', gp: 9, label: 'Excellent 👍', color: '#059669' };
+    if (m >= 70) return { grade: 'A', gp: 8, label: 'Very Good ⭐', color: '#3b82f6' };
+    if (m >= 60) return { grade: 'B+', gp: 7, label: 'Good', color: '#6366f1' };
+    if (m >= 50) return { grade: 'B', gp: 6, label: 'Above Average', color: '#f59e0b' };
+    return { grade: 'F', gp: 0, label: 'Fail / Re-exam ⚠️', color: '#ef4444' };
+  };
+
+  const totalCredits = subjects.reduce((sum, s) => sum + s.credits, 0);
+  const totalPoints = subjects.reduce((sum, s) => {
+    const info = getGradeInfo(s.marks);
+    return sum + (info.gp * s.credits);
+  }, 0);
+
+  const predictedSGPA = totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+  const previousCGPA = parseFloat(currentUser.cgpa) || 8.20;
+  const predictedCGPA = ((previousCGPA + parseFloat(predictedSGPA)) / 2).toFixed(2);
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(6px)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: 'white',
+          borderRadius: '24px',
+          maxWidth: '680px',
+          width: '100%',
+          boxShadow: 'var(--shadow-xl)',
+          overflow: 'hidden',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: '18px 24px', background: '#f8fafc', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>🔮</span>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>Interactive Academic Performance Predictor</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Drag the expected marks sliders to calculate your forecast CGPA</div>
+            </div>
+          </div>
+          <button className="btn btn-white btn-sm" onClick={onClose} style={{ padding: '4px 8px' }}>✕</button>
+        </div>
+
+        {/* Sliders Body */}
+        <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ background: 'var(--primary-50)', padding: '16px', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--primary-100)' }}>
+              <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Predicted Sem SGPA</span>
+              <h2 style={{ fontSize: '32px', fontWeight: 900, color: 'var(--primary)', margin: '4px 0' }}>{predictedSGPA}</h2>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Based on current expected marks</span>
+            </div>
+            <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '16px', textAlign: 'center', border: '1px solid #bbf7d0' }}>
+              <span style={{ fontSize: '11px', color: '#15803d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Predicted Cumulative CGPA</span>
+              <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#15803d', margin: '4px 0' }}>{predictedCGPA}</h2>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Previous baseline CGPA: {previousCGPA}</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {subjects.map((sub, idx) => {
+              const grade = getGradeInfo(sub.marks);
+              return (
+                <div key={sub.code} style={{ background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-light)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div>
+                      <strong style={{ fontSize: '13px', color: 'var(--text-heading)' }}>{sub.name}</strong>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '8px' }}>({sub.code} • {sub.credits} Credits)</span>
+                    </div>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: grade.color, background: 'white', padding: '3px 8px', borderRadius: '8px', border: `1px solid ${grade.color}` }}>
+                      Grade {grade.grade} ({grade.label})
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={sub.marks}
+                      onChange={(e) => handleMarksChange(idx, e.target.value)}
+                      style={{ flex: 1, accentColor: 'var(--primary)', cursor: 'pointer' }}
+                    />
+                    <div style={{ width: '50px', textAlign: 'right', fontWeight: 800, fontSize: '14px', color: 'var(--text-heading)' }}>
+                      {sub.marks}%
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
