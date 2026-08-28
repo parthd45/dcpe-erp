@@ -1,26 +1,113 @@
-import React, { useState } from 'react';
-import { Shield, CheckCircle2, AlertTriangle, Camera } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
+import { Shield, CheckCircle2, AlertTriangle, Camera, AlertCircle } from 'lucide-react';
 
 export default function QRScannerModal({ students = [], onClose }) {
   const [scannedResult, setScannedResult] = useState(null);
+  const [cameraError, setCameraError] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
+  const html5QrCodeRef = useRef(null);
 
-  const handleSimulateScan = (student) => {
-    setIsScanning(true);
-    setTimeout(() => {
-      setIsScanning(false);
-      const attendanceNum = parseFloat(student.attendance || '0');
-      const feesPaid = student.feesStatus?.toLowerCase().includes('paid') && !student.feesStatus?.toLowerCase().includes('unpaid');
-      const isEligible = attendanceNum >= 75 && feesPaid;
+  useEffect(() => {
+    const qrRegionId = "qr-reader-element";
+    
+    const timeoutId = setTimeout(() => {
+      const html5QrCode = new Html5Qrcode(qrRegionId);
+      html5QrCodeRef.current = html5QrCode;
+
+      setIsScanning(true);
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 220, height: 220 },
+        },
+        (decodedText) => {
+          handleQrSuccess(decodedText);
+        },
+        () => {}
+      ).catch((err) => {
+        console.error("Camera startup error:", err);
+        setCameraError("Camera Access Error: Please ensure you grant camera permissions and that no other application is using your webcam.");
+        setIsScanning(false);
+      });
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+      cleanupScanner();
+    };
+  }, []);
+
+  const cleanupScanner = async () => {
+    if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+      try {
+        await html5QrCodeRef.current.stop();
+      } catch (err) {
+        console.error("Error stopping scanner:", err);
+      }
+    }
+  };
+
+  const handleQrSuccess = async (decodedText) => {
+    await cleanupScanner();
+    setIsScanning(false);
+
+    try {
+      const data = JSON.parse(decodedText);
+      if (!data.prn) throw new Error("Invalid QR data format");
+
+      const matchedStudent = students.find(s => s.prn === data.prn);
       
+      const attendanceNum = parseFloat(matchedStudent?.attendance || data.attendance || '0');
+      const feesPaid = matchedStudent
+        ? matchedStudent.feesStatus?.toLowerCase().includes('paid') && !matchedStudent.feesStatus?.toLowerCase().includes('unpaid')
+        : data.feesStatus?.toLowerCase().includes('paid');
+
+      const isEligible = attendanceNum >= 75 && feesPaid;
+
       setScannedResult({
-        student,
+        student: matchedStudent || data,
         isEligible,
-        attendance: student.attendance || '0%',
-        feesStatus: student.feesStatus || 'Pending',
+        attendance: `${attendanceNum}%`,
+        feesStatus: feesPaid ? 'Paid ✓' : 'Pending',
         scanTime: new Date().toLocaleTimeString(),
       });
-    }, 1200);
+    } catch (err) {
+      console.error("Error parsing QR:", err);
+      setScannedResult({
+        student: { name: "Unknown Student / Code", prn: decodedText.slice(0, 20), course: "External Data" },
+        isEligible: false,
+        attendance: "N/A",
+        feesStatus: "N/A",
+        scanTime: new Date().toLocaleTimeString(),
+        rawText: decodedText
+      });
+    }
+  };
+
+  const handleScanNext = () => {
+    setScannedResult(null);
+    setCameraError(null);
+    setIsScanning(true);
+    
+    if (html5QrCodeRef.current) {
+      html5QrCodeRef.current.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 220, height: 220 },
+        },
+        (decodedText) => {
+          handleQrSuccess(decodedText);
+        },
+        () => {}
+      ).catch((err) => {
+        console.error("Camera restart error:", err);
+        setCameraError("Failed to restart camera stream.");
+        setIsScanning(false);
+      });
+    }
   };
 
   return (
@@ -51,10 +138,10 @@ export default function QRScannerModal({ students = [], onClose }) {
         }}
       >
         {/* Header */}
-        <div style={{ padding: '18px 24px', background: '#f8fafc', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyGroup: 'space-between', justifyContent: 'space-between' }}>
+        <div style={{ padding: '18px 24px', background: '#f8fafc', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Shield size={20} color="var(--primary)" />
-            <span style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>Exam Gatepass Verification Scanner</span>
+            <span style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>Live Exam Gatepass Verification Scanner</span>
           </div>
           <button className="btn btn-white btn-sm" onClick={onClose} style={{ padding: '4px 8px' }}>✕</button>
         </div>
@@ -65,86 +152,85 @@ export default function QRScannerModal({ students = [], onClose }) {
           {/* Scanning Box View */}
           {!scannedResult && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-              <div
-                style={{
-                  width: '240px',
-                  height: '240px',
-                  border: '3px solid var(--primary)',
-                  borderRadius: '20px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  background: '#0f172a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: 'inset 0 0 40px rgba(0,0,0,0.8)'
-                }}
-              >
-                {/* Neon Laser Line */}
+              
+              {cameraError ? (
+                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '16px', padding: '16px', color: '#b91c1c', fontSize: '13px', display: 'flex', gap: '10px', width: '100%' }}>
+                  <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>Camera Access Blocked</strong>
+                    <div style={{ marginTop: '4px', color: '#991b1b' }}>{cameraError}</div>
+                  </div>
+                </div>
+              ) : (
                 <div
                   style={{
-                    position: 'absolute',
-                    left: 0,
-                    width: '100%',
-                    height: '4px',
-                    background: '#10b981',
-                    boxShadow: '0 0 12px #10b981',
-                    top: isScanning ? '80%' : '10%',
-                    animation: 'scanLine 2s linear infinite'
+                    width: '260px',
+                    height: '260px',
+                    border: '3px solid var(--primary)',
+                    borderRadius: '24px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: '#0f172a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: 'inset 0 0 40px rgba(0,0,0,0.8)'
                   }}
-                />
-                
-                <style>{`
-                  @keyframes scanLine {
-                    0% { top: 10%; }
-                    50% { top: 90%; }
-                    100% { top: 10%; }
-                  }
-                `}</style>
+                >
+                  {/* Neon Laser Line */}
+                  {isScanning && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        width: '100%',
+                        height: '4px',
+                        background: '#10b981',
+                        boxShadow: '0 0 12px #10b981',
+                        animation: 'scanLine 2s linear infinite',
+                        zIndex: 10
+                      }}
+                    />
+                  )}
+                  
+                  <style>{`
+                    @keyframes scanLine {
+                      0% { top: 10%; }
+                      50% { top: 90%; }
+                      100% { top: 10%; }
+                    }
+                  `}</style>
 
-                {isScanning ? (
-                  <div style={{ color: 'white', fontSize: '12px', fontWeight: 700 }}>
-                    🔍 DECODING QR DATA...
-                  </div>
-                ) : (
-                  <div style={{ color: '#94a3b8', fontSize: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                    <Camera size={32} />
-                    <span>Live Camera Feed Active</span>
-                  </div>
-                )}
-              </div>
+                  <div 
+                    id="qr-reader-element" 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover',
+                      background: 'black'
+                    }}
+                  />
+                </div>
+              )}
               
               <div style={{ textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>
-                Position student's hall ticket QR code inside the frame to scan
+                {isScanning ? (
+                  <span style={{ color: '#10b981', fontWeight: 600 }}>🟢 Webcam stream active — Point at student hall ticket QR</span>
+                ) : (
+                  <span>Camera loading...</span>
+                )}
               </div>
 
-              {/* Simulation Helper */}
-              <div style={{ width: '100%', borderTop: '1px solid var(--border-light)', paddingTop: '16px', marginTop: '10px' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-heading)', marginBottom: '10px', textTransform: 'uppercase' }}>
-                  🎯 Simulate QR Code Scan (Demo Panel)
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
-                  {students.length === 0 ? (
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No student records in database for this department.</div>
-                  ) : (
-                    students.map(s => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        className="btn btn-white btn-sm"
-                        style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '10px', width: '100%', border: '1px solid var(--border-light)' }}
-                        onClick={() => handleSimulateScan(s)}
-                      >
-                        <div style={{ textAlign: 'left' }}>
-                          <strong style={{ display: 'block', fontSize: '12px', color: 'var(--text-heading)' }}>{s.name}</strong>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>PRN: {s.prn} • Attendance: {s.attendance}</span>
-                        </div>
-                        <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>Scan QR →</span>
-                      </button>
-                    ))
-                  )}
-                </div>
+              {/* Demo Scan Help Panel */}
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-light)', width: '100%', marginTop: '10px' }}>
+                <h5 style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 800, color: 'var(--text-heading)', textTransform: 'uppercase' }}>
+                  💡 Testing Instructions:
+                </h5>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                  Instruct the student to open their <strong>Exam Hall Ticket Modal</strong> on their portal and show the QR code. Hold their screen up to this camera. The scanner will decode, verify eligibility, and render an admit/detain decision immediately.
+                </p>
               </div>
+
             </div>
           )}
 
@@ -197,7 +283,7 @@ export default function QRScannerModal({ students = [], onClose }) {
                     </tr>
                     <tr>
                       <td style={{ padding: '8px 0', color: 'var(--text-muted)' }}>Semester Fee Status:</td>
-                      <td style={{ padding: '8px 0', fontWeight: 700, color: scannedResult.feesStatus?.toLowerCase().includes('paid') && !scannedResult.feesStatus?.toLowerCase().includes('unpaid') ? '#059669' : '#d97706' }}>
+                      <td style={{ padding: '8px 0', fontWeight: 700, color: scannedResult.feesStatus?.toLowerCase().includes('paid') ? '#059669' : '#d97706' }}>
                         {scannedResult.feesStatus}
                       </td>
                     </tr>
@@ -210,7 +296,7 @@ export default function QRScannerModal({ students = [], onClose }) {
                 type="button"
                 className="btn btn-primary"
                 style={{ width: '100%', padding: '12px' }}
-                onClick={() => setScannedResult(null)}
+                onClick={handleScanNext}
               >
                 Scan Next Gatepass QR Code
               </button>

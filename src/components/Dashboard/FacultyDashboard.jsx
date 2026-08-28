@@ -3,8 +3,9 @@ import { useAuth } from '../../context/AuthContext';
 import {
   BookOpen, Calendar, CheckCircle2, XCircle, Clock, UserCheck,
   Send, Search, LogOut, Users, Sparkles, AlertCircle, History,
-  Building2, CheckSquare, Square, Award, Save, TrendingUp
+  Building2, CheckSquare, Square, Award, Save, TrendingUp, Shield
 } from 'lucide-react';
+import QRScannerModal from './QRScannerModal';
 import {
   fetchFacultyAssignedSubjects,
   fetchSubjectStudents,
@@ -28,6 +29,7 @@ export default function FacultyDashboard({ onBackToHome }) {
 
   const [activeFacultyTab, setActiveFacultyTab] = useState('attendance'); // 'attendance' | 'marks' | 'leaves'
   const [showTimetableModal, setShowTimetableModal] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   // Teacher Leaves State
   const [pendingLeaves, setPendingLeaves] = useState([]);
@@ -430,6 +432,16 @@ export default function FacultyDashboard({ onBackToHome }) {
                 {pendingLeaves.length}
               </span>
             )}
+          </button>
+          
+          <button
+            className="hod-tab-btn"
+            style={{ border: '1px solid #10b981', color: '#047857', background: '#ecfdf5', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            onClick={() => setShowQRScanner(true)}
+            title="Open camera scanner to verify exam entrance eligibility"
+          >
+            <Shield size={16} />
+            Scan Exam Gatepass QR
           </button>
         </div>
 
@@ -1035,6 +1047,14 @@ export default function FacultyDashboard({ onBackToHome }) {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ── Secure Exam Gatepass QR Scanner Modal ── */}
+        {showQRScanner && (
+          <QRScannerModal
+            students={students}
+            onClose={() => setShowQRScanner(false)}
+          />
         )}
 
       </div>
