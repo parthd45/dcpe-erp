@@ -151,6 +151,33 @@ export default function AdminDashboard({ onBackToHome }) {
     { id: 'vocational', name: 'Department of Vocational & Skill Education', code: 'VOC', hod: 'HOD Vocational' },
   ];
 
+  // Predefined designations list
+  const DESIGNATIONS = [
+    'Assistant Professor',
+    'Associate Professor',
+    'Professor',
+    'Head of Department (HOD)',
+    'Director',
+    'Principal',
+    'Registrar',
+    'Lab Instructor / Assistant',
+    'Academic Coordinator',
+    'Assistant Registrar',
+    'Administrative Officer',
+    'Senior Clerk',
+    'Junior Clerk'
+  ];
+
+  // Helper to auto-generate staff email address based on name and role
+  const autoGenerateEmail = (name, role) => {
+    if (!name || !name.trim()) return '';
+    const parts = name.trim().toLowerCase().split(/\s+/);
+    // Take the last part of name (usually last name/surname)
+    const identifier = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+    const cleanIdentifier = identifier.replace(/[^a-z0-9]/g, '');
+    return `${role}.${cleanIdentifier}@dcpehvpm.org`;
+  };
+
   const deptStats = DEPARTMENTS.map((dept) => {
     const deptStus = students.filter((s) => s.department === dept.id);
     const pending = deptStus.filter((s) => s.status === 'pending').length;
@@ -918,13 +945,36 @@ export default function AdminDashboard({ onBackToHome }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                   <div className="form-group">
                     <label className="form-label">Full Name *</label>
-                    <input type="text" className="form-input" placeholder="Prof. A. B. Deshmukh"
-                      value={newStaffForm.name} onChange={(e) => setNewStaffForm({ ...newStaffForm, name: e.target.value })} required />
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Jaydeep Ravat"
+                      value={newStaffForm.name}
+                      onChange={(e) => {
+                        const newName = e.target.value;
+                        setNewStaffForm((prev) => {
+                          const nextForm = { ...prev, name: newName };
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          if (!prev.email || prev.email === oldAutoGen) {
+                            nextForm.email = autoGenerateEmail(newName, prev.role);
+                          }
+                          return nextForm;
+                        });
+                      }}
+                      required
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Designation</label>
-                    <input type="text" className="form-input" placeholder="Assistant Professor"
-                      value={newStaffForm.designation} onChange={(e) => setNewStaffForm({ ...newStaffForm, designation: e.target.value })} />
+                    <select
+                      className="form-select"
+                      value={newStaffForm.designation}
+                      onChange={(e) => setNewStaffForm({ ...newStaffForm, designation: e.target.value })}
+                    >
+                      {DESIGNATIONS.map((des) => (
+                        <option key={des} value={des}>{des}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -956,7 +1006,21 @@ export default function AdminDashboard({ onBackToHome }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                   <div className="form-group">
                     <label className="form-label">Account Role</label>
-                    <select className="form-select" value={newStaffForm.role} onChange={(e) => setNewStaffForm({ ...newStaffForm, role: e.target.value })}>
+                    <select
+                      className="form-select"
+                      value={newStaffForm.role}
+                      onChange={(e) => {
+                        const newRole = e.target.value;
+                        setNewStaffForm((prev) => {
+                          const nextForm = { ...prev, role: newRole };
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          if (!prev.email || prev.email === oldAutoGen) {
+                            nextForm.email = autoGenerateEmail(prev.name, newRole);
+                          }
+                          return nextForm;
+                        });
+                      }}
+                    >
                       <option value="faculty">Faculty Teacher</option>
                       <option value="hod">Head of Department (HOD)</option>
                       <option value="admin">Administrator</option>
@@ -1004,13 +1068,35 @@ export default function AdminDashboard({ onBackToHome }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                   <div className="form-group">
                     <label className="form-label">Full Name *</label>
-                    <input type="text" className="form-input"
-                      value={editStaffForm.name} onChange={(e) => setEditStaffForm({ ...editStaffForm, name: e.target.value })} required />
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={editStaffForm.name}
+                      onChange={(e) => {
+                        const newName = e.target.value;
+                        setEditStaffForm((prev) => {
+                          const nextForm = { ...prev, name: newName };
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          if (!prev.email || prev.email === oldAutoGen) {
+                            nextForm.email = autoGenerateEmail(newName, prev.role);
+                          }
+                          return nextForm;
+                        });
+                      }}
+                      required
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Designation</label>
-                    <input type="text" className="form-input"
-                      value={editStaffForm.designation} onChange={(e) => setEditStaffForm({ ...editStaffForm, designation: e.target.value })} />
+                    <select
+                      className="form-select"
+                      value={editStaffForm.designation}
+                      onChange={(e) => setEditStaffForm({ ...editStaffForm, designation: e.target.value })}
+                    >
+                      {DESIGNATIONS.map((des) => (
+                        <option key={des} value={des}>{des}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -1041,7 +1127,21 @@ export default function AdminDashboard({ onBackToHome }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                   <div className="form-group">
                     <label className="form-label">Account Role</label>
-                    <select className="form-select" value={editStaffForm.role} onChange={(e) => setEditStaffForm({ ...editStaffForm, role: e.target.value })}>
+                    <select
+                      className="form-select"
+                      value={editStaffForm.role}
+                      onChange={(e) => {
+                        const newRole = e.target.value;
+                        setEditStaffForm((prev) => {
+                          const nextForm = { ...prev, role: newRole };
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          if (!prev.email || prev.email === oldAutoGen) {
+                            nextForm.email = autoGenerateEmail(prev.name, newRole);
+                          }
+                          return nextForm;
+                        });
+                      }}
+                    >
                       <option value="faculty">Faculty Teacher</option>
                       <option value="hod">Head of Department (HOD)</option>
                       <option value="admin">Administrator</option>
