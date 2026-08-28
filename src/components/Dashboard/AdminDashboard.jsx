@@ -385,6 +385,39 @@ export default function AdminDashboard({ onBackToHome }) {
     }
   };
 
+  // Export Faculty/Staff roster to CSV/Excel
+  const handleExportStaffCSV = () => {
+    const headers = [
+      'Staff Name',
+      'Designation',
+      'Institutional Email',
+      'Account Role',
+      'Department Name'
+    ];
+
+    const rows = staffList.map(s => [
+      s.name,
+      s.designation || 'Staff',
+      s.email,
+      s.role.toUpperCase(),
+      s.department_name || 'Central Administration'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `DCPE_Faculty_Staff_List_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // ── Delete a staff account (with inline confirmation)
   const handleDeleteStaff = async (staffId) => {
     try {
@@ -841,9 +874,14 @@ export default function AdminDashboard({ onBackToHome }) {
                 </p>
               </div>
 
-              <button className="btn btn-primary btn-sm" onClick={openAddStaffModal}>
-                <UserPlus size={16} /> Add New Faculty Member
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button className="btn btn-outline-dark btn-sm" onClick={handleExportStaffCSV}>
+                  📥 Export Staff List (CSV)
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={openAddStaffModal}>
+                  <UserPlus size={16} /> Add New Faculty Member
+                </button>
+              </div>
             </div>
 
             <div className="table-responsive">

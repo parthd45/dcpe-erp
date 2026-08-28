@@ -249,6 +249,54 @@ export default function HODDashboard({ onBackToHome }) {
     setEditingLectureIdx(null);
   };
 
+  // Attendance Warning Letter State
+  const [warningStudent, setWarningStudent] = useState(null);
+
+  // Export student list to Excel/CSV
+  const handleExportStudentsCSV = () => {
+    const headers = [
+      'Student Name',
+      'PRN',
+      'Roll Number',
+      'Email',
+      'Course',
+      'Year',
+      'Department',
+      'Attendance',
+      'CGPA',
+      'Fees Status',
+      'Registration Status'
+    ];
+
+    const rows = filteredList.map(s => [
+      s.name,
+      s.prn,
+      s.rollNo || 'Pending',
+      s.email,
+      s.course,
+      s.year,
+      s.departmentName,
+      s.attendance || '0.0%',
+      s.cgpa || 'N/A',
+      s.feesStatus || 'Pending',
+      s.status
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `DCPE_Student_Roster_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleHodReview = async (appId, decision) => {
     const app = hodLeaves.find((a) => a.id === appId);
     const isLong = app && (app.requiresPrincipal || app.totalDays >= 10);
@@ -668,15 +716,26 @@ export default function HODDashboard({ onBackToHome }) {
                 ))}
               </div>
 
-              <div className="form-input-wrap" style={{ flex: 1, minWidth: '240px' }}>
-                <span className="form-input-icon"><Search size={16} /></span>
-                <input
-                  type="text"
-                  placeholder="Search by Student Name, PRN, Email, or Course..."
-                  className="form-input"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div style={{ display: 'flex', gap: '10px', flex: 1, minWidth: '240px' }}>
+                <div className="form-input-wrap" style={{ flex: 1 }}>
+                  <span className="form-input-icon"><Search size={16} /></span>
+                  <input
+                    type="text"
+                    placeholder="Search by Student Name, PRN, Email, or Course..."
+                    className="form-input"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-outline-dark"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', height: '42px', padding: '0 16px', borderRadius: '10px' }}
+                  onClick={handleExportStudentsCSV}
+                  title="Export filtered student list to CSV file"
+                >
+                  📥 Export (CSV)
+                </button>
               </div>
             </div>
 
@@ -835,16 +894,26 @@ export default function HODDashboard({ onBackToHome }) {
                                 <FileBadge size={13} />
                                 Inspect Docs
                               </button>
-                              <button
-                                className="btn btn-outline-dark btn-sm"
-                                style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                onClick={() => handleOpenManager(student)}
-                                title="Open Dedicated Student Academic & Fee Manager Page"
-                              >
-                                <Edit3 size={12} />
-                                Manage Record
-                              </button>
-                            </div>
+                               <button
+                                 className="btn btn-outline-dark btn-sm"
+                                 style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                 onClick={() => handleOpenManager(student)}
+                                 title="Open Dedicated Student Academic & Fee Manager Page"
+                               >
+                                 <Edit3 size={12} />
+                                 Manage Record
+                               </button>
+                               {parseFloat(student.attendance || '0') < 75 && (
+                                 <button
+                                   className="btn btn-outline-dark btn-sm"
+                                   style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', borderColor: '#f59e0b', color: '#b45309', background: '#fffbeb' }}
+                                   onClick={() => setWarningStudent(student)}
+                                   title="Print Official Attendance shortage warning letter for this student"
+                                 >
+                                   ⚠️ Warning Letter
+                                 </button>
+                               )}
+                             </div>
                           )}
                           {student.status === 'rejected' && (
                             <button
@@ -1639,6 +1708,190 @@ export default function HODDashboard({ onBackToHome }) {
             onUpdateStatus={updateStudentDocuments}
             onClose={() => setVerificationStudent(null)}
           />
+        )}
+
+        {/* ── Attendance Warning Letter Printable Modal ── */}
+        {warningStudent && (
+          <div
+            className="no-print-backdrop"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.75)',
+              backdropFilter: 'blur(6px)',
+              zIndex: 1100,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+              overflowY: 'auto'
+            }}
+            onClick={() => setWarningStudent(null)}
+          >
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '24px',
+                maxWidth: '720px',
+                width: '100%',
+                boxShadow: 'var(--shadow-xl)',
+                overflow: 'hidden',
+                maxHeight: '90vh',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Top Action Bar (Hidden during print) */}
+              <div
+                className="no-print"
+                style={{
+                  padding: '16px 24px',
+                  background: '#f8fafc',
+                  borderBottom: '1px solid var(--border-light)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexShrink: 0
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '14px', color: 'var(--text-heading)' }}>
+                  <AlertCircle size={18} color="#b45309" />
+                  Official Attendance Shortage Warning Letter Preview
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => window.print()}
+                    style={{ background: '#b45309', border: 'none' }}
+                  >
+                    <Printer size={15} /> Print / Save Letter PDF
+                  </button>
+                  <button className="btn btn-white btn-sm" onClick={() => setWarningStudent(null)}>
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Letter Document Container */}
+              <div style={{ padding: '36px', overflowY: 'auto', flex: 1, background: '#f1f5f9' }}>
+                <div
+                  id="printable-warning-letter"
+                  style={{
+                    background: 'white',
+                    border: '1px solid #cbd5e1',
+                    padding: '48px',
+                    fontFamily: '"Times New Roman", Times, serif',
+                    color: '#0f172a',
+                    lineHeight: '1.6',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                    position: 'relative'
+                  }}
+                >
+                  <style>{`
+                    @media print {
+                      body * {
+                        visibility: hidden !important;
+                      }
+                      #printable-warning-letter, #printable-warning-letter * {
+                        visibility: visible !important;
+                      }
+                      #printable-warning-letter {
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        border: none !important;
+                        padding: 0 !important;
+                        box-shadow: none !important;
+                      }
+                      .no-print-backdrop {
+                        background: none !important;
+                        backdrop-filter: none !important;
+                        padding: 0 !important;
+                      }
+                    }
+                  `}</style>
+                  {/* Institution Letterhead Banner */}
+                  <div style={{ textAlign: 'center', borderBottom: '2px double #0f172a', paddingBottom: '16px', marginBottom: '24px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: 800, margin: '0 0 4px', letterSpacing: '0.12em', color: '#1e3a8a' }}>
+                      SHREE HANUMAN VYAYAM PRASARAK MANDAL'S
+                    </h4>
+                    <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#1e3b8b', margin: '4px 0' }}>
+                      DEGREE COLLEGE OF PHYSICAL EDUCATION
+                    </h2>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>
+                      HVPM Campus, Amravati, Maharashtra - 444605
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                      Autonomous College | Affiliated to Sant Gadge Baba Amravati University
+                    </div>
+                  </div>
+
+                  {/* Ref & Date info */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '14px' }}>
+                    <div>
+                      <strong>Ref No:</strong> DCPE/ESTD/ATTN-WARN/{new Date().getFullYear()}/{warningStudent.prn.slice(-4)}
+                    </div>
+                    <div>
+                      <strong>Date:</strong> {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </div>
+                  </div>
+
+                  {/* Addressee Info */}
+                  <div style={{ marginBottom: '24px', fontSize: '14px' }}>
+                    <div>To,</div>
+                    <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{warningStudent.name}</div>
+                    <div>PRN: {warningStudent.prn} | Roll No: {warningStudent.rollNo || 'Pending'}</div>
+                    <div>Program: {warningStudent.course} ({warningStudent.year})</div>
+                    <div>Department of {currentUser.departmentName || 'Computer Science & Technology'}</div>
+                  </div>
+
+                  {/* Subject Line */}
+                  <div style={{ marginBottom: '20px', fontSize: '15px', textDecoration: 'underline', fontWeight: 700 }}>
+                    Subject: WARNING LETTER REGARDING CRITICAL ATTENDANCE SHORTAGE
+                  </div>
+
+                  {/* Letter Body */}
+                  <div style={{ fontSize: '14px', textAlign: 'justify', marginBottom: '24px' }}>
+                    <p style={{ marginBottom: '14px' }}>Dear Student,</p>
+                    <p style={{ marginBottom: '14px' }}>
+                      This is an official notice to inform you that your current cumulative attendance in the ongoing term is recorded at{' '}
+                      <strong style={{ color: '#b91c1c', textDecoration: 'underline' }}>{warningStudent.attendance || '0%'}</strong>. This falls critically below the mandatory minimum of{' '}
+                      <strong>75%</strong> attendance required under university regulations and institute guidelines to be eligible to appear for the end-semester examinations.
+                    </p>
+                    <p style={{ marginBottom: '14px' }}>
+                      Please be advised that regular attendance in theory classes and practical sessions is essential for your academic progress and is a prerequisite for permission to sit for exam panels. If your attendance does not improve immediately, the college administration reserves the right to bar your name from university exam registrations and lock your hall ticket.
+                    </p>
+                    <p style={{ marginBottom: '14px' }}>
+                      You are hereby directed to meet with the Head of Department (HOD) immediately upon receipt of this letter to submit a written explanation for your absences, along with medical or official documents supporting your leave if applicable.
+                    </p>
+                    <p>We trust you will give this matter your immediate attention and work to restore your attendance to the required compliance level.</p>
+                  </div>
+
+                  {/* Signatures */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '60px', fontSize: '14px' }}>
+                    <div style={{ textAlign: 'center', width: '200px' }}>
+                      <div style={{ height: '40px' }}></div>
+                      <div style={{ borderTop: '1px solid #0f172a', paddingTop: '6px', fontWeight: 700 }}>
+                        Class Coordinator
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>Dept. of {currentUser.departmentName || 'Computer Science'}</div>
+                    </div>
+                    <div style={{ textAlign: 'center', width: '200px' }}>
+                      <div style={{ height: '40px', fontFamily: '"Brush Script MT", cursive', fontSize: '20px', color: '#1e3b8b' }}>
+                        {currentUser.name}
+                      </div>
+                      <div style={{ borderTop: '1px solid #0f172a', paddingTop: '6px', fontWeight: 700 }}>
+                        Head of Department (HOD)
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>Official Seal &amp; Authority</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* ── Document Viewer Modal ── */}
