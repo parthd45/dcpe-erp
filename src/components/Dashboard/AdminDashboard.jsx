@@ -582,6 +582,186 @@ export default function AdminDashboard({ onBackToHome }) {
               </button>
             </div>
 
+            {/* Visual Charts Dashboard Section */}
+            {(() => {
+              const maxVal = Math.max(...deptStats.map(d => d.totalCount), 10);
+              const totalFeePaid = totalFeePaidCount;
+              const totalFeePending = totalStudentsCount - totalFeePaid;
+              const feePaidPercent = Math.round((totalFeePaid / (totalStudentsCount || 1)) * 100);
+              
+              // Doughnut SVG calculations
+              const radius = 60;
+              const circumference = 2 * Math.PI * radius;
+              const strokeDashoffset = circumference - (feePaidPercent / 100) * circumference;
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                  {/* Department Comparison Bar Chart */}
+                  <div style={{ background: 'white', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-xl)', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
+                    <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 700, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <BarChart3 size={18} color="var(--primary)" />
+                      Departmental Student Distribution Comparison
+                    </h4>
+                    
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', fontSize: '11px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '12px', height: '12px', background: 'var(--primary)', borderRadius: '3px' }}></span>
+                        <span style={{ color: 'var(--text-muted)' }}>Total Students</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '12px', height: '12px', background: '#059669', borderRadius: '3px' }}></span>
+                        <span style={{ color: 'var(--text-muted)' }}>Approved Active</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '12px', height: '12px', background: '#dc2626', borderRadius: '3px' }}></span>
+                        <span style={{ color: 'var(--text-muted)' }}>Attendance Shortage</span>
+                      </div>
+                    </div>
+
+                    <div style={{ height: '220px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingBottom: '20px', borderBottom: '1px solid var(--border-light)', position: 'relative' }}>
+                      {/* Grid background lines */}
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none' }}>
+                        {[0, 1, 2, 3].map((i) => (
+                          <div key={i} style={{ width: '100%', borderBottom: '1px dashed var(--border-light)', height: 0 }}></div>
+                        ))}
+                      </div>
+
+                      {deptStats.map((dept) => {
+                        const totalH = (dept.totalCount / maxVal) * 160;
+                        const approvedH = (dept.approvedCount / maxVal) * 160;
+                        const shortageH = (dept.shortageCount / maxVal) * 160;
+
+                        return (
+                          <div key={dept.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, zIndex: 1, position: 'relative' }}>
+                            {/* Bars container */}
+                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '160px', position: 'relative' }}>
+                              
+                              {/* Tooltip on group hover */}
+                              <div className="chart-tooltip" style={{
+                                position: 'absolute',
+                                bottom: `${Math.max(totalH, approvedH, shortageH) + 10}px`,
+                                background: 'rgba(15, 23, 42, 0.95)',
+                                color: 'white',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                fontSize: '10px',
+                                whiteSpace: 'nowrap',
+                                pointerEvents: 'none',
+                                opacity: 0,
+                                transform: 'translateY(10px) translateX(-50%)',
+                                left: '50%',
+                                transition: 'all 0.2s ease',
+                                boxShadow: 'var(--shadow-md)',
+                              }}>
+                                <strong>{dept.name}</strong><br/>
+                                • Total: {dept.totalCount}<br/>
+                                • Approved: {dept.approvedCount}<br/>
+                                • Shortage: {dept.shortageCount}
+                              </div>
+
+                              <style>{`
+                                div[key="${dept.id}"]:hover .chart-tooltip {
+                                  opacity: 1 !important;
+                                  transform: translateY(0) translateX(-50%) !important;
+                                }
+                              `}</style>
+
+                              {/* Total Bar */}
+                              <div style={{
+                                width: '12px',
+                                height: `${Math.max(totalH, 4)}px`,
+                                background: 'var(--primary)',
+                                borderRadius: '3px 3px 0 0',
+                                transition: 'height 0.8s ease',
+                              }}></div>
+
+                              {/* Approved Bar */}
+                              <div style={{
+                                width: '12px',
+                                height: `${Math.max(approvedH, 4)}px`,
+                                background: '#059669',
+                                borderRadius: '3px 3px 0 0',
+                                transition: 'height 0.8s ease',
+                              }}></div>
+
+                              {/* Shortage Bar */}
+                              <div style={{
+                                width: '12px',
+                                height: `${Math.max(shortageH, 4)}px`,
+                                background: '#dc2626',
+                                borderRadius: '3px 3px 0 0',
+                                transition: 'height 0.8s ease',
+                              }}></div>
+                            </div>
+                            
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-heading)', marginTop: '8px' }}>
+                              {dept.code}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* College Fees Clearance Ring Chart */}
+                  <div style={{ background: 'white', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-xl)', padding: '24px', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+                    <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 700, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ShieldCheck size={18} color="#059669" />
+                      Fee Clearance Status
+                    </h4>
+
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                      <svg width="150" height="150" viewBox="0 0 150 150">
+                        {/* Background Ring */}
+                        <circle
+                          cx="75"
+                          cy="75"
+                          r={radius}
+                          fill="transparent"
+                          stroke="#f1f5f9"
+                          strokeWidth="14"
+                        />
+                        {/* Foreground Progress Ring */}
+                        <circle
+                          cx="75"
+                          cy="75"
+                          r={radius}
+                          fill="transparent"
+                          stroke="#059669"
+                          strokeWidth="14"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={strokeDashoffset}
+                          strokeLinecap="round"
+                          transform="rotate(-90 75 75)"
+                          style={{ transition: 'stroke-dashoffset 0.8s ease-in-out' }}
+                        />
+                      </svg>
+                      {/* Percent Center Label */}
+                      <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <span style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text-heading)' }}>
+                          {feePaidPercent}%
+                        </span>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Cleared
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px', fontSize: '12px', borderTop: '1px solid var(--border-light)', paddingTop: '14px' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>Paid Students</span>
+                        <strong style={{ color: '#059669', fontSize: '15px' }}>{totalFeePaid}</strong>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>Pending Check</span>
+                        <strong style={{ color: '#d97706', fontSize: '15px' }}>{totalFeePending}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Department Comparison Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
               {deptStats.map((dept) => (
