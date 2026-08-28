@@ -278,3 +278,18 @@ CREATE POLICY "Public All Placement Apps" ON public.placement_applications FOR A
 CREATE POLICY "Public All Student Leaves" ON public.student_leaves FOR ALL USING (true);
 CREATE POLICY "Public All Library Books" ON public.library_books FOR ALL USING (true);
 CREATE POLICY "Public All Library Issues" ON public.library_issues FOR ALL USING (true);
+
+-- 17. TIMETABLES TABLE
+CREATE TABLE IF NOT EXISTS public.timetables (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    department_id TEXT NOT NULL,
+    course TEXT NOT NULL,
+    day TEXT NOT NULL,
+    schedule JSONB DEFAULT '[]'::jsonb,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE (department_id, course, day)
+);
+
+ALTER TABLE public.timetables ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public All Timetables" ON public.timetables;
+CREATE POLICY "Public All Timetables" ON public.timetables FOR ALL USING (true);

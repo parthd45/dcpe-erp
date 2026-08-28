@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar, Clock, MapPin, User, BookOpen, X, Printer,
   CheckCircle2, Sparkles, Building2, ChevronRight, Layers, Bell
 } from 'lucide-react';
+import { getTimetable } from '../../lib/timetableService';
 import './Dashboard.css';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -65,8 +66,35 @@ export function TimetableModal({ currentUser, onClose }) {
   const todayName = currentDayIndex >= 1 && currentDayIndex <= 6 ? DAYS[currentDayIndex - 1] : 'Monday';
 
   const [selectedDay, setSelectedDay] = useState(todayName);
+  const [scheduleForDay, setScheduleForDay] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const scheduleForDay = DEFAULT_SCHEDULE[selectedDay] || [];
+  const userDept = currentUser.department || 'cs';
+  const userCourse = currentUser.course || 'MCA';
+
+  useEffect(() => {
+    async function loadLiveTimetable() {
+      setIsLoading(true);
+      try {
+        const res = await getTimetable(userDept, userCourse, selectedDay);
+        if (res && Array.isArray(res)) {
+          setScheduleForDay(res);
+        } else {
+          // Fallback to local default schedule if CS and MCA
+          if (userDept === 'cs' && userCourse === 'MCA') {
+            setScheduleForDay(DEFAULT_SCHEDULE[selectedDay] || []);
+          } else {
+            setScheduleForDay([]);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadLiveTimetable();
+  }, [userDept, userCourse, selectedDay]);
 
   const handlePrint = () => {
     window.print();
@@ -200,7 +228,18 @@ export function TimetableModal({ currentUser, onClose }) {
 
           {/* Schedule List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {scheduleForDay.map((slot, idx) => {
+            {isLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '14px', fontWeight: 600 }}>🔄 Syncing live timetable...</div>
+              </div>
+            ) : scheduleForDay.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', background: 'var(--bg-body)', borderRadius: '14px', border: '1px dashed var(--border-light)' }}>
+                <Calendar size={32} style={{ marginBottom: '12px', color: 'var(--text-muted)' }} />
+                <div style={{ fontSize: '14px', fontWeight: 600 }}>No lectures scheduled for {selectedDay}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Enjoy your day off!</div>
+              </div>
+            ) : (
+              scheduleForDay.map((slot, idx) => {
               const isBreak = slot.type === 'Break';
               const isLab = slot.type === 'Lab';
               const isSports = slot.type === 'Sports';
@@ -304,7 +343,7 @@ export function TimetableModal({ currentUser, onClose }) {
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </div>
       </div>

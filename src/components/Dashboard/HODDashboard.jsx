@@ -5,7 +5,7 @@ import {
   ShieldCheck, LogOut, UserCheck, Megaphone,
   GraduationCap, Send, Trash2, Globe, Building2, AlertCircle,
   Edit3, Award, CreditCard, TrendingUp, Save, FileCheck, FileBadge,
-  Briefcase, RefreshCw
+  Briefcase, RefreshCw, Calendar, Plus, Edit, BookOpen, MapPin, User
 } from 'lucide-react';
 import {
   fetchStaffNotices, postNotice, archiveNotice, subscribeToNotices
@@ -14,6 +14,7 @@ import {
   fetchHODPendingApplications,
   reviewLeaveApplication
 } from '../../lib/leaveService';
+import { getTimetable, saveTimetable } from '../../lib/timetableService';
 import StudentManager from './StudentManager';
 import PlacementManager from './PlacementManager';
 import { DocumentVerificationModal } from './StudentDocumentModals';
@@ -27,6 +28,56 @@ const TAG_OPTIONS = [
   { value: 'sports',    label: '🏅 Sports',       tagLabel: 'Sports' },
   { value: 'general',   label: '📌 General',      tagLabel: 'General' },
 ];
+
+const DEFAULT_SCHEDULE_FALLBACK = {
+  Monday: [
+    { time: '09:00 AM - 10:00 AM', code: 'MCA-501', subject: 'Cloud Computing & Virtualization', faculty: 'Prof. S. Sharma', room: 'Lab 4 (CS Building)', type: 'Theory' },
+    { time: '10:00 AM - 11:00 AM', code: 'MCA-502', subject: 'Machine Learning & Neural Networks', faculty: 'Dr. V. M. Thakare', room: 'Room 204', type: 'Theory' },
+    { time: '11:00 AM - 11:30 AM', code: 'RECESS', subject: 'Tea & Refreshment Break', faculty: '-', room: 'Campus Cafeteria', type: 'Break' },
+    { time: '11:30 AM - 01:30 PM', code: 'MCA-505P', subject: 'AI & Data Science Laboratory', faculty: 'Prof. S. Sharma', room: 'Advanced Computing Lab 2', type: 'Lab' },
+    { time: '01:30 PM - 02:15 PM', code: 'LUNCH', subject: 'Lunch Recess', faculty: '-', room: '-', type: 'Break' },
+    { time: '02:15 PM - 03:15 PM', code: 'MCA-503', subject: 'Advanced Database Systems', faculty: 'Dr. Ananya Roy', room: 'Room 204', type: 'Theory' },
+    { time: '03:15 PM - 04:15 PM', code: 'MCA-504', subject: 'Software Architecture & Design', faculty: 'Prof. R. Deshmukh', room: 'Room 204', type: 'Theory' },
+  ],
+  Tuesday: [
+    { time: '09:00 AM - 10:00 AM', code: 'MCA-503', subject: 'Advanced Database Systems', faculty: 'Dr. Ananya Roy', room: 'Room 204', type: 'Theory' },
+    { time: '10:00 AM - 11:00 AM', code: 'MCA-501', subject: 'Cloud Computing & Virtualization', faculty: 'Prof. S. Sharma', room: 'Room 204', type: 'Theory' },
+    { time: '11:00 AM - 11:30 AM', code: 'RECESS', subject: 'Tea & Refreshment Break', faculty: '-', room: 'Campus Cafeteria', type: 'Break' },
+    { time: '11:30 AM - 12:30 PM', code: 'MCA-502', subject: 'Machine Learning & Neural Networks', faculty: 'Dr. V. M. Thakare', room: 'Room 204', type: 'Theory' },
+    { time: '12:30 PM - 01:30 PM', code: 'MCA-506S', subject: 'Research Seminar & Case Study', faculty: 'Prof. R. Deshmukh', room: 'Seminar Hall 1', type: 'Seminar' },
+    { time: '01:30 PM - 02:15 PM', code: 'LUNCH', subject: 'Lunch Recess', faculty: '-', room: '-', type: 'Break' },
+    { time: '02:15 PM - 04:15 PM', code: 'MCA-507P', subject: 'Cloud Computing Practical Lab', faculty: 'Prof. S. Sharma', room: 'Lab 4 (CS Building)', type: 'Lab' },
+  ],
+  Wednesday: [
+    { time: '09:00 AM - 10:00 AM', code: 'MCA-502', subject: 'Machine Learning & Neural Networks', faculty: 'Dr. V. M. Thakare', room: 'Room 204', type: 'Theory' },
+    { time: '10:00 AM - 11:00 AM', code: 'MCA-504', subject: 'Software Architecture & Design', faculty: 'Prof. R. Deshmukh', room: 'Room 204', type: 'Theory' },
+    { time: '11:00 AM - 11:30 AM', code: 'RECESS', subject: 'Tea Break', faculty: '-', room: '-', type: 'Break' },
+    { time: '11:30 AM - 01:30 PM', code: 'MCA-508P', subject: 'Full Stack Web Engineering Lab', faculty: 'Dr. Ananya Roy', room: 'Web Tech Lab', type: 'Lab' },
+    { time: '01:30 PM - 02:15 PM', code: 'LUNCH', subject: 'Lunch Recess', faculty: '-', room: '-', type: 'Break' },
+    { time: '02:15 PM - 03:15 PM', code: 'MCA-501', subject: 'Cloud Computing & Virtualization', faculty: 'Prof. S. Sharma', room: 'Room 204', type: 'Theory' },
+    { time: '03:15 PM - 04:15 PM', code: 'MCA-509E', subject: 'Sports Analytics & Biometrics (Elective)', faculty: 'Prof. Kulkarni', room: 'Sports AV Room', type: 'Elective' },
+  ],
+  Thursday: [
+    { time: '09:00 AM - 10:00 AM', code: 'MCA-504', subject: 'Software Architecture & Design', faculty: 'Prof. R. Deshmukh', room: 'Room 204', type: 'Theory' },
+    { time: '10:00 AM - 11:00 AM', code: 'MCA-503', subject: 'Advanced Database Systems', faculty: 'Dr. Ananya Roy', room: 'Room 204', type: 'Theory' },
+    { time: '11:00 AM - 11:30 AM', code: 'RECESS', subject: 'Tea Break', faculty: '-', room: '-', type: 'Break' },
+    { time: '11:30 AM - 01:30 PM', code: 'MCA-510P', subject: 'DBMS Implementation & SQL Tuning', faculty: 'Dr. Ananya Roy', room: 'Lab 2', type: 'Lab' },
+    { time: '01:30 PM - 02:15 PM', code: 'LUNCH', subject: 'Lunch Recess', faculty: '-', room: '-', type: 'Break' },
+    { time: '02:15 PM - 04:15 PM', code: 'PROJECT', subject: 'Industry Major Project Mentorship', faculty: 'Dr. V. M. Thakare', room: 'Innovation Lab', type: 'Project' },
+  ],
+  Friday: [
+    { time: '09:00 AM - 10:00 AM', code: 'MCA-501', subject: 'Cloud Computing & Virtualization', faculty: 'Prof. S. Sharma', room: 'Room 204', type: 'Theory' },
+    { time: '10:00 AM - 11:00 AM', code: 'MCA-502', subject: 'Machine Learning & Neural Networks', faculty: 'Dr. V. M. Thakare', room: 'Room 204', type: 'Theory' },
+    { time: '11:00 AM - 11:30 AM', code: 'RECESS', subject: 'Tea Break', faculty: '-', room: '-', type: 'Break' },
+    { time: '11:30 AM - 01:00 PM', code: 'SPORTS', subject: 'Compulsory Physical Education & Yoga', faculty: 'Prof. S. Patil', room: 'Main Gymnasium Ground', type: 'Sports' },
+    { time: '01:00 PM - 02:00 PM', code: 'LUNCH', subject: 'Lunch Recess', faculty: '-', room: '-', type: 'Break' },
+    { time: '02:00 PM - 04:00 PM', code: 'PLACEMENT', subject: 'Placement Preparation & Mock Aptitude', faculty: 'T&P Cell Officers', room: 'Auditorium', type: 'Placement' },
+  ],
+  Saturday: [
+    { time: '09:00 AM - 11:00 AM', code: 'MCA-511E', subject: 'Expert Guest Lecture / Tech Talk', faculty: 'Industry Guest Speaker', room: 'Main AV Hall', type: 'Seminar' },
+    { time: '11:00 AM - 01:00 PM', code: 'LIBRARY', subject: 'Self-Study, Research & Library Hours', faculty: 'Librarian In-charge', room: 'Central Library', type: 'Study' },
+  ],
+};
 
 export default function HODDashboard({ onBackToHome }) {
   const {
@@ -75,8 +126,26 @@ export default function HODDashboard({ onBackToHome }) {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // ── Tab switcher
-  const [activeTab, setActiveTab] = useState('approvals'); // 'approvals' | 'notices' | 'manage' | 'placement' | 'leaves'
+  const [activeTab, setActiveTab] = useState('approvals'); // 'approvals' | 'notices' | 'manage' | 'placement' | 'leaves' | 'timetable'
   const [selectedForManageId, setSelectedForManageId] = useState(null);
+
+  // ── HOD Timetable Management States
+  const [timetableCourse, setTimetableCourse] = useState('MCA');
+  const [timetableDay, setTimetableDay] = useState('Monday');
+  const [timetableLectures, setTimetableLectures] = useState([]);
+  const [isSavingTimetable, setIsSavingTimetable] = useState(false);
+  const [timetableSaveStatus, setTimetableSaveStatus] = useState(null);
+  const [editingLectureIdx, setEditingLectureIdx] = useState(null);
+  const [showAddLectureModal, setShowAddLectureModal] = useState(false);
+  
+  const [lectureForm, setLectureForm] = useState({
+    time: '09:00 AM - 10:00 AM',
+    code: '',
+    subject: '',
+    faculty: '',
+    room: '',
+    type: 'Theory',
+  });
 
   // ── HOD Leaves state
   const [hodLeaves, setHodLeaves] = useState([]);
@@ -97,6 +166,88 @@ export default function HODDashboard({ onBackToHome }) {
   useEffect(() => {
     loadHodLeaves();
   }, [currentUser]);
+
+  // Load HOD Timetable
+  useEffect(() => {
+    async function loadTimetable() {
+      if (!currentUser?.department) return;
+      try {
+        const res = await getTimetable(currentUser.department, timetableCourse, timetableDay);
+        if (res && Array.isArray(res)) {
+          setTimetableLectures(res);
+        } else {
+          // Pre-fill fallback if MCA
+          if (currentUser.department === 'cs' && timetableCourse === 'MCA') {
+            setTimetableLectures(DEFAULT_SCHEDULE_FALLBACK[timetableDay] || []);
+          } else {
+            setTimetableLectures([]);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    if (activeTab === 'timetable') {
+      loadTimetable();
+    }
+  }, [timetableCourse, timetableDay, activeTab, currentUser]);
+
+  const handleSaveTimetable = async () => {
+    if (!currentUser?.department) return;
+    setIsSavingTimetable(true);
+    setTimetableSaveStatus(null);
+
+    const res = await saveTimetable(
+      currentUser.department,
+      timetableCourse,
+      timetableDay,
+      timetableLectures
+    );
+    setIsSavingTimetable(false);
+    if (res.success) {
+      setTimetableSaveStatus({ type: 'success', text: '✅ Timetable day schedule saved successfully!' });
+      setTimeout(() => setTimetableSaveStatus(null), 4000);
+    } else {
+      setTimetableSaveStatus({ type: 'error', text: `Failed to save: ${res.message}` });
+    }
+  };
+
+  const handleAddLecture = () => {
+    setEditingLectureIdx(null);
+    setLectureForm({
+      time: '09:00 AM - 10:00 AM',
+      code: '',
+      subject: '',
+      faculty: '',
+      room: '',
+      type: 'Theory',
+    });
+    setShowAddLectureModal(true);
+  };
+
+  const handleEditLecture = (idx) => {
+    const lecture = timetableLectures[idx];
+    setEditingLectureIdx(idx);
+    setLectureForm({ ...lecture });
+    setShowAddLectureModal(true);
+  };
+
+  const handleDeleteLecture = (idx) => {
+    setTimetableLectures(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleLectureFormSubmit = (e) => {
+    e.preventDefault();
+    if (editingLectureIdx !== null) {
+      // Update
+      setTimetableLectures(prev => prev.map((item, idx) => idx === editingLectureIdx ? lectureForm : item));
+    } else {
+      // Create new
+      setTimetableLectures(prev => [...prev, lectureForm]);
+    }
+    setShowAddLectureModal(false);
+    setEditingLectureIdx(null);
+  };
 
   const handleHodReview = async (appId, decision) => {
     const app = hodLeaves.find((a) => a.id === appId);
@@ -406,6 +557,14 @@ export default function HODDashboard({ onBackToHome }) {
                 {hodLeaves.length}
               </span>
             )}
+          </button>
+
+          <button
+            className={`hod-tab-btn ${activeTab === 'timetable' ? 'active' : ''}`}
+            onClick={() => setActiveTab('timetable')}
+          >
+            <Calendar size={16} />
+            Department Timetables
           </button>
         </div>
 
@@ -1202,6 +1361,274 @@ export default function HODDashboard({ onBackToHome }) {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════ */}
+        {/*  TAB 6: Department Timetable Editor        */}
+        {/* ═══════════════════════════════════════════ */}
+        {activeTab === 'timetable' && (
+          <div className="dashboard-panel">
+            <div className="panel-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <div className="panel-title">
+                  <Calendar size={22} color="var(--primary)" />
+                  Department Timetable Scheduler
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                  Manage, reschedule, and edit the live timetable for your department's courses
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button className="btn btn-primary btn-sm" onClick={handleAddLecture}>
+                  <Plus size={16} /> Add Lecture / Event
+                </button>
+              </div>
+            </div>
+
+            {/* Course & Day Selectors */}
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', background: 'var(--bg-body)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-light)', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Select Course</span>
+                <select className="form-select" style={{ width: '160px', padding: '8px 12px' }} value={timetableCourse} onChange={(e) => setTimetableCourse(e.target.value)}>
+                  <option value="MCA">MCA (Comp. Sci.)</option>
+                  <option value="BCA">BCA (Comp. Sci.)</option>
+                  <option value="BSC">B.Sc (Comp. Sci.)</option>
+                  <option value="BPED">B.P.Ed (Physical Ed)</option>
+                  <option value="BBA">BBA (Commerce)</option>
+                  <option value="VOC">B.Voc (Software Dev)</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Select Day</span>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setTimetableDay(d)}
+                      className={`btn btn-sm ${timetableDay === d ? 'btn-primary' : 'btn-white'}`}
+                      style={{ padding: '6px 12px', borderRadius: '6px' }}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {timetableSaveStatus && (
+              <div className={`alert-message ${timetableSaveStatus.type}`} style={{ marginBottom: '16px' }}>
+                {timetableSaveStatus.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                <div>{timetableSaveStatus.text}</div>
+              </div>
+            )}
+
+            {/* Timetable List Grid */}
+            <div className="table-responsive" style={{ border: '1px solid var(--border-light)', borderRadius: '12px' }}>
+              <table className="custom-table" style={{ background: 'white' }}>
+                <thead>
+                  <tr>
+                    <th>Time Slot</th>
+                    <th>Code</th>
+                    <th>Subject Name</th>
+                    <th>Faculty In-Charge</th>
+                    <th>Room / Lab</th>
+                    <th>Type</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {timetableLectures.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                        No lectures scheduled for {timetableDay} on this course. Click "Add Lecture" to set one up.
+                      </td>
+                    </tr>
+                  ) : (
+                    timetableLectures.map((lec, idx) => (
+                      <tr key={idx} style={{ background: lec.type === 'Break' ? '#f8fafc' : undefined }}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--text-heading)' }}>
+                            <Clock size={14} color="var(--primary)" />
+                            {lec.time}
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{
+                            padding: '3px 8px',
+                            background: lec.type === 'Break' ? '#e2e8f0' : 'var(--primary-50)',
+                            color: lec.type === 'Break' ? '#475569' : 'var(--primary)',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: 700
+                          }}>
+                            {lec.code || 'BREAK'}
+                          </span>
+                        </td>
+                        <td style={{ fontWeight: 600, color: 'var(--text-heading)' }}>{lec.subject}</td>
+                        <td>{lec.faculty || '-'}</td>
+                        <td>
+                          {lec.room ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                              <MapPin size={12} />
+                              {lec.room}
+                            </div>
+                          ) : '-'}
+                        </td>
+                        <td>
+                          <span className={`status-pill ${
+                            lec.type === 'Theory' ? 'approved' :
+                            lec.type === 'Lab' ? 'pending' : 'completed'
+                          }`} style={{ fontSize: '10px', padding: '2px 8px' }}>
+                            {lec.type}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                            <button className="action-btn" type="button" onClick={() => handleEditLecture(idx)} title="Edit Lecture" style={{ color: 'var(--primary)', border: 'none', background: 'none', cursor: 'pointer' }}>
+                              <Edit size={16} />
+                            </button>
+                            <button className="action-btn" type="button" onClick={() => handleDeleteLecture(idx)} title="Delete Lecture" style={{ color: '#dc2626', border: 'none', background: 'none', cursor: 'pointer' }}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Bottom Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', gap: '12px' }}>
+              <button
+                type="button"
+                className="btn btn-outline-dark btn-sm"
+                onClick={async () => {
+                  if (confirm('Discard changes and reload original timetable?')) {
+                    const res = await getTimetable(currentUser.department, timetableCourse, timetableDay);
+                    setTimetableLectures(res || (currentUser.department === 'cs' && timetableCourse === 'MCA' ? DEFAULT_SCHEDULE_FALLBACK[timetableDay] : []));
+                  }
+                }}
+              >
+                Reset Changes
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={handleSaveTimetable}
+                disabled={isSavingTimetable}
+              >
+                <Save size={15} /> {isSavingTimetable ? 'Saving Schedule...' : 'Save Timetable Changes ✓'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Add / Edit Lecture Modal ── */}
+        {showAddLectureModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div style={{ background: 'white', padding: '28px', borderRadius: '20px', maxWidth: '480px', width: '100%', boxShadow: 'var(--shadow-xl)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
+                <Calendar size={22} color="var(--primary)" />
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                  {editingLectureIdx !== null ? 'Modify Lecture Slot' : 'Schedule New Lecture / Slot'}
+                </h3>
+              </div>
+
+              <form onSubmit={handleLectureFormSubmit}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Time Slot *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. 09:00 AM - 10:00 AM"
+                      value={lectureForm.time}
+                      onChange={(e) => setLectureForm({ ...lectureForm, time: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Type</label>
+                    <select
+                      className="form-select"
+                      value={lectureForm.type}
+                      onChange={(e) => setLectureForm({ ...lectureForm, type: e.target.value })}
+                    >
+                      <option value="Theory">Theory Lecture</option>
+                      <option value="Lab">Practical Lab</option>
+                      <option value="Seminar">Research Seminar</option>
+                      <option value="Break">Recess / Break</option>
+                      <option value="Elective">Elective / Options</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', marginBottom: '14px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Subject Code</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. MCA-501"
+                      value={lectureForm.code}
+                      onChange={(e) => setLectureForm({ ...lectureForm, code: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Subject / Slot Name *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Cloud Computing"
+                      value={lectureForm.subject}
+                      onChange={(e) => setLectureForm({ ...lectureForm, subject: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Faculty Name</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Prof. S. Sharma"
+                      value={lectureForm.faculty}
+                      onChange={(e) => setLectureForm({ ...lectureForm, faculty: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Room / Laboratory</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Lab 4 / Room 204"
+                      value={lectureForm.room}
+                      onChange={(e) => setLectureForm({ ...lectureForm, room: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark btn-sm"
+                    onClick={() => setShowAddLectureModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary btn-sm">
+                    {editingLectureIdx !== null ? 'Apply Changes ✓' : 'Add to Schedule +'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
