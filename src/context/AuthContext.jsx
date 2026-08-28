@@ -653,6 +653,43 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ── Staff Password Change
+  const changeStaffPassword = async (email, currentPassword, newPassword, role) => {
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const { data: staffRows, error } = await supabase
+        .from('staff')
+        .select('*')
+        .eq('email', cleanEmail)
+        .eq('role', role);
+
+      if (error) throw error;
+      const staffUser = staffRows?.[0];
+      if (!staffUser) {
+        return { success: false, message: 'No staff account found with this email and role.' };
+      }
+
+      // Verify current password
+      const passwordMatch = await comparePassword(currentPassword, staffUser.password_hash);
+      if (!passwordMatch) {
+        return { success: false, message: 'Incorrect current password.' };
+      }
+
+      // Hash and update new password
+      const newHash = await hashPassword(newPassword.trim());
+      const { error: updateErr } = await supabase
+        .from('staff')
+        .update({ password_hash: newHash })
+        .eq('id', staffUser.id);
+
+      if (updateErr) throw updateErr;
+      return { success: true };
+    } catch (err) {
+      console.error('[DCPE ERP] changeStaffPassword error:', err.message);
+      return { success: false, message: err.message };
+    }
+  };
+
   // ── Logout
   const logout = () => {
     setCurrentUser(null);
@@ -675,6 +712,7 @@ export const AuthProvider = ({ children }) => {
         updateStudentAcademicRecord,
         updateStudentDocuments,
         toggleHallTicketApproval,
+        changeStaffPassword,
         logout,
         authNotification,
         setAuthNotification,

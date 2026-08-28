@@ -224,24 +224,19 @@ export default function AdminDashboard({ onBackToHome }) {
     return 'faculty';
   };
 
-  // Helper to generate a strong random password
-  const generateStrongPassword = (length = 10) => {
-    const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*';
-    let pass = '';
-    for (let i = 0; i < length; i++) {
-      pass += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return pass;
+  // Helper to generate a relatable, easy-to-remember staff passcode
+  const autoGeneratePasscode = (firstName, lastName) => {
+    const namePart = (lastName || firstName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+    return namePart ? `dcpe@${namePart}` : 'dcpe@123';
   };
 
-  // Open Add Staff Modal pre-filled with a generated secure password
+  // Open Add Staff Modal pre-filled with a default relatable passcode
   const openAddStaffModal = () => {
-    const generatedPass = generateStrongPassword(10);
     setNewStaffForm({
       firstName: '',
       lastName: '',
       email: '',
-      password: generatedPass,
+      password: 'dcpe@123',
       role: 'faculty',
       departmentId: 'cs',
       designation: 'Assistant Professor',
@@ -1046,9 +1041,15 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newFirst = e.target.value;
                         setNewStaffForm((prev) => {
                           const nextForm = { ...prev, firstName: newFirst };
+                          // Auto email
                           const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList);
                           if (!prev.email || prev.email === oldAutoGen) {
                             nextForm.email = autoGenerateEmail(newFirst, prev.lastName, prev.role, staffList);
+                          }
+                          // Auto passcode
+                          const oldAutoGenPass = autoGeneratePasscode(prev.firstName, prev.lastName);
+                          if (!prev.password || prev.password === oldAutoGenPass) {
+                            nextForm.password = autoGeneratePasscode(newFirst, prev.lastName);
                           }
                           return nextForm;
                         });
@@ -1067,9 +1068,15 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newLast = e.target.value;
                         setNewStaffForm((prev) => {
                           const nextForm = { ...prev, lastName: newLast };
+                          // Auto email
                           const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList);
                           if (!prev.email || prev.email === oldAutoGen) {
                             nextForm.email = autoGenerateEmail(prev.firstName, newLast, prev.role, staffList);
+                          }
+                          // Auto passcode
+                          const oldAutoGenPass = autoGeneratePasscode(prev.firstName, prev.lastName);
+                          if (!prev.password || prev.password === oldAutoGenPass) {
+                            nextForm.password = autoGeneratePasscode(prev.firstName, newLast);
                           }
                           return nextForm;
                         });
@@ -1122,10 +1129,10 @@ export default function AdminDashboard({ onBackToHome }) {
                     <label className="form-label" style={{ margin: 0 }}>Login Password * <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>(min. 6 characters)</span></label>
                     <button
                       type="button"
-                      onClick={() => setNewStaffForm({ ...newStaffForm, password: generateStrongPassword(10) })}
+                      onClick={() => setNewStaffForm({ ...newStaffForm, password: autoGeneratePasscode(newStaffForm.firstName, newStaffForm.lastName) })}
                       style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: 0 }}
                     >
-                      🔄 Generate New
+                      🔄 Reset Default
                     </button>
                   </div>
                   <div style={{ position: 'relative' }}>

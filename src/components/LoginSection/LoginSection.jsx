@@ -54,7 +54,7 @@ const DEMO_ACCOUNTS = [
 ];
 
 export default function LoginSection() {
-  const { login } = useAuth();
+  const { login, changeStaffPassword } = useAuth();
 
   const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register'
   const [selectedRole, setSelectedRole] = useState('student');
@@ -64,6 +64,47 @@ export default function LoginSection() {
   const [pendingWarning, setPendingWarning] = useState(null);
   const [rejectedError, setRejectedError] = useState(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Change password modal states
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [resetRole, setResetRole] = useState('faculty');
+  const [resetEmail, setResetEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetResult, setResetResult] = useState(null);
+
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setResetResult(null);
+
+    if (!resetEmail.trim() || !currentPassword || !newPassword) {
+      setResetResult({ type: 'error', text: 'All fields are required.' });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setResetResult({ type: 'error', text: 'New password must be at least 6 characters.' });
+      return;
+    }
+
+    setIsResetting(true);
+    const res = await changeStaffPassword(resetEmail, currentPassword, newPassword, resetRole);
+    setIsResetting(false);
+
+    if (res.success) {
+      setResetResult({ type: 'success', text: '✅ Password changed successfully! You can now log in.' });
+      setResetEmail('');
+      setCurrentPassword('');
+      setNewPassword('');
+      setTimeout(() => {
+        setShowChangePasswordModal(false);
+        setResetResult(null);
+      }, 2000);
+    } else {
+      setResetResult({ type: 'error', text: res.message || 'Verification failed. Check your email or current password.' });
+    }
+  };
 
   const handleRoleSelect = (roleId) => {
     setSelectedRole(roleId);
@@ -347,9 +388,18 @@ export default function LoginSection() {
                     <input type="checkbox" defaultChecked />
                     Remember me
                   </label>
-                  <a className="form-forgot" href="#login-section" onClick={(e) => { e.preventDefault(); alert('Password reset link has been dispatched to your registered email.'); }}>
-                    Forgot Password?
-                  </a>
+                  <button
+                    type="button"
+                    className="form-forgot"
+                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setResetResult(null);
+                      setShowChangePasswordModal(true);
+                    }}
+                  >
+                    Forgot / Change Password?
+                  </button>
                 </div>
 
                 <button
@@ -380,6 +430,93 @@ export default function LoginSection() {
                   Need assistance? Contact the Department Office or{' '}
                   <a href="#contact">IT Helpdesk</a>
                 </p>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── Change Password Modal ── */}
+        {showChangePasswordModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div style={{ background: 'white', padding: '28px', borderRadius: '20px', maxWidth: '440px', width: '100%', boxShadow: 'var(--shadow-xl)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
+                <KeyRound size={22} color="var(--primary)" />
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700, margin: 0 }}>Change Faculty / Staff Password</h3>
+              </div>
+
+              {resetResult && (
+                <div className={`alert-message ${resetResult.type}`} style={{ marginBottom: '16px', fontSize: '13px' }}>
+                  {resetResult.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                  <div>{resetResult.text}</div>
+                </div>
+              )}
+
+              <form onSubmit={handleChangePasswordSubmit}>
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--text-heading)', display: 'block', marginBottom: '6px' }}>Select Account Role</label>
+                  <select
+                    className="form-select"
+                    value={resetRole}
+                    onChange={(e) => setResetRole(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-light)' }}
+                  >
+                    <option value="faculty">Faculty Member</option>
+                    <option value="hod">Head of Department (HOD)</option>
+                    <option value="admin">ERP Administrator</option>
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--text-heading)', display: 'block', marginBottom: '6px' }}>Official Email *</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="e.g. faculty.sharma@dcpehvpm.org"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-light)' }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--text-heading)', display: 'block', marginBottom: '6px' }}>Current Password *</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="Enter your current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-light)' }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--text-heading)', display: 'block', marginBottom: '6px' }}>New Password * <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>(min. 6 characters)</span></label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="Enter your new secure password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-light)' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark btn-sm"
+                    onClick={() => { setShowChangePasswordModal(false); setResetResult(null); }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={isResetting}>
+                    {isResetting ? 'Saving Password...' : 'Update Password ✓'}
+                  </button>
+                </div>
               </form>
             </div>
           </div>
