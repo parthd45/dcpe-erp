@@ -11,6 +11,7 @@ import StudentDashboard from './components/Dashboard/StudentDashboard';
 import HODDashboard from './components/Dashboard/HODDashboard';
 import FacultyDashboard from './components/Dashboard/FacultyDashboard';
 import AdminDashboard from './components/Dashboard/AdminDashboard';
+import RealtimeNotificationToast from './components/Dashboard/RealtimeNotificationToast';
 import Footer from './components/Footer/Footer';
 
 function MainApp() {
@@ -109,6 +110,7 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <MainApp />
+        <RealtimeNotificationToast />
       </AuthProvider>
     </ErrorBoundary>
   );
