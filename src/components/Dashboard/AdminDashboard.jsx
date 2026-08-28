@@ -224,6 +224,33 @@ export default function AdminDashboard({ onBackToHome }) {
     return 'faculty';
   };
 
+  // Helper to generate a strong random password
+  const generateStrongPassword = (length = 10) => {
+    const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*';
+    let pass = '';
+    for (let i = 0; i < length; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return pass;
+  };
+
+  // Open Add Staff Modal pre-filled with a generated secure password
+  const openAddStaffModal = () => {
+    const generatedPass = generateStrongPassword(10);
+    setNewStaffForm({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: generatedPass,
+      role: 'faculty',
+      departmentId: 'cs',
+      designation: 'Assistant Professor',
+    });
+    setAddStaffResult(null);
+    setShowAddPassword(true); // make password visible by default during register
+    setShowAddStaffModal(true);
+  };
+
   const deptStats = DEPARTMENTS.map((dept) => {
     const deptStus = students.filter((s) => s.department === dept.id);
     const pending = deptStus.filter((s) => s.status === 'pending').length;
@@ -639,7 +666,7 @@ export default function AdminDashboard({ onBackToHome }) {
                 </p>
               </div>
 
-              <button className="btn btn-primary btn-sm" onClick={() => setShowAddStaffModal(true)}>
+              <button className="btn btn-primary btn-sm" onClick={openAddStaffModal}>
                 <UserPlus size={16} /> Add New Faculty Member
               </button>
             </div>
@@ -1090,8 +1117,17 @@ export default function AdminDashboard({ onBackToHome }) {
                     value={newStaffForm.email} onChange={(e) => setNewStaffForm({ ...newStaffForm, email: e.target.value })} required />
                 </div>
 
-                <div className="form-group" style={{ marginBottom: '14px' }}>
-                  <label className="form-label">Login Password * <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>(min. 6 characters)</span></label>
+                 <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label className="form-label" style={{ margin: 0 }}>Login Password * <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>(min. 6 characters)</span></label>
+                    <button
+                      type="button"
+                      onClick={() => setNewStaffForm({ ...newStaffForm, password: generateStrongPassword(10) })}
+                      style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: 0 }}
+                    >
+                      🔄 Generate New
+                    </button>
+                  </div>
                   <div style={{ position: 'relative' }}>
                     <input
                       type={showAddPassword ? 'text' : 'password'}
