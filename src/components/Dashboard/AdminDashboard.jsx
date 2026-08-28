@@ -178,6 +178,23 @@ export default function AdminDashboard({ onBackToHome }) {
     return `${role}.${cleanIdentifier}@dcpehvpm.org`;
   };
 
+  // Helper to get matching Account Role based on selected Designation
+  const getRoleFromDesignation = (designation) => {
+    if (!designation) return 'faculty';
+    if (designation === 'Head of Department (HOD)') return 'hod';
+    const adminDesignations = [
+      'Director',
+      'Principal',
+      'Registrar',
+      'Assistant Registrar',
+      'Administrative Officer',
+      'Senior Clerk',
+      'Junior Clerk'
+    ];
+    if (adminDesignations.includes(designation)) return 'admin';
+    return 'faculty';
+  };
+
   const deptStats = DEPARTMENTS.map((dept) => {
     const deptStus = students.filter((s) => s.department === dept.id);
     const pending = deptStus.filter((s) => s.status === 'pending').length;
@@ -978,7 +995,18 @@ export default function AdminDashboard({ onBackToHome }) {
                     <select
                       className="form-select"
                       value={newStaffForm.designation}
-                      onChange={(e) => setNewStaffForm({ ...newStaffForm, designation: e.target.value })}
+                      onChange={(e) => {
+                        const newDesignation = e.target.value;
+                        const newRole = getRoleFromDesignation(newDesignation);
+                        setNewStaffForm((prev) => {
+                          const nextForm = { ...prev, designation: newDesignation, role: newRole };
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          if (!prev.email || prev.email === oldAutoGen) {
+                            nextForm.email = autoGenerateEmail(prev.name, newRole);
+                          }
+                          return nextForm;
+                        });
+                      }}
                     >
                       {DESIGNATIONS.map((des) => (
                         <option key={des} value={des}>{des}</option>
@@ -1100,7 +1128,18 @@ export default function AdminDashboard({ onBackToHome }) {
                     <select
                       className="form-select"
                       value={editStaffForm.designation}
-                      onChange={(e) => setEditStaffForm({ ...editStaffForm, designation: e.target.value })}
+                      onChange={(e) => {
+                        const newDesignation = e.target.value;
+                        const newRole = getRoleFromDesignation(newDesignation);
+                        setEditStaffForm((prev) => {
+                          const nextForm = { ...prev, designation: newDesignation, role: newRole };
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          if (!prev.email || prev.email === oldAutoGen) {
+                            nextForm.email = autoGenerateEmail(prev.name, newRole);
+                          }
+                          return nextForm;
+                        });
+                      }}
                     >
                       {DESIGNATIONS.map((des) => (
                         <option key={des} value={des}>{des}</option>
