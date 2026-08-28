@@ -168,14 +168,36 @@ export default function AdminDashboard({ onBackToHome }) {
     'Junior Clerk'
   ];
 
-  // Helper to auto-generate staff email address based on name and role
-  const autoGenerateEmail = (name, role) => {
+  // Helper to auto-generate staff email address based on name and role, resolving duplicates
+  const autoGenerateEmail = (name, role, currentStaffList = [], excludeId = null) => {
     if (!name || !name.trim()) return '';
     const parts = name.trim().toLowerCase().split(/\s+/);
     // Take the last part of name (usually last name/surname)
     const identifier = parts.length > 1 ? parts[parts.length - 1] : parts[0];
     const cleanIdentifier = identifier.replace(/[^a-z0-9]/g, '');
-    return `${role}.${cleanIdentifier}@dcpehvpm.org`;
+    
+    const baseEmail = `${role}.${cleanIdentifier}@dcpehvpm.org`;
+    
+    // Filter out the staff member we are currently editing
+    const emailsInUse = new Set(
+      currentStaffList
+        .filter(s => s.id !== excludeId)
+        .map(s => s.email?.toLowerCase().trim())
+    );
+    
+    if (!emailsInUse.has(baseEmail)) {
+      return baseEmail;
+    }
+    
+    // If taken, append counter starting from 2
+    let counter = 2;
+    while (true) {
+      const candidate = `${role}.${cleanIdentifier}${counter}@dcpehvpm.org`;
+      if (!emailsInUse.has(candidate)) {
+        return candidate;
+      }
+      counter++;
+    }
   };
 
   // Helper to get matching Account Role based on selected Designation
@@ -980,9 +1002,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newName = e.target.value;
                         setNewStaffForm((prev) => {
                           const nextForm = { ...prev, name: newName };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(newName, prev.role);
+                            nextForm.email = autoGenerateEmail(newName, prev.role, staffList);
                           }
                           return nextForm;
                         });
@@ -1000,9 +1022,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newRole = getRoleFromDesignation(newDesignation);
                         setNewStaffForm((prev) => {
                           const nextForm = { ...prev, designation: newDesignation, role: newRole };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(prev.name, newRole);
+                            nextForm.email = autoGenerateEmail(prev.name, newRole, staffList);
                           }
                           return nextForm;
                         });
@@ -1050,9 +1072,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newRole = e.target.value;
                         setNewStaffForm((prev) => {
                           const nextForm = { ...prev, role: newRole };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(prev.name, newRole);
+                            nextForm.email = autoGenerateEmail(prev.name, newRole, staffList);
                           }
                           return nextForm;
                         });
@@ -1113,9 +1135,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newName = e.target.value;
                         setEditStaffForm((prev) => {
                           const nextForm = { ...prev, name: newName };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList, editStaffTarget?.id);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(newName, prev.role);
+                            nextForm.email = autoGenerateEmail(newName, prev.role, staffList, editStaffTarget?.id);
                           }
                           return nextForm;
                         });
@@ -1133,9 +1155,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newRole = getRoleFromDesignation(newDesignation);
                         setEditStaffForm((prev) => {
                           const nextForm = { ...prev, designation: newDesignation, role: newRole };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList, editStaffTarget?.id);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(prev.name, newRole);
+                            nextForm.email = autoGenerateEmail(prev.name, newRole, staffList, editStaffTarget?.id);
                           }
                           return nextForm;
                         });
@@ -1182,9 +1204,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newRole = e.target.value;
                         setEditStaffForm((prev) => {
                           const nextForm = { ...prev, role: newRole };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role);
+                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList, editStaffTarget?.id);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(prev.name, newRole);
+                            nextForm.email = autoGenerateEmail(prev.name, newRole, staffList, editStaffTarget?.id);
                           }
                           return nextForm;
                         });
