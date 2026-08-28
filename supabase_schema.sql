@@ -221,6 +221,7 @@ ALTER TABLE public.library_issues ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public Read All Staff" ON public.staff;
 DROP POLICY IF EXISTS "Public Write Staff" ON public.staff;
 DROP POLICY IF EXISTS "Public Update Staff" ON public.staff;
+DROP POLICY IF EXISTS "Public Delete Staff" ON public.staff;
 
 DROP POLICY IF EXISTS "Public Read All Students" ON public.students;
 DROP POLICY IF EXISTS "Public Write Students" ON public.students;
@@ -235,6 +236,7 @@ DROP POLICY IF EXISTS "Public Insert/Update Marks" ON public.marks;
 
 DROP POLICY IF EXISTS "Public Read All Notices" ON public.notices;
 DROP POLICY IF EXISTS "Public Insert Notices" ON public.notices;
+DROP POLICY IF EXISTS "Public All Notices" ON public.notices;
 
 DROP POLICY IF EXISTS "Public All Placement Drives" ON public.placement_drives;
 DROP POLICY IF EXISTS "Public All Placement Apps" ON public.placement_applications;
@@ -247,6 +249,7 @@ DROP POLICY IF EXISTS "Public All Library Issues" ON public.library_issues;
 CREATE POLICY "Public Read All Staff" ON public.staff FOR SELECT USING (true);
 CREATE POLICY "Public Write Staff" ON public.staff FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Update Staff" ON public.staff FOR UPDATE USING (true);
+CREATE POLICY "Public Delete Staff" ON public.staff FOR DELETE USING (true);
 
 CREATE POLICY "Public All Students" ON public.students FOR ALL USING (true);
 
@@ -257,8 +260,7 @@ CREATE POLICY "Public Insert Attendance" ON public.attendance_logs FOR INSERT WI
 CREATE POLICY "Public Read All Marks" ON public.marks FOR SELECT USING (true);
 CREATE POLICY "Public Insert/Update Marks" ON public.marks FOR ALL USING (true);
 
-CREATE POLICY "Public Read All Notices" ON public.notices FOR SELECT USING (true);
-CREATE POLICY "Public Insert Notices" ON public.notices FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public All Notices" ON public.notices FOR ALL USING (true);
 
 -- 16. SAFE COLUMN MIGRATIONS (For existing databases)
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT 'Male';

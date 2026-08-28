@@ -310,8 +310,17 @@ export default function AdminDashboard({ onBackToHome }) {
   // ── Delete a staff account (with inline confirmation)
   const handleDeleteStaff = async (staffId) => {
     try {
+      // 1. Clean up notices publisher/posted reference constraint
+      await supabase.from('notices').delete().eq('publisher_id', staffId);
+      await supabase.from('notices').delete().eq('posted_by', staffId);
+
+      // 2. Clean up marks reference constraint
+      await supabase.from('marks').update({ staff_id: null }).eq('staff_id', staffId);
+
+      // 3. Delete the staff member
       const { error } = await supabase.from('staff').delete().eq('id', staffId);
       if (error) throw error;
+
       setDeleteConfirmId(null);
       setAddStaffResult({ type: 'success', text: '🗑️ Staff account deleted successfully.' });
       loadStaffAndSubjects();
