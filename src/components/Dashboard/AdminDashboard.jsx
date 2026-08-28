@@ -31,7 +31,8 @@ export default function AdminDashboard({ onBackToHome }) {
   // New Faculty Modal state
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
   const [newStaffForm, setNewStaffForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     role: 'faculty',
@@ -46,7 +47,8 @@ export default function AdminDashboard({ onBackToHome }) {
   const [showEditStaffModal, setShowEditStaffModal] = useState(false);
   const [editStaffTarget, setEditStaffTarget] = useState(null); // the staff row being edited
   const [editStaffForm, setEditStaffForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     newPassword: '', // leave empty to keep existing password
     role: 'faculty',
@@ -168,15 +170,20 @@ export default function AdminDashboard({ onBackToHome }) {
     'Junior Clerk'
   ];
 
-  // Helper to auto-generate staff email address based on name and role, resolving duplicates
-  const autoGenerateEmail = (name, role, currentStaffList = [], excludeId = null) => {
-    if (!name || !name.trim()) return '';
-    const parts = name.trim().toLowerCase().split(/\s+/);
-    // Take the last part of name (usually last name/surname)
-    const identifier = parts.length > 1 ? parts[parts.length - 1] : parts[0];
-    const cleanIdentifier = identifier.replace(/[^a-z0-9]/g, '');
+  // Helper to auto-generate staff email address based on first & last name and role, resolving duplicates
+  const autoGenerateEmail = (firstName, lastName, role, currentStaffList = [], excludeId = null) => {
+    if (!firstName && !lastName) return '';
+    const fPart = (firstName || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const lPart = (lastName || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
     
-    const baseEmail = `${role}.${cleanIdentifier}@dcpehvpm.org`;
+    let prefix = '';
+    if (fPart && lPart) {
+      prefix = `${fPart}.${lPart}`;
+    } else {
+      prefix = fPart || lPart;
+    }
+    
+    const baseEmail = `${role}.${prefix}@dcpehvpm.org`;
     
     // Filter out the staff member we are currently editing
     const emailsInUse = new Set(
@@ -192,7 +199,7 @@ export default function AdminDashboard({ onBackToHome }) {
     // If taken, append counter starting from 2
     let counter = 2;
     while (true) {
-      const candidate = `${role}.${cleanIdentifier}${counter}@dcpehvpm.org`;
+      const candidate = `${role}.${prefix}${counter}@dcpehvpm.org`;
       if (!emailsInUse.has(candidate)) {
         return candidate;
       }
@@ -236,7 +243,8 @@ export default function AdminDashboard({ onBackToHome }) {
     e.preventDefault();
     setAddStaffResult(null);
 
-    if (!newStaffForm.name.trim() || !newStaffForm.email.trim()) {
+    const fullName = `${newStaffForm.firstName.trim()} ${newStaffForm.lastName.trim()}`.trim();
+    if (!fullName || !newStaffForm.email.trim()) {
       setAddStaffResult({ type: 'error', text: 'Please fill in Name and Email.' });
       return;
     }
@@ -253,7 +261,7 @@ export default function AdminDashboard({ onBackToHome }) {
       const { data, error } = await supabase
         .from('staff')
         .insert({
-          name: newStaffForm.name.trim(),
+          name: fullName,
           email: newStaffForm.email.trim().toLowerCase(),
           password_hash: hash,
           role: newStaffForm.role,
@@ -268,9 +276,9 @@ export default function AdminDashboard({ onBackToHome }) {
 
       setAddStaffResult({
         type: 'success',
-        text: `✅ ${newStaffForm.role.toUpperCase()} account for ${newStaffForm.name} created! Login: ${newStaffForm.email}`,
+        text: `✅ ${newStaffForm.role.toUpperCase()} account for ${fullName} created! Login: ${newStaffForm.email}`,
       });
-      setNewStaffForm({ name: '', email: '', password: '', role: 'faculty', departmentId: 'cs', designation: 'Assistant Professor' });
+      setNewStaffForm({ firstName: '', lastName: '', email: '', password: '', role: 'faculty', departmentId: 'cs', designation: 'Assistant Professor' });
       setShowAddStaffModal(false);
       loadStaffAndSubjects();
       setTimeout(() => setAddStaffResult(null), 5000);
@@ -285,9 +293,16 @@ export default function AdminDashboard({ onBackToHome }) {
   const openEditStaff = (st) => {
     const deptId = DEPARTMENTS.find((d) => d.name === st.department_name)?.id ||
       DEPARTMENTS.find((d) => d.id === st.department_id)?.id || 'cs';
+    
+    // Split name into first and last name
+    const parts = (st.name || '').trim().split(/\s+/);
+    const fName = parts[0] || '';
+    const lName = parts.slice(1).join(' ') || '';
+
     setEditStaffTarget(st);
     setEditStaffForm({
-      name: st.name,
+      firstName: fName,
+      lastName: lName,
       email: st.email,
       newPassword: '',
       role: st.role,
@@ -303,7 +318,9 @@ export default function AdminDashboard({ onBackToHome }) {
   const handleEditStaffSubmit = async (e) => {
     e.preventDefault();
     setEditStaffResult(null);
-    if (!editStaffForm.name.trim() || !editStaffForm.email.trim()) {
+
+    const fullName = `${editStaffForm.firstName.trim()} ${editStaffForm.lastName.trim()}`.trim();
+    if (!fullName || !editStaffForm.email.trim()) {
       setEditStaffResult({ type: 'error', text: 'Name and Email are required.' });
       return;
     }
@@ -315,7 +332,7 @@ export default function AdminDashboard({ onBackToHome }) {
     try {
       const deptObj = DEPARTMENTS.find((d) => d.id === editStaffForm.departmentId);
       const updatePayload = {
-        name: editStaffForm.name.trim(),
+        name: fullName,
         email: editStaffForm.email.trim().toLowerCase(),
         role: editStaffForm.role,
         department_id: editStaffForm.departmentId,
@@ -332,7 +349,7 @@ export default function AdminDashboard({ onBackToHome }) {
         .eq('id', editStaffTarget.id);
       if (error) throw error;
 
-      setEditStaffResult({ type: 'success', text: `✅ ${editStaffForm.name}'s account updated successfully!` });
+      setEditStaffResult({ type: 'success', text: `✅ ${fullName}'s account updated successfully!` });
       loadStaffAndSubjects();
       setTimeout(() => {
         setShowEditStaffModal(false);
@@ -992,19 +1009,19 @@ export default function AdminDashboard({ onBackToHome }) {
               <form onSubmit={handleAddStaffSubmit}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                   <div className="form-group">
-                    <label className="form-label">Full Name *</label>
+                    <label className="form-label">First Name *</label>
                     <input
                       type="text"
                       className="form-input"
-                      placeholder="Jaydeep Ravat"
-                      value={newStaffForm.name}
+                      placeholder="Jaydeep"
+                      value={newStaffForm.firstName}
                       onChange={(e) => {
-                        const newName = e.target.value;
+                        const newFirst = e.target.value;
                         setNewStaffForm((prev) => {
-                          const nextForm = { ...prev, name: newName };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList);
+                          const nextForm = { ...prev, firstName: newFirst };
+                          const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(newName, prev.role, staffList);
+                            nextForm.email = autoGenerateEmail(newFirst, prev.lastName, prev.role, staffList);
                           }
                           return nextForm;
                         });
@@ -1012,6 +1029,30 @@ export default function AdminDashboard({ onBackToHome }) {
                       required
                     />
                   </div>
+                  <div className="form-group">
+                    <label className="form-label">Last Name *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Ravat"
+                      value={newStaffForm.lastName}
+                      onChange={(e) => {
+                        const newLast = e.target.value;
+                        setNewStaffForm((prev) => {
+                          const nextForm = { ...prev, lastName: newLast };
+                          const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList);
+                          if (!prev.email || prev.email === oldAutoGen) {
+                            nextForm.email = autoGenerateEmail(prev.firstName, newLast, prev.role, staffList);
+                          }
+                          return nextForm;
+                        });
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                   <div className="form-group">
                     <label className="form-label">Designation</label>
                     <select
@@ -1022,9 +1063,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newRole = getRoleFromDesignation(newDesignation);
                         setNewStaffForm((prev) => {
                           const nextForm = { ...prev, designation: newDesignation, role: newRole };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList);
+                          const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(prev.name, newRole, staffList);
+                            nextForm.email = autoGenerateEmail(prev.firstName, prev.lastName, newRole, staffList);
                           }
                           return nextForm;
                         });
@@ -1033,6 +1074,12 @@ export default function AdminDashboard({ onBackToHome }) {
                       {DESIGNATIONS.map((des) => (
                         <option key={des} value={des}>{des}</option>
                       ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Department</label>
+                    <select className="form-select" value={newStaffForm.departmentId} onChange={(e) => setNewStaffForm({ ...newStaffForm, departmentId: e.target.value })}>
+                      {DEPARTMENTS.map((d) => (<option key={d.id} value={d.id}>{d.code} — {d.name.split('(')[0].trim()}</option>))}
                     </select>
                   </div>
                 </div>
@@ -1072,9 +1119,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newRole = e.target.value;
                         setNewStaffForm((prev) => {
                           const nextForm = { ...prev, role: newRole };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList);
+                          const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(prev.name, newRole, staffList);
+                            nextForm.email = autoGenerateEmail(prev.firstName, prev.lastName, newRole, staffList);
                           }
                           return nextForm;
                         });
@@ -1086,10 +1133,7 @@ export default function AdminDashboard({ onBackToHome }) {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Department</label>
-                    <select className="form-select" value={newStaffForm.departmentId} onChange={(e) => setNewStaffForm({ ...newStaffForm, departmentId: e.target.value })}>
-                      {DEPARTMENTS.map((d) => (<option key={d.id} value={d.id}>{d.code} — {d.name.split('(')[0].trim()}</option>))}
-                    </select>
+                    {/* Empty spacer or password inside grid */}
                   </div>
                 </div>
 
@@ -1126,18 +1170,18 @@ export default function AdminDashboard({ onBackToHome }) {
               <form onSubmit={handleEditStaffSubmit}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                   <div className="form-group">
-                    <label className="form-label">Full Name *</label>
+                    <label className="form-label">First Name *</label>
                     <input
                       type="text"
                       className="form-input"
-                      value={editStaffForm.name}
+                      value={editStaffForm.firstName}
                       onChange={(e) => {
-                        const newName = e.target.value;
+                        const newFirst = e.target.value;
                         setEditStaffForm((prev) => {
-                          const nextForm = { ...prev, name: newName };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList, editStaffTarget?.id);
+                          const nextForm = { ...prev, firstName: newFirst };
+                          const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList, editStaffTarget?.id);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(newName, prev.role, staffList, editStaffTarget?.id);
+                            nextForm.email = autoGenerateEmail(newFirst, prev.lastName, prev.role, staffList, editStaffTarget?.id);
                           }
                           return nextForm;
                         });
@@ -1145,6 +1189,29 @@ export default function AdminDashboard({ onBackToHome }) {
                       required
                     />
                   </div>
+                  <div className="form-group">
+                    <label className="form-label">Last Name *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={editStaffForm.lastName}
+                      onChange={(e) => {
+                        const newLast = e.target.value;
+                        setEditStaffForm((prev) => {
+                          const nextForm = { ...prev, lastName: newLast };
+                          const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList, editStaffTarget?.id);
+                          if (!prev.email || prev.email === oldAutoGen) {
+                            nextForm.email = autoGenerateEmail(prev.firstName, newLast, prev.role, staffList, editStaffTarget?.id);
+                          }
+                          return nextForm;
+                        });
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                   <div className="form-group">
                     <label className="form-label">Designation</label>
                     <select
@@ -1155,9 +1222,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newRole = getRoleFromDesignation(newDesignation);
                         setEditStaffForm((prev) => {
                           const nextForm = { ...prev, designation: newDesignation, role: newRole };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList, editStaffTarget?.id);
+                          const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList, editStaffTarget?.id);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(prev.name, newRole, staffList, editStaffTarget?.id);
+                            nextForm.email = autoGenerateEmail(prev.firstName, prev.lastName, newRole, staffList, editStaffTarget?.id);
                           }
                           return nextForm;
                         });
@@ -1166,6 +1233,12 @@ export default function AdminDashboard({ onBackToHome }) {
                       {DESIGNATIONS.map((des) => (
                         <option key={des} value={des}>{des}</option>
                       ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Department</label>
+                    <select className="form-select" value={editStaffForm.departmentId} onChange={(e) => setEditStaffForm({ ...editStaffForm, departmentId: e.target.value })}>
+                      {DEPARTMENTS.map((d) => (<option key={d.id} value={d.id}>{d.code} — {d.name.split('(')[0].trim()}</option>))}
                     </select>
                   </div>
                 </div>
@@ -1204,9 +1277,9 @@ export default function AdminDashboard({ onBackToHome }) {
                         const newRole = e.target.value;
                         setEditStaffForm((prev) => {
                           const nextForm = { ...prev, role: newRole };
-                          const oldAutoGen = autoGenerateEmail(prev.name, prev.role, staffList, editStaffTarget?.id);
+                          const oldAutoGen = autoGenerateEmail(prev.firstName, prev.lastName, prev.role, staffList, editStaffTarget?.id);
                           if (!prev.email || prev.email === oldAutoGen) {
-                            nextForm.email = autoGenerateEmail(prev.name, newRole, staffList, editStaffTarget?.id);
+                            nextForm.email = autoGenerateEmail(prev.firstName, prev.lastName, newRole, staffList, editStaffTarget?.id);
                           }
                           return nextForm;
                         });
@@ -1218,10 +1291,7 @@ export default function AdminDashboard({ onBackToHome }) {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Department</label>
-                    <select className="form-select" value={editStaffForm.departmentId} onChange={(e) => setEditStaffForm({ ...editStaffForm, departmentId: e.target.value })}>
-                      {DEPARTMENTS.map((d) => (<option key={d.id} value={d.id}>{d.code} — {d.name.split('(')[0].trim()}</option>))}
-                    </select>
+                    {/* Empty spacer */}
                   </div>
                 </div>
 
