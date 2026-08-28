@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import {
   submitLeaveApplication,
-  fetchStudentApplications
+  fetchStudentApplications,
+  calculateLeaveDays,
 } from '../../lib/leaveService';
 import './Dashboard.css';
 
@@ -47,11 +48,8 @@ export function StudentLeaveModal({ currentUser, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitToast, setSubmitToast] = useState(null);
 
-  // Calculate day difference
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const diffTime = Math.max(0, end - start);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  // Calculate day difference (excluding Sundays as official holiday)
+  const { totalDays: diffDays, sundaysCount } = calculateLeaveDays(startDate, endDate);
   const isLongLeave = diffDays >= 10;
 
   const loadData = async () => {
@@ -102,7 +100,7 @@ export function StudentLeaveModal({ currentUser, onClose }) {
       setSubmitToast({
         type: 'success',
         text: isLongLeave
-          ? `🎉 Application submitted! Because leave is ${diffDays} days (10+ days), it will route through Teacher Mentor ➔ HOD ➔ Principal for final sanction.`
+          ? `🎉 Application submitted! Because leave is ${diffDays} working days (10+ days), it will route through Teacher Mentor ➔ HOD ➔ Principal for final sanction.`
           : `🎉 Application submitted! It will route through your Teacher Mentor ➔ HOD for verification.`,
       });
       setReason('');
@@ -332,7 +330,7 @@ export function StudentLeaveModal({ currentUser, onClose }) {
                               {app.category}
                             </h4>
                             <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
-                              Dates: <strong>{app.startDate}</strong> to <strong>{app.endDate}</strong> • Duration: <strong>{app.totalDays} Day(s)</strong>
+                              Dates: <strong>{app.startDate}</strong> to <strong>{app.endDate}</strong> • Duration: <strong>{app.totalDays} Working Day(s)</strong>
                             </p>
                           </div>
 
@@ -627,11 +625,18 @@ export function StudentLeaveModal({ currentUser, onClose }) {
                   <ShieldCheck size={20} color="#2563eb" style={{ flexShrink: 0, marginTop: '2px' }} />
                 )}
                 <div>
-                  <strong>Calculated Duration: {diffDays} Day(s)</strong>
-                  <p style={{ margin: '2px 0 0', fontSize: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <strong>Calculated Duration: {diffDays} Working Day(s)</strong>
+                    {sundaysCount > 0 && (
+                      <span style={{ fontSize: '11px', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                        ({sundaysCount} Sunday{sundaysCount > 1 ? 's' : ''} Excluded - Official Holiday)
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ margin: '4px 0 0', fontSize: '12px' }}>
                     {isLongLeave
-                      ? '⚠️ Extended Leave Rule: Leaves of 10 or more days strictly require Level-1 (Teacher) ➔ Level-2 (HOD) ➔ Level-3 (Principal / Admin Executive Sanction) before being approved.'
-                      : 'ℹ️ Standard Leave Rule: Under 10 days leaves will be sanctioned upon Level-1 (Teacher) and Level-2 (HOD) verification.'}
+                      ? '⚠️ Extended Leave Rule: Leaves of 10 or more working days strictly require Level-1 (Teacher) ➔ Level-2 (HOD) ➔ Level-3 (Principal / Admin Executive Sanction) before being approved.'
+                      : 'ℹ️ Standard Leave Rule: Under 10 working days leaves will be sanctioned upon Level-1 (Teacher) and Level-2 (HOD) verification.'}
                   </p>
                 </div>
               </div>

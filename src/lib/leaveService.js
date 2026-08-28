@@ -26,11 +26,53 @@ function saveLocalApplications(apps) {
 }
 
 /**
+ * Calculate total leave days between start and end date (inclusive),
+ * excluding Sundays because Sunday is an official holiday.
+ */
+export function calculateLeaveDays(startDateStr, endDateStr) {
+  if (!startDateStr || !endDateStr) {
+    return { totalDays: 0, sundaysCount: 0 };
+  }
+
+  const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
+  const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+
+  if (!sYear || !sMonth || !sDay || !eYear || !eMonth || !eDay) {
+    return { totalDays: 0, sundaysCount: 0 };
+  }
+
+  let current = new Date(sYear, sMonth - 1, sDay);
+  const end = new Date(eYear, eMonth - 1, eDay);
+
+  if (current > end) {
+    return { totalDays: 0, sundaysCount: 0 };
+  }
+
+  let totalDays = 0;
+  let sundaysCount = 0;
+
+  while (current <= end) {
+    if (current.getDay() === 0) {
+      // 0 = Sunday (Official Holiday)
+      sundaysCount++;
+    } else {
+      totalDays++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return { totalDays, sundaysCount };
+}
+
+/**
  * Submit a new Leave Application or Grievance
  */
 export async function submitLeaveApplication(payload) {
   const all = getLocalApplications();
-  const totalDays = Math.max(1, parseInt(payload.totalDays) || 1);
+  const calculated = calculateLeaveDays(payload.startDate, payload.endDate);
+  const totalDays = payload.totalDays !== undefined && payload.totalDays !== null
+    ? Math.max(0, parseInt(payload.totalDays))
+    : calculated.totalDays;
   const requiresPrincipal = totalDays >= 10 || payload.isEscalatedGrievance === true;
 
   const newApp = {
