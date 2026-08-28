@@ -83,6 +83,10 @@ export default function HODDashboard({ onBackToHome }) {
   const [hodLeavesLoading, setHodLeavesLoading] = useState(false);
   const [hodLeaveToast, setHodLeaveToast] = useState(null);
 
+  // Document Viewer Modal
+  const [viewProofUrl, setViewProofUrl] = useState(null);
+  const [viewProofName, setViewProofName] = useState('');
+
   const loadHodLeaves = async () => {
     setHodLeavesLoading(true);
     const list = await fetchHODPendingApplications(currentUser?.department || 'cs');
@@ -1157,9 +1161,19 @@ export default function HODDashboard({ onBackToHome }) {
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '16px', marginTop: '6px' }}>
                           <span>Emergency Contact: <strong>{app.emergencyContact}</strong></span>
                           {app.attachmentName && (
-                            <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                              📎 Document Attached: {app.attachmentName}
-                            </span>
+                            app.attachmentUrl ? (
+                              <button
+                                type="button"
+                                onClick={() => { setViewProofUrl(app.attachmentUrl); setViewProofName(app.attachmentName); }}
+                                style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', color: '#1d4ed8', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              >
+                                📎 View Proof
+                              </button>
+                            ) : (
+                              <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                                📎 Proof: {app.attachmentName}
+                              </span>
+                            )
                           )}
                         </div>
                       </div>
@@ -1198,6 +1212,66 @@ export default function HODDashboard({ onBackToHome }) {
             onUpdateStatus={updateStudentDocuments}
             onClose={() => setVerificationStudent(null)}
           />
+        )}
+
+        {/* ── Document Viewer Modal ── */}
+        {viewProofUrl && (
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
+            onClick={() => setViewProofUrl(null)}
+          >
+            <div
+              style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', maxWidth: '860px', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 60px rgba(0,0,0,0.4)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '18px' }}>📎</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '14px', color: '#1e293b' }}>{viewProofName}</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Student Uploaded Document Proof</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewProofUrl(null)}
+                  style={{ background: '#fee2e2', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color: '#dc2626', fontWeight: 700, fontSize: '13px' }}
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* Document Viewer */}
+              <div style={{ flex: 1, overflow: 'auto', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+                {viewProofUrl.startsWith('data:image') ? (
+                  <img
+                    src={viewProofUrl}
+                    alt={viewProofName}
+                    style={{ maxWidth: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '4px' }}
+                  />
+                ) : viewProofUrl.startsWith('data:application/pdf') ? (
+                  <iframe
+                    src={viewProofUrl}
+                    title={viewProofName}
+                    style={{ width: '100%', height: '75vh', border: 'none' }}
+                  />
+                ) : (
+                  <div style={{ color: 'white', textAlign: 'center', padding: '32px' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>📄</div>
+                    <div style={{ fontWeight: 700, marginBottom: '8px' }}>{viewProofName}</div>
+                    <div style={{ fontSize: '13px', color: '#94a3b8' }}>Preview not available for this file type.</div>
+                    <a
+                      href={viewProofUrl}
+                      download={viewProofName}
+                      style={{ display: 'inline-block', marginTop: '16px', background: '#2563eb', color: 'white', padding: '8px 20px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}
+                    >
+                      Download to View
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
       </div>
