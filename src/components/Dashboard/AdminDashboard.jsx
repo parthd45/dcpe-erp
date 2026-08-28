@@ -3,7 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import {
   Building2, Users, ShieldCheck, CheckCircle2, Clock, XCircle,
   TrendingUp, BarChart3, UserPlus, BookOpen, LogOut, Megaphone,
-  Send, Award, CreditCard, Plus, Search, ShieldAlert, AlertCircle, RefreshCw
+  Send, Award, CreditCard, Plus, Search, ShieldAlert, AlertCircle, RefreshCw,
+  Pencil, Trash2, Eye, EyeOff
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { postNotice } from '../../lib/noticesService';
@@ -32,13 +33,32 @@ export default function AdminDashboard({ onBackToHome }) {
   const [newStaffForm, setNewStaffForm] = useState({
     name: '',
     email: '',
-    password: 'password123',
+    password: '',
     role: 'faculty',
     departmentId: 'cs',
     designation: 'Assistant Professor',
   });
+  const [showAddPassword, setShowAddPassword] = useState(false);
   const [isAddingStaff, setIsAddingStaff] = useState(false);
   const [addStaffResult, setAddStaffResult] = useState(null);
+
+  // Edit Faculty Modal state
+  const [showEditStaffModal, setShowEditStaffModal] = useState(false);
+  const [editStaffTarget, setEditStaffTarget] = useState(null); // the staff row being edited
+  const [editStaffForm, setEditStaffForm] = useState({
+    name: '',
+    email: '',
+    newPassword: '', // leave empty to keep existing password
+    role: 'faculty',
+    departmentId: 'cs',
+    designation: 'Assistant Professor',
+  });
+  const [showEditPassword, setShowEditPassword] = useState(false);
+  const [isEditingStaff, setIsEditingStaff] = useState(false);
+  const [editStaffResult, setEditStaffResult] = useState(null);
+
+  // Delete confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   // Central Broadcast Notice state
   const [broadcastForm, setBroadcastForm] = useState({
@@ -150,6 +170,10 @@ export default function AdminDashboard({ onBackToHome }) {
       setAddStaffResult({ type: 'error', text: 'Please fill in Name and Email.' });
       return;
     }
+    if (!newStaffForm.password || newStaffForm.password.length < 6) {
+      setAddStaffResult({ type: 'error', text: 'Password must be at least 6 characters.' });
+      return;
+    }
 
     setIsAddingStaff(true);
     try {
@@ -174,18 +198,9 @@ export default function AdminDashboard({ onBackToHome }) {
 
       setAddStaffResult({
         type: 'success',
-        text: `✅ ${newStaffForm.role.toUpperCase()} Account for ${newStaffForm.name} created! Login email: ${newStaffForm.email}`,
+        text: `✅ ${newStaffForm.role.toUpperCase()} account for ${newStaffForm.name} created! Login: ${newStaffForm.email}`,
       });
-
-      setNewStaffForm({
-        name: '',
-        email: '',
-        password: 'password123',
-        role: 'faculty',
-        departmentId: 'cs',
-        designation: 'Assistant Professor',
-      });
-
+      setNewStaffForm({ name: '', email: '', password: '', role: 'faculty', departmentId: 'cs', designation: 'Assistant Professor' });
       setShowAddStaffModal(false);
       loadStaffAndSubjects();
       setTimeout(() => setAddStaffResult(null), 5000);
@@ -193,6 +208,85 @@ export default function AdminDashboard({ onBackToHome }) {
       setAddStaffResult({ type: 'error', text: `Failed to create staff account: ${err.message}` });
     } finally {
       setIsAddingStaff(false);
+    }
+  };
+
+  // ── Open Edit Modal pre-filled with existing staff data
+  const openEditStaff = (st) => {
+    const deptId = DEPARTMENTS.find((d) => d.name === st.department_name)?.id ||
+      DEPARTMENTS.find((d) => d.id === st.department_id)?.id || 'cs';
+    setEditStaffTarget(st);
+    setEditStaffForm({
+      name: st.name,
+      email: st.email,
+      newPassword: '',
+      role: st.role,
+      departmentId: deptId,
+      designation: st.designation || 'Assistant Professor',
+    });
+    setEditStaffResult(null);
+    setShowEditPassword(false);
+    setShowEditStaffModal(true);
+  };
+
+  // ── Save edits to an existing staff member
+  const handleEditStaffSubmit = async (e) => {
+    e.preventDefault();
+    setEditStaffResult(null);
+    if (!editStaffForm.name.trim() || !editStaffForm.email.trim()) {
+      setEditStaffResult({ type: 'error', text: 'Name and Email are required.' });
+      return;
+    }
+    if (editStaffForm.newPassword && editStaffForm.newPassword.length < 6) {
+      setEditStaffResult({ type: 'error', text: 'New password must be at least 6 characters.' });
+      return;
+    }
+    setIsEditingStaff(true);
+    try {
+      const deptObj = DEPARTMENTS.find((d) => d.id === editStaffForm.departmentId);
+      const updatePayload = {
+        name: editStaffForm.name.trim(),
+        email: editStaffForm.email.trim().toLowerCase(),
+        role: editStaffForm.role,
+        department_id: editStaffForm.departmentId,
+        department_name: deptObj ? deptObj.name : editStaffTarget.department_name,
+        designation: editStaffForm.designation,
+      };
+      // Only update password if a new one was provided
+      if (editStaffForm.newPassword.trim()) {
+        updatePayload.password_hash = await hashPassword(editStaffForm.newPassword.trim());
+      }
+      const { error } = await supabase
+        .from('staff')
+        .update(updatePayload)
+        .eq('id', editStaffTarget.id);
+      if (error) throw error;
+
+      setEditStaffResult({ type: 'success', text: `✅ ${editStaffForm.name}'s account updated successfully!` });
+      loadStaffAndSubjects();
+      setTimeout(() => {
+        setShowEditStaffModal(false);
+        setEditStaffTarget(null);
+        setEditStaffResult(null);
+      }, 1800);
+    } catch (err) {
+      setEditStaffResult({ type: 'error', text: `Update failed: ${err.message}` });
+    } finally {
+      setIsEditingStaff(false);
+    }
+  };
+
+  // ── Delete a staff account (with inline confirmation)
+  const handleDeleteStaff = async (staffId) => {
+    try {
+      const { error } = await supabase.from('staff').delete().eq('id', staffId);
+      if (error) throw error;
+      setDeleteConfirmId(null);
+      setAddStaffResult({ type: 'success', text: '🗑️ Staff account deleted successfully.' });
+      loadStaffAndSubjects();
+      setTimeout(() => setAddStaffResult(null), 4000);
+    } catch (err) {
+      setAddStaffResult({ type: 'error', text: `Delete failed: ${err.message}` });
     }
   };
 
@@ -463,6 +557,7 @@ export default function AdminDashboard({ onBackToHome }) {
                     <th>Role</th>
                     <th>Department</th>
                     <th>Status</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -503,6 +598,46 @@ export default function AdminDashboard({ onBackToHome }) {
                         </td>
                         <td>
                           <span style={{ color: '#059669', fontSize: '12px', fontWeight: 600 }}>Active ✓</span>
+                        </td>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          {deleteConfirmId === st.id ? (
+                            <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                              <span style={{ fontSize: '11px', color: '#dc2626', fontWeight: 600 }}>Confirm?</span>
+                              <button
+                                className="btn btn-white btn-sm"
+                                style={{ color: '#dc2626', border: '1px solid #fecaca', fontSize: '11px', padding: '2px 8px' }}
+                                onClick={() => handleDeleteStaff(st.id)}
+                              >
+                                Yes, Delete
+                              </button>
+                              <button
+                                className="btn btn-white btn-sm"
+                                style={{ fontSize: '11px', padding: '2px 8px' }}
+                                onClick={() => setDeleteConfirmId(null)}
+                              >
+                                Cancel
+                              </button>
+                            </span>
+                          ) : (
+                            <span style={{ display: 'inline-flex', gap: '6px' }}>
+                              <button
+                                className="btn btn-white btn-sm"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 10px', border: '1px solid #bfdbfe', color: '#1d4ed8' }}
+                                onClick={() => openEditStaff(st)}
+                                title="Edit Staff Account"
+                              >
+                                <Pencil size={12} /> Edit
+                              </button>
+                              <button
+                                className="btn btn-white btn-sm"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 10px', border: '1px solid #fecaca', color: '#dc2626' }}
+                                onClick={() => setDeleteConfirmId(st.id)}
+                                title="Delete Staff Account"
+                              >
+                                <Trash2 size={12} /> Delete
+                              </button>
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -751,85 +886,169 @@ export default function AdminDashboard({ onBackToHome }) {
 
         {/* ── Add Staff Modal ── */}
         {showAddStaffModal && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-            <div style={{ background: 'white', padding: '28px', borderRadius: '20px', maxWidth: '480px', width: '100%', boxShadow: 'var(--shadow-xl)' }}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div style={{ background: 'white', padding: '28px', borderRadius: '20px', maxWidth: '500px', width: '100%', boxShadow: 'var(--shadow-xl)', maxHeight: '90vh', overflowY: 'auto' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
                 <UserPlus size={22} color="var(--primary)" />
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700, margin: 0 }}>
-                  Add New Faculty / Staff Member
-                </h3>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700, margin: 0 }}>Create New Faculty / Staff Account</h3>
               </div>
 
+              {addStaffResult && (
+                <div className={`alert-message ${addStaffResult.type}`} style={{ marginBottom: '16px' }}>
+                  {addStaffResult.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                  <div>{addStaffResult.text}</div>
+                </div>
+              )}
+
               <form onSubmit={handleAddStaffSubmit}>
-                <div className="form-group" style={{ marginBottom: '14px' }}>
-                  <label className="form-label">Full Name *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Prof. A. B. Deshmukh"
-                    value={newStaffForm.name}
-                    onChange={(e) => setNewStaffForm({ ...newStaffForm, name: e.target.value })}
-                    required
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Full Name *</label>
+                    <input type="text" className="form-input" placeholder="Prof. A. B. Deshmukh"
+                      value={newStaffForm.name} onChange={(e) => setNewStaffForm({ ...newStaffForm, name: e.target.value })} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Designation</label>
+                    <input type="text" className="form-input" placeholder="Assistant Professor"
+                      value={newStaffForm.designation} onChange={(e) => setNewStaffForm({ ...newStaffForm, designation: e.target.value })} />
+                  </div>
                 </div>
 
                 <div className="form-group" style={{ marginBottom: '14px' }}>
                   <label className="form-label">Institutional Email *</label>
-                  <input
-                    type="email"
-                    className="form-input"
-                    placeholder="e.g. faculty.deshmukh@dcpehvpm.org"
-                    value={newStaffForm.email}
-                    onChange={(e) => setNewStaffForm({ ...newStaffForm, email: e.target.value })}
-                    required
-                  />
+                  <input type="email" className="form-input" placeholder="faculty.deshmukh@dcpehvpm.org"
+                    value={newStaffForm.email} onChange={(e) => setNewStaffForm({ ...newStaffForm, email: e.target.value })} required />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label">Login Password * <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>(min. 6 characters)</span></label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showAddPassword ? 'text' : 'password'}
+                      className="form-input"
+                      placeholder="Set a secure password for this account"
+                      value={newStaffForm.password}
+                      onChange={(e) => setNewStaffForm({ ...newStaffForm, password: e.target.value })}
+                      style={{ paddingRight: '42px' }}
+                      required
+                    />
+                    <button type="button" onClick={() => setShowAddPassword(!showAddPassword)}
+                      style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                      {showAddPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                   <div className="form-group">
                     <label className="form-label">Account Role</label>
-                    <select
-                      className="form-select"
-                      value={newStaffForm.role}
-                      onChange={(e) => setNewStaffForm({ ...newStaffForm, role: e.target.value })}
-                    >
+                    <select className="form-select" value={newStaffForm.role} onChange={(e) => setNewStaffForm({ ...newStaffForm, role: e.target.value })}>
                       <option value="faculty">Faculty Teacher</option>
                       <option value="hod">Head of Department (HOD)</option>
                       <option value="admin">Administrator</option>
                     </select>
                   </div>
-
                   <div className="form-group">
                     <label className="form-label">Department</label>
-                    <select
-                      className="form-select"
-                      value={newStaffForm.departmentId}
-                      onChange={(e) => setNewStaffForm({ ...newStaffForm, departmentId: e.target.value })}
-                    >
-                      {DEPARTMENTS.map((d) => (
-                        <option key={d.id} value={d.id}>{d.code} - {d.name.split(' ')[0]}</option>
-                      ))}
+                    <select className="form-select" value={newStaffForm.departmentId} onChange={(e) => setNewStaffForm({ ...newStaffForm, departmentId: e.target.value })}>
+                      {DEPARTMENTS.map((d) => (<option key={d.id} value={d.id}>{d.code} — {d.name.split('(')[0].trim()}</option>))}
                     </select>
                   </div>
                 </div>
 
-                <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label">Designation</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Assistant Professor"
-                    value={newStaffForm.designation}
-                    onChange={(e) => setNewStaffForm({ ...newStaffForm, designation: e.target.value })}
-                  />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <button type="button" className="btn btn-outline-dark btn-sm" onClick={() => setShowAddStaffModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={isAddingStaff}>
+                    <UserPlus size={15} /> {isAddingStaff ? 'Creating Account...' : 'Create Staff Account'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── Edit Staff Modal ── */}
+        {showEditStaffModal && editStaffTarget && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div style={{ background: 'white', padding: '28px', borderRadius: '20px', maxWidth: '500px', width: '100%', boxShadow: 'var(--shadow-xl)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border-light)' }}>
+                <Pencil size={22} color="#1d4ed8" />
+                <div>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700, margin: 0 }}>Edit Staff Account</h3>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>Editing: <strong>{editStaffTarget.name}</strong> — <code>{editStaffTarget.email}</code></p>
+                </div>
+              </div>
+
+              {editStaffResult && (
+                <div className={`alert-message ${editStaffResult.type}`} style={{ marginBottom: '16px' }}>
+                  {editStaffResult.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                  <div>{editStaffResult.text}</div>
+                </div>
+              )}
+
+              <form onSubmit={handleEditStaffSubmit}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Full Name *</label>
+                    <input type="text" className="form-input"
+                      value={editStaffForm.name} onChange={(e) => setEditStaffForm({ ...editStaffForm, name: e.target.value })} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Designation</label>
+                    <input type="text" className="form-input"
+                      value={editStaffForm.designation} onChange={(e) => setEditStaffForm({ ...editStaffForm, designation: e.target.value })} />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label">Institutional Email *</label>
+                  <input type="email" className="form-input"
+                    value={editStaffForm.email} onChange={(e) => setEditStaffForm({ ...editStaffForm, email: e.target.value })} required />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label">Reset Password <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>(leave blank to keep existing password)</span></label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showEditPassword ? 'text' : 'password'}
+                      className="form-input"
+                      placeholder="Enter new password to change it..."
+                      value={editStaffForm.newPassword}
+                      onChange={(e) => setEditStaffForm({ ...editStaffForm, newPassword: e.target.value })}
+                      style={{ paddingRight: '42px' }}
+                    />
+                    <button type="button" onClick={() => setShowEditPassword(!showEditPassword)}
+                      style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                      {showEditPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Account Role</label>
+                    <select className="form-select" value={editStaffForm.role} onChange={(e) => setEditStaffForm({ ...editStaffForm, role: e.target.value })}>
+                      <option value="faculty">Faculty Teacher</option>
+                      <option value="hod">Head of Department (HOD)</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Department</label>
+                    <select className="form-select" value={editStaffForm.departmentId} onChange={(e) => setEditStaffForm({ ...editStaffForm, departmentId: e.target.value })}>
+                      {DEPARTMENTS.map((d) => (<option key={d.id} value={d.id}>{d.code} — {d.name.split('(')[0].trim()}</option>))}
+                    </select>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                  <button type="button" className="btn btn-outline-dark btn-sm" onClick={() => setShowAddStaffModal(false)}>
+                  <button type="button" className="btn btn-outline-dark btn-sm"
+                    onClick={() => { setShowEditStaffModal(false); setEditStaffTarget(null); }}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary btn-sm" disabled={isAddingStaff}>
-                    {isAddingStaff ? 'Creating...' : 'Create Account'}
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={isEditingStaff}
+                    style={{ background: 'linear-gradient(135deg, #1d4ed8, #2563eb)' }}>
+                    <Pencil size={14} /> {isEditingStaff ? 'Saving Changes...' : 'Save Changes'}
                   </button>
                 </div>
               </form>
