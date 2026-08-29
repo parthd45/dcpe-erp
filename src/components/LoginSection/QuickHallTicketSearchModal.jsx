@@ -27,7 +27,18 @@ export function QuickHallTicketSearchModal({ onClose, allStudents = [] }) {
 
   return (
     <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-      <div style={{ maxWidth: '580px', width: '100%', background: '#ffffff', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.3)', animation: 'slideUpPWA 0.3s ease' }}>
+      <div
+        className="modal-content"
+        style={{
+          maxWidth: '580px',
+          width: '100%',
+          background: '#ffffff',
+          borderRadius: '24px',
+          overflow: 'hidden',
+          boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+          animation: 'slideUpPWA 0.3s ease'
+        }}
+      >
         
         {/* Modal Header */}
         <div style={{ background: 'linear-gradient(135deg, #1e1b4b, #312e81)', padding: '20px 24px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
