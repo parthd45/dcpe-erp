@@ -248,6 +248,9 @@
 }
 
 @media (max-width: 768px) {
+  .login-cards {
+    grid-template-columns: 1fr !important;
+  }
   .login-tab-bar {
     display: flex !important;
     flex-direction: column !important;
@@ -265,8 +268,4 @@
     justify-content: center !important;
     padding: 10px !important;
   }
-}
-
-@media (max-width: 480px) {
-  .login-cards { grid-template-columns: 1fr; }
 }

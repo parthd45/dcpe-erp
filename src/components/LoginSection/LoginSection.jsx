@@ -291,9 +291,9 @@ export default function LoginSection() {
                         cursor: 'pointer',
                       }}
                     >
-                      <span>
-                        <strong>{demo.label}</strong>{' '}
-                        <span style={{ color: 'var(--text-muted)' }}>({demo.email})</span>
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left', overflow: 'hidden', flex: '1 1 auto', marginRight: '8px' }}>
+                        <strong style={{ fontSize: '11.5px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{demo.label}</strong>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', wordBreak: 'break-all', whiteSpace: 'normal' }}>({demo.email})</span>
                       </span>
                       <span
                         className={`status-pill ${
@@ -303,7 +303,7 @@ export default function LoginSection() {
                             ? 'pending'
                             : 'approved'
                         }`}
-                        style={{ fontSize: '10px', padding: '2px 8px' }}
+                        style={{ fontSize: '10px', padding: '2px 8px', flexShrink: 0 }}
                       >
                         {demo.status === 'pending' ? 'Pending Approval' : 'Fill Credentials'}
                       </span>
