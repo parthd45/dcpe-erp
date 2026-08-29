@@ -36,6 +36,7 @@ import { WellnessTrackerModal } from './WellnessTrackerModal';
 import { NotificationCommandCenterModal } from './NotificationCommandCenterModal';
 import { KanbanAssignmentModal } from './KanbanAssignmentModal';
 import { CampusMapModal } from './CampusMapModal';
+import { CodeSandboxModal } from './CodeSandboxModal';
 import { StudentServicesSuite } from './StudentServicesSuite';
 import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
@@ -75,6 +76,7 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showNotifCenterModal, setShowNotifCenterModal] = useState(false);
   const [showKanbanModal, setShowKanbanModal] = useState(false);
   const [showCampusMapModal, setShowCampusMapModal] = useState(false);
+  const [showCodeSandboxModal, setShowCodeSandboxModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -387,6 +389,7 @@ export default function StudentDashboard({ onBackToHome }) {
                 if (modalKey === 'notifCenter') setShowNotifCenterModal(true);
                 if (modalKey === 'kanban') setShowKanbanModal(true);
                 if (modalKey === 'campusMap') setShowCampusMapModal(true);
+                if (modalKey === 'codeSandbox') setShowCodeSandboxModal(true);
               }}
             />
           </div>
@@ -639,6 +642,9 @@ export default function StudentDashboard({ onBackToHome }) {
         {showCampusMapModal && (
           <CampusMapModal currentUser={currentUser} onClose={() => setShowCampusMapModal(false)} />
         )}
+        {showCodeSandboxModal && (
+          <CodeSandboxModal currentUser={currentUser} onClose={() => setShowCodeSandboxModal(false)} />
+        )}
 
         {/* ── Grievance Timeline Modal ── */}
         {showGrievanceTimelineModal && (
@@ -675,6 +681,7 @@ export default function StudentDashboard({ onBackToHome }) {
             if (key === 'notif_center' || key === 'notifCenter') setShowNotifCenterModal(true);
             if (key === 'kanban') setShowKanbanModal(true);
             if (key === 'campus_map' || key === 'campusMap') setShowCampusMapModal(true);
+            if (key === 'code_sandbox' || key === 'codeSandbox') setShowCodeSandboxModal(true);
             if (key === 'grievance') setShowGrievanceTimelineModal(true);
           }}
         />

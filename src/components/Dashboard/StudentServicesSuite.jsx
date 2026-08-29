@@ -107,6 +107,19 @@ export function StudentServicesSuite({
       glow: 'rgba(139, 92, 246, 0.25)',
       onClick: () => onOpenModal('careerPath'),
     },
+    {
+      id: 'code_sandbox',
+      title: 'WASM Code REPL Sandbox',
+      subtitle: 'In-Browser Python, JS, SQL & HTML Code Execution Studio',
+      category: 'career',
+      badge: '⚡ WASM REPL',
+      badgeGradient: 'linear-gradient(135deg, #10b981, #059669)',
+      icon: Zap,
+      color: '#10b981',
+      bg: '#ecfdf5',
+      glow: 'rgba(16, 185, 129, 0.25)',
+      onClick: () => onOpenModal('codeSandbox'),
+    },
 
     // 🎓 ACADEMICS, FINANCE & GAMIFICATION (4)
     {
