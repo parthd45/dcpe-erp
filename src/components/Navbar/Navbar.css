@@ -147,6 +147,19 @@
 @media (max-width: 900px) {
   .navbar-links { display: none; }
   .navbar-mobile-toggle { display: flex; }
+  .navbar-actions > .btn,
+  .navbar-actions > div > .btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-brand-sub {
+    display: none !important;
+  }
+  .navbar-brand-main {
+    font-size: 16px !important;
+  }
 }
 
 @media (max-width: 600px) {
@@ -155,13 +168,10 @@
   }
   .navbar-brand img,
   .navbar-brand svg {
-    width: 42px !important;
-    height: 42px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
-  .navbar-brand span:first-child {
+  .navbar-brand-main {
     font-size: 15px !important;
-  }
-  .navbar-brand span:last-child {
-    font-size: 9.5px !important;
   }
 }

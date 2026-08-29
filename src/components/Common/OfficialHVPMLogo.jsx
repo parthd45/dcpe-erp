@@ -63,25 +63,31 @@ export function OfficialHVPMLogo({ size = 58, showTitle = true, isLight = false,
       {showTitle && (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Main Title in High-Visibility Bold Crimson Red */}
-          <span style={{
-            fontSize: '19px',
-            fontWeight: 900,
-            color: '#ef4444', // High-visibility bright crimson red!
-            fontFamily: 'var(--font-display)',
-            letterSpacing: '0.2px',
-            lineHeight: 1.2,
-            textShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
-          }}>
+          <span
+            className="navbar-brand-main"
+            style={{
+              fontSize: '19px',
+              fontWeight: 900,
+              color: '#ef4444', // High-visibility bright crimson red!
+              fontFamily: 'var(--font-display)',
+              letterSpacing: '0.2px',
+              lineHeight: 1.2,
+              textShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
+            }}
+          >
             DCPE HVPM
           </span>
           {/* Subtitle also in High-Visibility Vibrant Red */}
-          <span style={{
-            fontSize: '11.5px',
-            fontWeight: 800,
-            color: '#f87171', // Bright vibrant red!
-            lineHeight: 1.25,
-            textShadow: '0 1px 4px rgba(0, 0, 0, 0.6)',
-          }}>
+          <span
+            className="navbar-brand-sub"
+            style={{
+              fontSize: '11.5px',
+              fontWeight: 800,
+              color: '#f87171', // Bright vibrant red!
+              lineHeight: 1.25,
+              textShadow: '0 1px 4px rgba(0, 0, 0, 0.6)',
+            }}
+          >
             Degree College of Physical Education, Amravati (M.S.)
           </span>
         </div>
