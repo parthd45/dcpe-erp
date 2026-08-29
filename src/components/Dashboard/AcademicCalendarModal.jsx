@@ -131,7 +131,24 @@ export function AcademicCalendarModal({ currentUser, onClose }) {
   const selectedEvents = selectedDate ? getDayEvents(selectedDate) : [];
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={onClose}>
+    <div
+      className="modal-overlay"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(8px)',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        boxSizing: 'border-box'
+      }}
+      onClick={onClose}
+    >
       <div
         className="modal-content"
         onClick={e => e.stopPropagation()}

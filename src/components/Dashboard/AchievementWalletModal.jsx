@@ -51,7 +51,24 @@ export function AchievementWalletModal({ currentUser, onClose }) {
     : ACHIEVEMENTS.filter(a => a.category === activeCategory);
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={onClose}>
+    <div
+      className="modal-overlay"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(8px)',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        boxSizing: 'border-box'
+      }}
+      onClick={onClose}
+    >
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{
         maxWidth: 880, width: '95vw', maxHeight: '92vh', overflow: 'hidden',
         borderRadius: '20px',
