@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import {
   FileText, Award, CreditCard, Briefcase,
-  Search, Lock, ChevronRight, Zap, Trophy,
-  Brain, Calendar, Sparkles, UserCheck
+  Search, Lock, ArrowUpRight, Zap, Trophy,
+  Brain, Calendar, Sparkles, UserCheck, CheckCircle2, Flame
 } from 'lucide-react';
 
 export function StudentServicesSuite({
@@ -14,31 +14,33 @@ export function StudentServicesSuite({
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 🏆 THE TOP 10 BEST CURATED STUDENT FEATURES
+  // 🏆 THE TOP 10 BEST CURATED STUDENT FEATURES (STUNNING DESIGN METADATA)
   const services = [
     // 📄 CORE DOCUMENTS & VERIFICATION (3)
     {
       id: 'id_card',
       title: 'Digital Student ID Card',
-      subtitle: '3D Flip Card with Security Hologram & Barcode',
+      subtitle: '3D Flip Card with Security Hologram & Barcode ID',
       category: 'docs',
       badge: '3D Smart ID',
-      badgeColor: '#2563eb',
+      badgeGradient: 'linear-gradient(135deg, #2563eb, #3b82f6)',
       icon: UserCheck,
       color: '#2563eb',
       bg: '#eff6ff',
+      glow: 'rgba(37, 99, 235, 0.25)',
       onClick: () => onOpenModal('idCard'),
     },
     {
       id: 'hall_ticket',
       title: currentUser.hallTicketApproved ? 'Exam Hall Ticket (Approved ✓)' : 'Exam Hall Ticket (Locked)',
-      subtitle: currentUser.hallTicketApproved ? 'Official Examination Gatepass & Seat No.' : 'Locked until HOD attendance & fee clearance',
+      subtitle: currentUser.hallTicketApproved ? 'Official Exam Gatepass & Seating Allocation' : 'Locked until HOD attendance & fee clearance',
       category: 'docs',
-      badge: currentUser.hallTicketApproved ? 'Verified ✓' : 'HOD Lock 🔒',
-      badgeColor: currentUser.hallTicketApproved ? '#059669' : '#d97706',
+      badge: currentUser.hallTicketApproved ? 'HOD Verified ✓' : 'HOD Lock 🔒',
+      badgeGradient: currentUser.hallTicketApproved ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #d97706, #f59e0b)',
       icon: currentUser.hallTicketApproved ? FileText : Lock,
       color: currentUser.hallTicketApproved ? '#059669' : '#d97706',
       bg: currentUser.hallTicketApproved ? '#ecfdf5' : '#fffbeb',
+      glow: currentUser.hallTicketApproved ? 'rgba(5, 150, 105, 0.25)' : 'rgba(217, 119, 6, 0.25)',
       onClick: () => {
         if (currentUser.hallTicketApproved) {
           onOpenModal('hallTicket');
@@ -53,13 +55,14 @@ export function StudentServicesSuite({
     {
       id: 'marksheet',
       title: 'Digital Marksheet & Grade Card',
-      subtitle: 'Official SGPA / CGPA Breakdown & Transcripts',
+      subtitle: 'Official SGPA / CGPA Transcripts & Marksheet Vault',
       category: 'docs',
-      badge: 'Grade Report',
-      badgeColor: '#7c3aed',
+      badge: 'Transcripts',
+      badgeGradient: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
       icon: Award,
       color: '#7c3aed',
       bg: '#faf5ff',
+      glow: 'rgba(124, 58, 237, 0.25)',
       onClick: () => onOpenModal('marksheet'),
     },
 
@@ -67,13 +70,15 @@ export function StudentServicesSuite({
     {
       id: 'placement',
       title: 'Training & Placement (T&P Cell)',
-      subtitle: 'Live Campus Drives, Job Applications & Salary Packages',
+      subtitle: 'Live Campus Drives, Job Applications & Salary CTCs',
       category: 'career',
       badge: 'Placements 🚀',
-      badgeColor: '#4f46e5',
+      badgeGradient: 'linear-gradient(135deg, #1e1b4b, #312e81)',
       icon: Briefcase,
-      color: '#4f46e5',
-      bg: '#eef2ff',
+      color: '#67e8f9',
+      bg: '#1e1b4b',
+      isDarkBg: true,
+      glow: 'rgba(30, 27, 75, 0.4)',
       onClick: () => onOpenModal('placement'),
     },
     {
@@ -82,22 +87,24 @@ export function StudentServicesSuite({
       subtitle: 'Single Page A4 Physical Canvas with AI Density Scaler',
       category: 'career',
       badge: 'A4 WYSIWYG',
-      badgeColor: '#0891b2',
+      badgeGradient: 'linear-gradient(135deg, #0891b2, #06b6d4)',
       icon: FileText,
       color: '#0891b2',
       bg: '#ecfeff',
+      glow: 'rgba(8, 145, 178, 0.25)',
       onClick: () => onOpenModal('resume'),
     },
     {
       id: 'career_ai',
       title: 'AI Career Path Predictor',
-      subtitle: 'Skill Tree Tree & Salary Fit Projection',
+      subtitle: 'Skill Tree Roadmap & Salary Fit Projections',
       category: 'career',
-      badge: 'AI Engine',
-      badgeColor: '#8b5cf6',
+      badge: 'AI Engine 🧠',
+      badgeGradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
       icon: Brain,
       color: '#8b5cf6',
       bg: '#f3e8ff',
+      glow: 'rgba(139, 92, 246, 0.25)',
       onClick: () => onOpenModal('careerPath'),
     },
 
@@ -108,52 +115,56 @@ export function StudentServicesSuite({
       subtitle: 'AI Bunk Calculator & Target % Safety Simulator',
       category: 'academic',
       badge: 'AI Safety 🔮',
-      badgeColor: '#047857',
+      badgeGradient: 'linear-gradient(135deg, #047857, #10b981)',
       icon: Zap,
       color: '#047857',
       bg: '#f0fdf4',
+      glow: 'rgba(4, 120, 87, 0.25)',
       onClick: () => onOpenModal('riskRadar'),
     },
     {
       id: 'fee_passbook',
       title: 'Fees Passbook & Receipt Vault',
-      subtitle: 'Online Payment, Ledger & Official Fee Receipts',
+      subtitle: 'Online Payment, Fee Receipts & Financial Ledger',
       category: 'academic',
       badge: 'Payments 💳',
-      badgeColor: '#2563eb',
+      badgeGradient: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
       icon: CreditCard,
       color: '#2563eb',
       bg: '#eff6ff',
+      glow: 'rgba(37, 99, 235, 0.25)',
       onClick: () => onOpenModal('feePassbook'),
     },
     {
       id: 'leaderboard',
       title: 'Gamified XP Leaderboard',
-      subtitle: 'Earn XP, Rank Badges & Maintain Daily Streaks',
+      subtitle: 'Earn XP, Rank Badges (Bronze → Legend) & Streaks',
       category: 'academic',
       badge: 'Leaderboard 🎮',
-      badgeColor: '#b45309',
+      badgeGradient: 'linear-gradient(135deg, #b45309, #f59e0b)',
       icon: Trophy,
       color: '#b45309',
       bg: '#fffbeb',
+      glow: 'rgba(180, 83, 9, 0.25)',
       onClick: () => onOpenModal('leaderboard'),
     },
     {
       id: 'calendar',
       title: 'Smart Academic Calendar',
-      subtitle: 'Exam Dates, Holidays, Events & Timetables',
+      subtitle: 'Exam Schedules, Holidays, Events & Timetable Heatmap',
       category: 'academic',
       badge: 'Schedule 📅',
-      badgeColor: '#047857',
+      badgeGradient: 'linear-gradient(135deg, #059669, #10b981)',
       icon: Calendar,
-      color: '#047857',
+      color: '#059669',
       bg: '#ecfdf5',
+      glow: 'rgba(5, 150, 105, 0.25)',
       onClick: () => onOpenModal('calendar'),
     },
   ];
 
   const categories = [
-    { key: 'all', label: 'Top 10 Features', count: services.length },
+    { key: 'all', label: 'Top 10 Essential Features', count: services.length },
     { key: 'docs', label: '📄 Core Documents', count: services.filter(s => s.category === 'docs').length },
     { key: 'career', label: '💼 Career & AI', count: services.filter(s => s.category === 'career').length },
     { key: 'academic', label: '🎓 Academics & Finance', count: services.filter(s => s.category === 'academic').length },
@@ -168,52 +179,66 @@ export function StudentServicesSuite({
   });
 
   return (
-    <div style={{ marginTop: '24px' }}>
+    <div style={{ marginTop: '28px' }}>
       {/* Module Title & Search Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '14px',
-        marginBottom: '16px',
+        gap: '16px',
+        marginBottom: '18px',
       }}>
         <div>
-          <h3 style={{
-            margin: 0,
-            fontSize: '17px',
-            fontWeight: 800,
-            color: 'var(--text-heading)',
-            fontFamily: 'var(--font-display)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <Sparkles size={18} color="var(--primary)" />
-            Top 10 Essential Student Power Features
-          </h3>
-          <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-            Curated high-value tools for academics, documents, career & finance
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <span style={{
+              background: 'linear-gradient(135deg, #d9234f, #f43f5e)',
+              color: '#ffffff',
+              padding: '3px 10px',
+              borderRadius: '20px',
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+              boxShadow: '0 2px 8px rgba(217, 35, 79, 0.3)',
+            }}>
+              Curated Suite
+            </span>
+            <h3 style={{
+              margin: 0,
+              fontSize: '18px',
+              fontWeight: 800,
+              color: 'var(--text-heading)',
+              fontFamily: 'var(--font-display)',
+              letterSpacing: '-0.3px',
+            }}>
+              Top 10 Essential Student Power Features
+            </h3>
+          </div>
+          <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-muted)' }}>
+            Hand-picked enterprise grade tools for academic success, documents, career & financial management.
           </p>
         </div>
 
         {/* Quick Search */}
-        <div style={{ position: 'relative', width: '240px' }}>
-          <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+        <div style={{ position: 'relative', width: '250px' }}>
+          <Search size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search feature..."
+            placeholder="Quick search feature..."
             style={{
               width: '100%',
-              padding: '7px 12px 7px 34px',
+              padding: '9px 14px 9px 38px',
               fontSize: '12px',
-              borderRadius: 'var(--radius-lg)',
+              borderRadius: 'var(--radius-xl)',
               border: '1px solid var(--border-light)',
               outline: 'none',
               background: 'var(--bg-white)',
               color: 'var(--text-heading)',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+              transition: 'all 0.2s ease',
             }}
           />
         </div>
@@ -223,7 +248,7 @@ export function StudentServicesSuite({
       <div style={{
         display: 'flex',
         gap: '8px',
-        marginBottom: '18px',
+        marginBottom: '20px',
         overflowX: 'auto',
         paddingBottom: '4px',
       }}>
@@ -234,28 +259,28 @@ export function StudentServicesSuite({
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '7px 14px',
-              borderRadius: 'var(--radius-lg)',
-              border: `1px solid ${activeCategory === cat.key ? 'var(--primary)' : 'var(--border-light)'}`,
-              background: activeCategory === cat.key ? 'var(--primary)' : 'var(--bg-white)',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-xl)',
+              border: `1px solid ${activeCategory === cat.key ? 'transparent' : 'var(--border-light)'}`,
+              background: activeCategory === cat.key ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)' : 'var(--bg-white)',
               color: activeCategory === cat.key ? '#ffffff' : 'var(--text-body)',
-              fontSize: '12px',
-              fontWeight: 600,
+              fontSize: '12.5px',
+              fontWeight: 700,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              transition: 'all 0.2s ease',
-              boxShadow: activeCategory === cat.key ? '0 4px 12px rgba(217, 35, 79, 0.2)' : 'none',
+              transition: 'all 0.25s ease',
+              boxShadow: activeCategory === cat.key ? '0 4px 14px rgba(30, 27, 75, 0.3)' : '0 2px 4px rgba(0,0,0,0.02)',
             }}
           >
             {cat.label}
             <span style={{
-              fontSize: '10px',
-              padding: '1px 6px',
+              fontSize: '10.5px',
+              padding: '2px 7px',
               borderRadius: '10px',
-              background: activeCategory === cat.key ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+              background: activeCategory === cat.key ? 'rgba(255,255,255,0.2)' : '#f1f5f9',
               color: activeCategory === cat.key ? '#ffffff' : 'var(--text-muted)',
-              fontWeight: 700,
+              fontWeight: 800,
             }}>
               {cat.count}
             </span>
@@ -266,8 +291,8 @@ export function StudentServicesSuite({
       {/* Clean Professional Service Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
-        gap: '14px',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+        gap: '16px',
       }}>
         {filteredServices.map((service) => {
           const Icon = service.icon;
@@ -276,78 +301,108 @@ export function StudentServicesSuite({
               key={service.id}
               onClick={service.onClick}
               style={{
-                background: 'var(--bg-white)',
-                border: '1px solid var(--border-light)',
-                borderRadius: 'var(--radius-xl)',
-                padding: '16px',
+                background: service.isDarkBg ? 'linear-gradient(145deg, #1e1b4b 0%, #2e1065 100%)' : 'var(--bg-white)',
+                border: `1px solid ${service.isDarkBg ? 'rgba(255,255,255,0.1)' : 'var(--border-light)'}`,
+                borderRadius: 'var(--radius-2xl)',
+                padding: '20px',
                 display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
                 cursor: 'pointer',
-                transition: 'all 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: 'var(--shadow-xs)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                 position: 'relative',
                 overflow: 'hidden',
+                minHeight: '138px',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = `0 12px 24px ${service.glow}`;
                 e.currentTarget.style.borderColor = service.color;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-xs)';
-                e.currentTarget.style.borderColor = 'var(--border-light)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)';
+                e.currentTarget.style.borderColor = service.isDarkBg ? 'rgba(255,255,255,0.1)' : 'var(--border-light)';
               }}
             >
-              {/* Icon Container */}
-              <div style={{
-                width: '46px',
-                height: '46px',
-                borderRadius: 'var(--radius-xl)',
-                background: service.bg,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <Icon size={22} color={service.color} />
+              {/* Top Row: Icon + Badge */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <div style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '14px',
+                  background: service.isDarkBg ? 'rgba(255,255,255,0.12)' : service.bg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: `0 4px 12px ${service.glow}`,
+                  flexShrink: 0,
+                }}>
+                  <Icon size={22} color={service.isDarkBg ? '#67e8f9' : service.color} />
+                </div>
+
+                {/* Badge Pill */}
+                <span style={{
+                  background: service.badgeGradient,
+                  color: '#ffffff',
+                  fontSize: '10.5px',
+                  fontWeight: 800,
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  boxShadow: `0 2px 8px ${service.glow}`,
+                  letterSpacing: '0.2px',
+                }}>
+                  {service.badge}
+                </span>
               </div>
 
-              {/* Text Meta */}
-              <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Bottom Meta & Action Arrow */}
+              <div>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  marginBottom: '3px',
+                  justifyContent: 'space-between',
+                  gap: '8px',
                 }}>
                   <strong style={{
-                    fontSize: '13.5px',
-                    fontWeight: 700,
-                    color: 'var(--text-heading)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
+                    fontSize: '14.5px',
+                    fontWeight: 800,
+                    color: service.isDarkBg ? '#ffffff' : 'var(--text-heading)',
+                    fontFamily: 'var(--font-display)',
+                    letterSpacing: '-0.2px',
+                    lineHeight: '1.25',
                   }}>
                     {service.title}
                   </strong>
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: service.isDarkBg ? 'rgba(255,255,255,0.15)' : '#f8fafc',
+                    border: `1px solid ${service.isDarkBg ? 'rgba(255,255,255,0.2)' : '#e2e8f0'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <ArrowUpRight size={15} color={service.isDarkBg ? '#67e8f9' : service.color} />
+                  </div>
                 </div>
+
                 <p style={{
-                  margin: 0,
-                  fontSize: '11.5px',
-                  color: 'var(--text-muted)',
-                  whiteSpace: 'nowrap',
+                  margin: '4px 0 0',
+                  fontSize: '12px',
+                  color: service.isDarkBg ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)',
+                  lineHeight: '1.35',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  lineHeight: '1.3',
                 }}>
                   {service.subtitle}
                 </p>
               </div>
-
-              {/* Arrow Indicator */}
-              <ChevronRight size={16} color="var(--text-muted)" style={{ opacity: 0.6, flexShrink: 0 }} />
             </div>
           );
         })}
@@ -356,10 +411,10 @@ export function StudentServicesSuite({
       {filteredServices.length === 0 && (
         <div style={{
           textAlign: 'center',
-          padding: '30px',
+          padding: '40px',
           background: 'var(--bg-white)',
           border: '1px dashed var(--border-light)',
-          borderRadius: 'var(--radius-xl)',
+          borderRadius: 'var(--radius-2xl)',
           color: 'var(--text-muted)',
           fontSize: '13px',
         }}>
