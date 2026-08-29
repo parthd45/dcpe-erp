@@ -56,8 +56,8 @@ function MainApp() {
         </main>
       )}
 
-      {/* Global DCPE AI Genius Assistant (Available on Home Page & Dashboards) */}
-      <AIAssistantWidget currentUser={currentUser} />
+      {/* Global DCPE AI Genius Assistant (Available on Home Page) */}
+      {!showDashboard && <AIAssistantWidget currentUser={currentUser} />}
 
       <Footer />
     </>

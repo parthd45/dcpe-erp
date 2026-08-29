@@ -20,6 +20,7 @@ import PlacementManager from './PlacementManager';
 import { DocumentVerificationModal } from './StudentDocumentModals';
 import QRScannerModal from './QRScannerModal';
 import { ExamSeatingMatrixModal } from './ExamSeatingMatrixModal';
+import { AIAssistantWidget } from './AIAssistantWidget';
 import './Dashboard.css';
 
 const TAG_OPTIONS = [
@@ -2004,6 +2005,20 @@ export default function HODDashboard({ onBackToHome }) {
             onClose={() => setShowSeatingMatrixModal(false)}
           />
         )}
+
+        {/* ── DCPE HOD AI Assistant Floating Widget ── */}
+        <AIAssistantWidget
+          currentUser={currentUser}
+          onOpenModal={(key) => {
+            if (key === 'approvals') setActiveTab('approvals');
+            if (key === 'timetable') setActiveTab('timetable');
+            if (key === 'notices') setActiveTab('notices');
+            if (key === 'seating') setShowSeatingMatrixModal(true);
+            if (key === 'leaves') setActiveTab('leaves');
+            if (key === 'manage') setActiveTab('manage');
+            if (key === 'placement') setActiveTab('placement');
+          }}
+        />
 
       </div>
     </div>

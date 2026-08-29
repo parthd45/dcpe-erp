@@ -124,10 +124,10 @@ export default function PlacementManager() {
 
   return (
     <div className="dashboard-panel">
-      <div className="panel-header" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+      <div className="panel-header placement-manager-header" style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--primary-50)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--primary-50)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Briefcase size={24} />
             </div>
             <div>
@@ -140,7 +140,7 @@ export default function PlacementManager() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="placement-tab-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
               className={`btn btn-sm ${activeTab === 'applicants' ? 'btn-primary' : 'btn-white'}`}
               onClick={() => setActiveTab('applicants')}

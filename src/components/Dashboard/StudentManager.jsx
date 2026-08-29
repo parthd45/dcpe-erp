@@ -131,7 +131,7 @@ export default function StudentManager({
       </div>
 
       {/* Main 2-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px' }}>
+      <div className="student-manager-layout-grid" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px' }}>
         
         {/* Left Column: Student Roster */}
         <div

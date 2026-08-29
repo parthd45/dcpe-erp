@@ -13,6 +13,7 @@ import {
   reviewLeaveApplication
 } from '../../lib/leaveService';
 import { hashPassword } from '../../lib/authCrypto';
+import { AIAssistantWidget } from './AIAssistantWidget';
 import './Dashboard.css';
 
 export default function AdminDashboard({ onBackToHome }) {
@@ -1629,6 +1630,17 @@ export default function AdminDashboard({ onBackToHome }) {
             </div>
           </div>
         )}
+
+        {/* ── Admin AI Copilot Assistant Widget ── */}
+        <AIAssistantWidget
+          currentUser={currentUser}
+          onOpenModal={(key) => {
+            if (key === 'analytics') setActiveTab('analytics');
+            if (key === 'staff') setActiveTab('staff');
+            if (key === 'broadcast' || key === 'notices') setActiveTab('broadcast');
+            if (key === 'sanctions' || key === 'leaves') setActiveTab('sanctions');
+          }}
+        />
 
       </div>
     </div>

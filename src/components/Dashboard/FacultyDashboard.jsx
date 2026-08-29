@@ -22,6 +22,7 @@ import {
   reviewLeaveApplication
 } from '../../lib/leaveService';
 import { TimetableModal } from './TimetableModal';
+import { AIAssistantWidget } from './AIAssistantWidget';
 import './Dashboard.css';
 
 export default function FacultyDashboard({ onBackToHome }) {
@@ -1056,6 +1057,18 @@ export default function FacultyDashboard({ onBackToHome }) {
             onClose={() => setShowQRScanner(false)}
           />
         )}
+
+        {/* ── Faculty AI Copilot Assistant Widget ── */}
+        <AIAssistantWidget
+          currentUser={currentUser}
+          onOpenModal={(key) => {
+            if (key === 'timetable') setShowTimetableModal(true);
+            if (key === 'attendance') setActiveFacultyTab('attendance');
+            if (key === 'marks') setActiveFacultyTab('marks');
+            if (key === 'leaves') setActiveFacultyTab('leaves');
+            if (key === 'qr_scanner' || key === 'scanner') setShowQRScanner(true);
+          }}
+        />
 
       </div>
     </div>

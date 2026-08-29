@@ -652,12 +652,29 @@ export default function StudentDashboard({ onBackToHome }) {
         <AIAssistantWidget
           currentUser={currentUser}
           onOpenModal={(key) => {
-            if (key === 'risk_radar') setShowRiskRadarModal(true);
-            if (key === 'fee_passbook') setShowFeePassbookModal(true);
+            if (key === 'risk_radar' || key === 'riskRadar') setShowRiskRadarModal(true);
+            if (key === 'fee_passbook' || key === 'feePassbook') setShowFeePassbookModal(true);
+            if (key === 'fee' || key === 'fee_modal') setShowFeeModal(true);
+            if (key === 'marksheet') setShowMarksheetModal(true);
+            if (key === 'id_card' || key === 'idCard') setShowIdCardModal(true);
+            if (key === 'hall_ticket' || key === 'hallTicket') setShowHallTicketModal(true);
+            if (key === 'doc_upload' || key === 'docUpload') setShowDocUploadModal(true);
+            if (key === 'placement') setShowPlacementModal(true);
             if (key === 'library') setShowLibraryModal(true);
             if (key === 'timetable') setShowTimetableModal(true);
+            if (key === 'leave') setShowLeaveModal(true);
             if (key === 'resume') setShowResumeBuilderModal(true);
-            if (key === 'hall_ticket') setShowHallTicketModal(true);
+            if (key === 'predictor') setShowPredictorModal(true);
+            if (key === 'leaderboard') setShowLeaderboardModal(true);
+            if (key === 'analytics') setShowAnalyticsModal(true);
+            if (key === 'career_path' || key === 'careerPath') setShowCareerPathModal(true);
+            if (key === 'calendar') setShowCalendarModal(true);
+            if (key === 'feedback') setShowFeedbackModal(true);
+            if (key === 'achievement') setShowAchievementModal(true);
+            if (key === 'wellness') setShowWellnessModal(true);
+            if (key === 'notif_center' || key === 'notifCenter') setShowNotifCenterModal(true);
+            if (key === 'kanban') setShowKanbanModal(true);
+            if (key === 'campus_map' || key === 'campusMap') setShowCampusMapModal(true);
             if (key === 'grievance') setShowGrievanceTimelineModal(true);
           }}
         />

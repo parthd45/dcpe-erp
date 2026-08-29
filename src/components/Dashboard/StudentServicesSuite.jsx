@@ -181,7 +181,7 @@ export function StudentServicesSuite({
   return (
     <div style={{ marginTop: '28px' }}>
       {/* Module Title & Search Header */}
-      <div style={{
+      <div className="student-services-header" style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -221,7 +221,7 @@ export function StudentServicesSuite({
         </div>
 
         {/* Quick Search */}
-        <div style={{ position: 'relative', width: '250px' }}>
+        <div className="services-search-box" style={{ position: 'relative', width: '250px' }}>
           <Search size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             type="text"
@@ -245,7 +245,7 @@ export function StudentServicesSuite({
       </div>
 
       {/* Category Tabs */}
-      <div style={{
+      <div className="student-services-categories" style={{
         display: 'flex',
         gap: '8px',
         marginBottom: '20px',
@@ -289,7 +289,7 @@ export function StudentServicesSuite({
       </div>
 
       {/* Clean Professional Service Grid */}
-      <div style={{
+      <div className="student-services-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
         gap: '16px',
@@ -299,6 +299,7 @@ export function StudentServicesSuite({
           return (
             <div
               key={service.id}
+              className="student-service-card"
               onClick={service.onClick}
               style={{
                 background: service.isDarkBg ? 'linear-gradient(145deg, #1e1b4b 0%, #2e1065 100%)' : 'var(--bg-white)',
@@ -328,7 +329,7 @@ export function StudentServicesSuite({
             >
               {/* Top Row: Icon + Badge */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                <div style={{
+                <div className="service-card-icon" style={{
                   width: '46px',
                   height: '46px',
                   borderRadius: '14px',
@@ -343,7 +344,7 @@ export function StudentServicesSuite({
                 </div>
 
                 {/* Badge Pill */}
-                <span style={{
+                <span className="service-card-badge" style={{
                   background: service.badgeGradient,
                   color: '#ffffff',
                   fontSize: '10.5px',
@@ -365,7 +366,7 @@ export function StudentServicesSuite({
                   justifyContent: 'space-between',
                   gap: '8px',
                 }}>
-                  <strong style={{
+                  <strong className="service-card-title" style={{
                     fontSize: '14.5px',
                     fontWeight: 800,
                     color: service.isDarkBg ? '#ffffff' : 'var(--text-heading)',
@@ -390,7 +391,7 @@ export function StudentServicesSuite({
                   </div>
                 </div>
 
-                <p style={{
+                <p className="service-card-subtitle" style={{
                   margin: '4px 0 0',
                   fontSize: '12px',
                   color: service.isDarkBg ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)',
