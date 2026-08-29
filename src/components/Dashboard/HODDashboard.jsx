@@ -93,6 +93,9 @@ export default function HODDashboard({ onBackToHome }) {
     logout
   } = useAuth();
 
+  // ── Seating Matrix Modal state
+  const [showSeatingMatrixModal, setShowSeatingMatrixModal] = useState(false);
+
   // ── Student approval state
   const [filterStatus, setFilterStatus] = useState('all');
   const [deptScope, setDeptScope] = useState('all'); // 'all' | 'mine' | specific dept_id
