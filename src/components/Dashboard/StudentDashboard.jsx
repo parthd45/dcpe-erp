@@ -37,6 +37,7 @@ import { NotificationCommandCenterModal } from './NotificationCommandCenterModal
 import { KanbanAssignmentModal } from './KanbanAssignmentModal';
 import { CampusMapModal } from './CampusMapModal';
 import { StudentServicesSuite } from './StudentServicesSuite';
+import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
 
 
