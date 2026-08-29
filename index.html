@@ -23,9 +23,26 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('[DCPE ERP PWA] ServiceWorker registered with scope:', reg.scope))
-            .catch(err => console.log('[DCPE ERP PWA] ServiceWorker registration failed:', err));
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            console.log('[DCPE ERP PWA] ServiceWorker registered');
+            
+            // Check for service worker updates immediately
+            reg.onupdatefound = () => {
+              const installingWorker = reg.installing;
+              if (installingWorker) {
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === 'installed') {
+                    if (navigator.serviceWorker.controller) {
+                      console.log('[DCPE ERP PWA] New update detected, reloading app...');
+                      window.location.reload();
+                    }
+                  }
+                };
+              }
+            };
+          }).catch(err => {
+            console.error('[DCPE ERP PWA] SW registration failed:', err);
+          });
         });
       }
     </script>
