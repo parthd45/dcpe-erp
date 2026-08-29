@@ -146,6 +146,19 @@ export function StudentServicesSuite({
       glow: 'rgba(16, 185, 129, 0.25)',
       onClick: () => onOpenModal('codeSandbox'),
     },
+    {
+      id: 'biomechanics',
+      title: 'Biomechanics Motion Capture',
+      subtitle: 'Kinematic Joint Angle & Athletic Performance Vision',
+      category: 'academic',
+      badge: 'Sports Science 🏃',
+      badgeGradient: 'linear-gradient(135deg, #059669, #10b981)',
+      icon: Zap,
+      color: '#059669',
+      bg: '#ecfdf5',
+      glow: 'rgba(5, 150, 105, 0.25)',
+      onClick: () => onOpenModal('biomechanics'),
+    },
 
     // 🎓 ACADEMICS, FINANCE & GAMIFICATION (4)
     {

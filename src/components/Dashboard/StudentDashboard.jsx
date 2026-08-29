@@ -39,6 +39,7 @@ import { CampusMapModal } from './CampusMapModal';
 import { CodeSandboxModal } from './CodeSandboxModal';
 import { TamperProofLedgerModal } from './TamperProofLedgerModal';
 import { SkillTreeModal } from './SkillTreeModal';
+import { BiomechanicsTrackerModal } from './BiomechanicsTrackerModal';
 import { StudentServicesSuite } from './StudentServicesSuite';
 import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
@@ -81,6 +82,7 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showCodeSandboxModal, setShowCodeSandboxModal] = useState(false);
   const [showTamperLedgerModal, setShowTamperLedgerModal] = useState(false);
   const [showSkillTreeModal, setShowSkillTreeModal] = useState(false);
+  const [showBiomechanicsModal, setShowBiomechanicsModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -396,6 +398,7 @@ export default function StudentDashboard({ onBackToHome }) {
                 if (modalKey === 'codeSandbox') setShowCodeSandboxModal(true);
                 if (modalKey === 'tamperLedger') setShowTamperLedgerModal(true);
                 if (modalKey === 'skillTree') setShowSkillTreeModal(true);
+                if (modalKey === 'biomechanics') setShowBiomechanicsModal(true);
               }}
             />
           </div>
@@ -657,6 +660,9 @@ export default function StudentDashboard({ onBackToHome }) {
         {showSkillTreeModal && (
           <SkillTreeModal currentUser={currentUser} onClose={() => setShowSkillTreeModal(false)} />
         )}
+        {showBiomechanicsModal && (
+          <BiomechanicsTrackerModal currentUser={currentUser} onClose={() => setShowBiomechanicsModal(false)} />
+        )}
 
         {/* ── Grievance Timeline Modal ── */}
         {showGrievanceTimelineModal && (
@@ -696,6 +702,7 @@ export default function StudentDashboard({ onBackToHome }) {
             if (key === 'code_sandbox' || key === 'codeSandbox') setShowCodeSandboxModal(true);
             if (key === 'tamper_ledger' || key === 'tamperLedger') setShowTamperLedgerModal(true);
             if (key === 'skill_tree' || key === 'skillTree') setShowSkillTreeModal(true);
+            if (key === 'biomechanics') setShowBiomechanicsModal(true);
             if (key === 'grievance') setShowGrievanceTimelineModal(true);
           }}
         />
