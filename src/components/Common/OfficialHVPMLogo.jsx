@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 /**
  * Official DCPE Amravati College Emblem Component
- * Renders a prominent, high-visibility version of the official seal of
- * Degree College of Physical Education, Amravati (M.S.)
+ * Features prominent logo seal and bold Crimson Red title text ("DCPE HVPM")
+ * for high contrast and ultra-high legibility on dark and light backgrounds.
  */
 export function OfficialHVPMLogo({ size = 58, showTitle = true, isLight = false, className = '' }) {
   const [imgError, setImgError] = useState(false);
@@ -21,7 +21,7 @@ export function OfficialHVPMLogo({ size = 58, showTitle = true, isLight = false,
             flexShrink: 0,
             filter: isLight
               ? 'brightness(0) invert(1) drop-shadow(0 4px 12px rgba(255,255,255,0.4))'
-              : 'drop-shadow(0 4px 12px rgba(0,0,0,0.18))',
+              : 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))',
             transition: 'transform 0.2s ease',
           }}
           onError={() => setImgError(true)}
@@ -62,21 +62,25 @@ export function OfficialHVPMLogo({ size = 58, showTitle = true, isLight = false,
 
       {showTitle && (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Main Name in High-Visibility Bold Crimson Red */}
           <span style={{
-            fontSize: '18px',
+            fontSize: '19px',
             fontWeight: 900,
-            color: isLight ? '#ffffff' : 'var(--text-heading)',
+            color: '#ef4444', // High-visibility bright crimson red!
             fontFamily: 'var(--font-display)',
-            letterSpacing: '-0.3px',
+            letterSpacing: '0.2px',
             lineHeight: 1.2,
+            textShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
           }}>
             DCPE HVPM
           </span>
+          {/* Subtitle in High-Contrast Crisp White / Light Tone */}
           <span style={{
             fontSize: '11.5px',
             fontWeight: 700,
-            color: isLight ? 'rgba(255,255,255,0.85)' : 'var(--text-muted)',
+            color: isLight ? 'rgba(255,255,255,0.9)' : '#e2e8f0',
             lineHeight: 1.25,
+            textShadow: '0 1px 4px rgba(0, 0, 0, 0.5)',
           }}>
             Degree College of Physical Education, Amravati (M.S.)
           </span>
