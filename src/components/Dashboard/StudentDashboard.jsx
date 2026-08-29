@@ -25,6 +25,7 @@ import { AttendanceRiskRadarModal } from './AttendanceRiskRadarModal';
 import { StudentResumeBuilderModal } from './StudentResumeBuilderModal';
 import { FeePassbookModal } from './FeePassbookModal';
 import { GrievanceTimelineModal } from './GrievanceTimelineModal';
+import { AIAssistantWidget } from './AIAssistantWidget';
 import './Dashboard.css';
 
 
@@ -626,6 +627,20 @@ export default function StudentDashboard({ onBackToHome }) {
             onClose={() => setShowGrievanceTimelineModal(false)}
           />
         )}
+
+        {/* ── DCPE AI Genius Assistant Floating Widget ── */}
+        <AIAssistantWidget
+          currentUser={currentUser}
+          onOpenModal={(key) => {
+            if (key === 'risk_radar') setShowRiskRadarModal(true);
+            if (key === 'fee_passbook') setShowFeePassbookModal(true);
+            if (key === 'library') setShowLibraryModal(true);
+            if (key === 'timetable') setShowTimetableModal(true);
+            if (key === 'resume') setShowResumeBuilderModal(true);
+            if (key === 'hall_ticket') setShowHallTicketModal(true);
+            if (key === 'grievance') setShowGrievanceTimelineModal(true);
+          }}
+        />
 
       </div>
     </div>

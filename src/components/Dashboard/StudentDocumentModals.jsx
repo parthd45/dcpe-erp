@@ -14,6 +14,8 @@ import './Dashboard.css';
 export function StudentIDCardModal({ currentUser, onClose }) {
   if (!currentUser) return null;
 
+  const [isFlipped, setIsFlipped] = useState(false);
+
   const handlePrint = () => {
     window.print();
   };
@@ -58,11 +60,19 @@ export function StudentIDCardModal({ currentUser, onClose }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '14px', color: 'var(--text-heading)' }}>
             <GraduationCap size={18} color="var(--primary)" />
-            Official Student ID Card Preview
+            Official Student Digital ID Card Studio
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              className="btn btn-white btn-sm"
+              onClick={() => setIsFlipped(!isFlipped)}
+              style={{ borderRadius: '20px', fontSize: '11px', fontWeight: 700 }}
+            >
+              🔄 Flip to {isFlipped ? 'Front View' : 'Back View'}
+            </button>
             <button className="btn btn-primary btn-sm" onClick={handlePrint}>
-              <Printer size={15} /> Print / Save PDF
+              <Printer size={15} /> Print ID Card
             </button>
             <button className="btn btn-white btn-sm" onClick={onClose}>
               <X size={16} />
@@ -75,210 +85,177 @@ export function StudentIDCardModal({ currentUser, onClose }) {
           <div
             id="printable-id-card"
             style={{
-              background: 'linear-gradient(145deg, #ffffff, #f8fafc)',
-              border: '2px solid #e2e8f0',
+              background: isFlipped ? 'linear-gradient(145deg, #0f172a, #1e1b4b)' : 'linear-gradient(145deg, #ffffff, #f8fafc)',
+              color: isFlipped ? 'white' : '#1e293b',
+              border: '2px solid #cbd5e1',
               borderRadius: '20px',
               padding: '24px',
               position: 'relative',
-              boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)',
+              boxShadow: '0 15px 30px -5px rgba(0,0,0,0.15)',
               overflow: 'hidden',
+              transition: 'transform 0.4s ease',
             }}
           >
-            {/* Background Watermark Pattern */}
+            {/* Security Hologram Stamp */}
             <div
               style={{
                 position: 'absolute',
-                right: '-40px',
-                bottom: '-40px',
-                opacity: 0.04,
-                pointerEvents: 'none',
-              }}
-            >
-              <ShieldCheck size={260} color="#1e1b4b" />
-            </div>
-
-            {/* Institution Header Banner */}
-            <div
-              style={{
-                borderBottom: '2px solid var(--primary)',
-                paddingBottom: '14px',
-                marginBottom: '18px',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                Shree Hanuman Vyayam Prasarak Mandal's
-              </div>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '16px',
-                  fontWeight: 800,
-                  color: '#1e1b4b',
-                  margin: '2px 0',
-                  lineHeight: 1.2,
-                }}
-              >
-                DEGREE COLLEGE OF PHYSICAL EDUCATION
-              </h3>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                Autonomous College • HVPM Campus, Amravati - 444605 (M.S.)
-              </div>
-            </div>
-
-            {/* ID Card Content Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '20px', alignItems: 'center' }}>
-              
-              {/* Left Photo & Role Badge */}
-              <div style={{ textAlign: 'center' }}>
-                {currentUser.photoUrl ? (
-                  <img
-                    src={currentUser.photoUrl}
-                    alt={currentUser.name}
-                    style={{
-                      width: '110px',
-                      height: '130px',
-                      borderRadius: '14px',
-                      objectFit: 'cover',
-                      margin: '0 auto 8px',
-                      boxShadow: 'var(--shadow-md)',
-                      border: '3px solid white',
-                      display: 'block',
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: '110px',
-                      height: '130px',
-                      borderRadius: '14px',
-                      background: 'linear-gradient(135deg, #d9234f, #4f46e5)',
-                      color: 'white',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 8px',
-                      boxShadow: 'var(--shadow-md)',
-                      border: '3px solid white',
-                    }}
-                  >
-                    <div style={{ fontSize: '42px', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
-                      {currentUser.name.charAt(0)}
-                    </div>
-                    <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '4px' }}>
-                      STUDENT
-                    </span>
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    color: '#059669',
-                    background: '#ecfdf5',
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    border: '1px solid #a7f3d0',
-                    display: 'inline-block',
-                  }}
-                >
-                  ✓ VERIFIED
-                </div>
-              </div>
-
-              {/* Right Student Details */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
-                <div>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Student Name</span>
-                  <strong style={{ fontSize: '15px', color: '#1e1b4b', display: 'block', lineHeight: 1.2 }}>
-                    {currentUser.name}
-                  </strong>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                  <div>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Permanent PRN</span>
-                    <code style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)' }}>{currentUser.prn}</code>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Roll No</span>
-                    <strong style={{ fontSize: '12px', color: 'var(--text-heading)' }}>{currentUser.rollNo || 'Pending'}</strong>
-                  </div>
-                </div>
-
-                <div>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Course &amp; Department</span>
-                  <strong style={{ fontSize: '12px', color: 'var(--text-heading)' }}>{currentUser.course}</strong>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{currentUser.departmentName}</div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                  <div>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Academic Session</span>
-                    <strong>2026 - 2028</strong>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Validity</span>
-                    <strong style={{ color: '#059669' }}>JUN 2028</strong>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Bottom Bar: QR Code, Barcode & Stamp */}
-            <div
-              style={{
-                marginTop: '20px',
-                paddingTop: '14px',
-                borderTop: '1px dashed #cbd5e1',
+                top: '16px',
+                right: '16px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'conic-gradient(from 0deg, #f43f5e, #eab308, #10b981, #06b6d4, #8b5cf6, #f43f5e)',
+                opacity: 0.8,
+                boxShadow: '0 0 10px rgba(255,255,255,0.8)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justifyContent: 'center',
+                fontSize: '8px',
+                fontWeight: 900,
+                color: 'white',
               }}
+              title="Official Institutional Hologram"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {/* Simulated QR Code SVG */}
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    background: '#f1f5f9',
-                    padding: 4,
-                    borderRadius: 6,
-                    border: '1px solid #cbd5e1',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <QrCode size={36} color="#1e1b4b" />
-                </div>
-                <div>
-                  <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600 }}>SCAN TO VERIFY</div>
-                  <div style={{ fontSize: '8px', color: 'var(--text-muted)' }}>DCPE ERP SECURE TOKEN</div>
-                </div>
-              </div>
-
-              {/* Principal / CoE Stamp Seal */}
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, color: '#1e1b4b', marginBottom: '2px' }}>
-                  {currentUser.approvedBy || 'Head of Department'}
-                </div>
-                <div style={{ fontSize: '8px', color: 'var(--text-muted)' }}>
-                  Head of Department / Issuing Authority
-                </div>
-                <div style={{ fontSize: '7px', color: '#059669', fontWeight: 800, marginTop: '2px' }}>
-                  OFFICIALLY STAMPED &amp; SIGNED
-                </div>
-              </div>
+              HVPM
             </div>
 
+            {!isFlipped ? (
+              /* FRONT SIDE */
+              <>
+                {/* Institution Header Banner */}
+                <div style={{ borderBottom: '2px solid var(--primary)', paddingBottom: '14px', marginBottom: '18px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                    Shree Hanuman Vyayam Prasarak Mandal's
+                  </div>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 800, color: '#1e1b4b', margin: '2px 0' }}>
+                    DEGREE COLLEGE OF PHYSICAL EDUCATION
+                  </h3>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                    Autonomous College • HVPM Campus, Amravati - 444605 (M.S.)
+                  </div>
+                </div>
+
+                {/* ID Card Content Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '20px', alignItems: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    {currentUser.photoUrl ? (
+                      <img
+                        src={currentUser.photoUrl}
+                        alt={currentUser.name}
+                        style={{ width: '110px', height: '130px', borderRadius: '14px', objectFit: 'cover', margin: '0 auto 8px', border: '3px solid white', boxShadow: 'var(--shadow-md)' }}
+                      />
+                    ) : (
+                      <div style={{ width: '110px', height: '130px', borderRadius: '14px', background: 'linear-gradient(135deg, #d9234f, #4f46e5)', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', border: '3px solid white' }}>
+                        <div style={{ fontSize: '42px', fontWeight: 800 }}>{currentUser.name.charAt(0)}</div>
+                        <span style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '4px' }}>
+                          STUDENT
+                        </span>
+                      </div>
+                    )}
+                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#059669', background: '#ecfdf5', padding: '2px 8px', borderRadius: '12px', border: '1px solid #a7f3d0', display: 'inline-block' }}>
+                      ✓ VERIFIED
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Student Name</span>
+                      <strong style={{ fontSize: '15px', color: '#1e1b4b', display: 'block' }}>{currentUser.name}</strong>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      <div>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Permanent PRN</span>
+                        <code style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)' }}>{currentUser.prn}</code>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Roll No</span>
+                        <strong style={{ fontSize: '12px' }}>{currentUser.rollNo || 'Pending'}</strong>
+                      </div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Course &amp; Department</span>
+                      <strong style={{ fontSize: '12px' }}>{currentUser.course}</strong>
+                      <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{currentUser.departmentName}</div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      <div>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Session</span>
+                        <strong>2026 - 2028</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Validity</span>
+                        <strong style={{ color: '#059669' }}>JUN 2028</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <QrCode size={38} color="#1e1b4b" />
+                    <div>
+                      <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600 }}>SCAN FOR CAMPUS VERIFICATION</div>
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#1e1b4b' }}>HVPM AUTONOMY SYSTEM</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontFamily: `'Brush Script MT', cursive, sans-serif`, fontSize: '16px', color: '#1e1b4b', fontWeight: 700 }}>
+                      Principal / Registrar
+                    </div>
+                    <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 700 }}>ISSUING AUTHORITY</div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* BACK SIDE */
+              <>
+                <div style={{ borderBottom: '1px solid #334155', paddingBottom: '12px', marginBottom: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.1em' }}>
+                    EMERGENCY CONTACT &amp; CAMPUS REGULATIONS
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8' }}>Shree HVPM DCPE Amravati Autonomous Institute</div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '11px', color: '#e2e8f0' }}>
+                  <div>
+                    <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>Permanent Residential Address</span>
+                    <strong>Plot 45, HVPM Campus Road, Amravati, Maharashtra - 444605</strong>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>Blood Group</span>
+                      <strong style={{ color: '#ef4444' }}>O +ve</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>Guardian Contact</span>
+                      <strong>+91 98765 43210</strong>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block' }}>Institution Rules</span>
+                    <ul style={{ margin: '4px 0 0', paddingLeft: '14px', fontSize: '10px', color: '#cbd5e1' }}>
+                      <li>This ID card must be produced on demand by Campus Security.</li>
+                      <li>Loss of ID card must be reported immediately to the HOD office.</li>
+                      <li>Non-transferable and property of HVPM Autonomous Institute.</li>
+                    </ul>
+                  </div>
+
+                  <div style={{ textAlign: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #334155' }}>
+                    <div style={{ fontFamily: 'monospace', fontSize: '12px', letterSpacing: '4px', color: '#38bdf8' }}>
+                      ||| | |||| || | ||||| || |||
+                    </div>
+                    <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '2px' }}>
+                      BARCODE ID: {currentUser.prn}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-
       </div>
     </div>
   );

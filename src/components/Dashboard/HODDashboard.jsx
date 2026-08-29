@@ -19,6 +19,7 @@ import StudentManager from './StudentManager';
 import PlacementManager from './PlacementManager';
 import { DocumentVerificationModal } from './StudentDocumentModals';
 import QRScannerModal from './QRScannerModal';
+import { ExamSeatingMatrixModal } from './ExamSeatingMatrixModal';
 import './Dashboard.css';
 
 const TAG_OPTIONS = [
@@ -616,6 +617,15 @@ export default function HODDashboard({ onBackToHome }) {
           >
             <Calendar size={16} />
             Department Timetables
+          </button>
+
+          <button
+            className="hod-tab-btn"
+            style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', color: '#67e8f9' }}
+            onClick={() => setShowSeatingMatrixModal(true)}
+          >
+            <Building2 size={16} />
+            Exam Seating Matrix 🪑
           </button>
         </div>
 
