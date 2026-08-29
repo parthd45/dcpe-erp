@@ -375,40 +375,42 @@ export function ExamHallTicketModal({ currentUser, attendanceStats, onClose }) {
 
             {/* Student Candidate Meta & Photo Section */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px', gap: '16px', marginBottom: '20px', alignItems: 'stretch' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700, width: '130px' }}>Candidate Name:</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700, fontSize: '13px' }}>{currentUser.name}</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700, width: '120px' }}>Permanent PRN:</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}><code>{currentUser.prn}</code></td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Course &amp; Program:</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>{currentUser.course}</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Examination Seat No:</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: 'var(--primary)' }}>
-                      SEAT-MCA-2026-042
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Department:</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>{currentUser.departmentName}</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Exam Center:</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>Main Exam Complex, DCPE Campus</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Overall Attendance:</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: isEligible ? '#059669' : '#dc2626' }}>
-                      {attendanceStats?.overallPercentage || currentUser.attendance || '90.0%'} ({isEligible ? 'Eligible ✓' : 'Shortage Detained ⚠️'})
-                    </td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Semester Fee Status:</td>
-                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', color: '#059669', fontWeight: 700 }}>
-                      {currentUser.feesStatus || 'Paid ✓'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700, width: '130px' }}>Candidate Name:</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700, fontSize: '13px' }}>{currentUser.name}</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700, width: '120px' }}>Permanent PRN:</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}><code>{currentUser.prn}</code></td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Course &amp; Program:</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>{currentUser.course}</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Examination Seat No:</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: 'var(--primary)' }}>
+                        SEAT-MCA-2026-042
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Department:</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>{currentUser.departmentName}</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Exam Center:</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>Main Exam Complex, DCPE Campus</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Overall Attendance:</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: isEligible ? '#059669' : '#dc2626' }}>
+                        {attendanceStats?.overallPercentage || currentUser.attendance || '90.0%'} ({isEligible ? 'Eligible ✓' : 'Shortage Detained ⚠️'})
+                      </td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Semester Fee Status:</td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', color: '#059669', fontWeight: 700 }}>
+                        {currentUser.feesStatus || 'Paid ✓'}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
               {/* Candidate Photograph Box */}
               <div
@@ -469,40 +471,42 @@ export function ExamHallTicketModal({ currentUser, attendanceStats, onClose }) {
               📋 Confirmed Examination Schedule:
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left', marginBottom: '20px' }}>
-              <thead>
-                <tr style={{ background: '#1e1b4b', color: 'white' }}>
-                  <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b' }}>Date &amp; Time</th>
-                  <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b' }}>Course Code</th>
-                  <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b' }}>Subject Title</th>
-                  <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b' }}>Hall No</th>
-                  <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b', textAlign: 'center' }}>Invigilator Sign</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><strong>25-AUG-2026</strong> (10:00 AM - 01:00 PM)</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><code>MCA-101</code></td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Cloud Computing &amp; DevOps</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Lab 3</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}></td>
-                </tr>
-                <tr style={{ background: '#f8fafc' }}>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><strong>27-AUG-2026</strong> (10:00 AM - 01:00 PM)</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><code>MCA-102</code></td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Advanced Database Systems</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Room 204</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}></td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><strong>29-AUG-2026</strong> (10:00 AM - 01:00 PM)</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><code>MCA-103</code></td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Software Engineering &amp; Agile</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Main Hall</td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}></td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left', marginBottom: '20px' }}>
+                <thead>
+                  <tr style={{ background: '#1e1b4b', color: 'white' }}>
+                    <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b' }}>Date &amp; Time</th>
+                    <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b' }}>Course Code</th>
+                    <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b' }}>Subject Title</th>
+                    <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b' }}>Hall No</th>
+                    <th style={{ padding: '8px 12px', border: '1px solid #1e1b4b', textAlign: 'center' }}>Invigilator Sign</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><strong>25-AUG-2026</strong> (10:00 AM - 01:00 PM)</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><code>MCA-101</code></td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Cloud Computing &amp; DevOps</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Lab 3</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}></td>
+                  </tr>
+                  <tr style={{ background: '#f8fafc' }}>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><strong>27-AUG-2026</strong> (10:00 AM - 01:00 PM)</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><code>MCA-102</code></td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Advanced Database Systems</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Room 204</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}></td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><strong>29-AUG-2026</strong> (10:00 AM - 01:00 PM)</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}><code>MCA-103</code></td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Software Engineering &amp; Agile</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}>Main Hall</td>
+                    <td style={{ padding: '8px 12px', border: '1px solid #cbd5e1' }}></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             {/* Candidate Rules */}
             <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 16px', fontSize: '11px', color: '#92400e', marginBottom: '24px' }}>
@@ -684,76 +688,80 @@ export function DigitalMarksheetModal({ currentUser, gradeReport, onClose }) {
             </div>
 
             {/* Candidate Metadata Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '20px' }}>
-              <tbody>
-                <tr>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700, width: '140px' }}>Student Name:</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700, fontSize: '14px', color: '#1e1b4b' }}>{currentUser.name}</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700, width: '130px' }}>Permanent PRN:</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}><code>{currentUser.prn}</code></td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Course &amp; Program:</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>{currentUser.course}</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>College Roll No:</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700 }}>{currentUser.rollNo || 'MCA-26-001'}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Department:</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>{currentUser.departmentName}</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Academic Term:</td>
-                  <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>Semester I (Winter 2026)</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', marginBottom: '20px', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '0' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700, width: '140px' }}>Student Name:</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700, fontSize: '14px', color: '#1e1b4b' }}>{currentUser.name}</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700, width: '130px' }}>Permanent PRN:</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}><code>{currentUser.prn}</code></td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Course &amp; Program:</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>{currentUser.course}</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>College Roll No:</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', fontWeight: 700 }}>{currentUser.rollNo || 'MCA-26-001'}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Department:</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>{currentUser.departmentName}</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 700 }}>Academic Term:</td>
+                    <td style={{ padding: '6px 10px', border: '1px solid #cbd5e1' }}>Semester I (Winter 2026)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             {/* Subject Marks Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'center', marginBottom: '20px' }}>
-              <thead>
-                <tr style={{ background: '#1e1b4b', color: 'white' }}>
-                  <th style={{ padding: '8px 10px', border: '1px solid #1e1b4b', textAlign: 'left' }}>Course Code &amp; Title</th>
-                  <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Credits</th>
-                  <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Internal (30)</th>
-                  <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>External (70)</th>
-                  <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Total (100)</th>
-                  <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Grade Point</th>
-                  <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Letter Grade</th>
-                  <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Credit Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displaySubjects.map((sub, idx) => (
-                  <tr key={idx} style={{ background: idx % 2 === 1 ? '#f8fafc' : 'white' }}>
-                    <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left' }}>
-                      <strong style={{ display: 'block', color: 'var(--text-heading)' }}>{sub.name}</strong>
-                      <code style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.code}</code>
-                    </td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1', fontWeight: 600 }}>{sub.credits || 4}</td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>{sub.internalMarks}</td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>{sub.externalMarks}</td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#1e1b4b' }}>{sub.totalMarks}</td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1', fontWeight: 700 }}>{sub.gradePoint}</td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
-                      <span
-                        style={{
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontWeight: 800,
-                          fontSize: '11px',
-                          background: sub.letterGrade === 'F' ? '#fee2e2' : '#dcfce7',
-                          color: sub.letterGrade === 'F' ? '#b91c1c' : '#15803d',
-                        }}
-                      >
-                        {sub.letterGrade}
-                      </span>
-                    </td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1', fontWeight: 700, color: 'var(--primary)' }}>
-                      {sub.creditPoints}
-                    </td>
+            <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', marginBottom: '20px', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'center', marginBottom: '0' }}>
+                <thead>
+                  <tr style={{ background: '#1e1b4b', color: 'white' }}>
+                    <th style={{ padding: '8px 10px', border: '1px solid #1e1b4b', textAlign: 'left' }}>Course Code &amp; Title</th>
+                    <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Credits</th>
+                    <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Internal (30)</th>
+                    <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>External (70)</th>
+                    <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Total (100)</th>
+                    <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Grade Point</th>
+                    <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Letter Grade</th>
+                    <th style={{ padding: '8px 8px', border: '1px solid #1e1b4b' }}>Credit Points</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {displaySubjects.map((sub, idx) => (
+                    <tr key={idx} style={{ background: idx % 2 === 1 ? '#f8fafc' : 'white' }}>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left' }}>
+                        <strong style={{ display: 'block', color: 'var(--text-heading)' }}>{sub.name}</strong>
+                        <code style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub.code}</code>
+                      </td>
+                      <td style={{ padding: '8px', border: '1px solid #cbd5e1', fontWeight: 600 }}>{sub.credits || 4}</td>
+                      <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>{sub.internalMarks}</td>
+                      <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>{sub.externalMarks}</td>
+                      <td style={{ padding: '8px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#1e1b4b' }}>{sub.totalMarks}</td>
+                      <td style={{ padding: '8px', border: '1px solid #cbd5e1', fontWeight: 700 }}>{sub.gradePoint}</td>
+                      <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                        <span
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontWeight: 800,
+                            fontSize: '11px',
+                            background: sub.letterGrade === 'F' ? '#fee2e2' : '#dcfce7',
+                            color: sub.letterGrade === 'F' ? '#b91c1c' : '#15803d',
+                          }}
+                        >
+                          {sub.letterGrade}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px', border: '1px solid #cbd5e1', fontWeight: 700, color: 'var(--primary)' }}>
+                        {sub.creditPoints}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {/* Performance Summary Box */}
             <div

@@ -156,52 +156,56 @@ export function FeePassbookModal({ currentUser, onClose }) {
             <div style={{ fontWeight: 800, fontSize: '14px', color: '#0f172a', marginBottom: '8px' }}>
               📊 Approved Fee Structure Breakdown:
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '24px' }}>
-              <thead>
-                <tr style={{ background: '#0f172a', color: 'white' }}>
-                  <th style={{ padding: '8px 12px', textAlign: 'left' }}>Fee Component</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'right' }}>Amount (₹)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Tuition & Academic Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{tuition.toLocaleString('en-IN')}</td></tr>
-                <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Laboratory & Practical Facility Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{lab.toLocaleString('en-IN')}</td></tr>
-                <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Sports & Gymnasium Development Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{sports.toLocaleString('en-IN')}</td></tr>
-                <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Autonomy Examination Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{exam.toLocaleString('en-IN')}</td></tr>
-                <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Library & Digital E-Resource Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{library.toLocaleString('en-IN')}</td></tr>
-                <tr style={{ background: '#f1f5f9', fontWeight: 800 }}>
-                  <td style={{ padding: '10px 12px', fontSize: '13px' }}>TOTAL ANNUAL ACADEMIC FEE</td>
-                  <td style={{ padding: '10px 12px', fontSize: '14px', textAlign: 'right', color: 'var(--primary)' }}>₹{totalFee.toLocaleString('en-IN')}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', marginBottom: '24px', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '0' }}>
+                <thead>
+                  <tr style={{ background: '#0f172a', color: 'white' }}>
+                    <th style={{ padding: '8px 12px', textAlign: 'left' }}>Fee Component</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Tuition & Academic Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{tuition.toLocaleString('en-IN')}</td></tr>
+                  <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Laboratory & Practical Facility Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{lab.toLocaleString('en-IN')}</td></tr>
+                  <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Sports & Gymnasium Development Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{sports.toLocaleString('en-IN')}</td></tr>
+                  <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Autonomy Examination Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{exam.toLocaleString('en-IN')}</td></tr>
+                  <tr><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0' }}>Library & Digital E-Resource Fee</td><td style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', textAlign: 'right', fontWeight: 700 }}>₹{library.toLocaleString('en-IN')}</td></tr>
+                  <tr style={{ background: '#f1f5f9', fontWeight: 800 }}>
+                    <td style={{ padding: '10px 12px', fontSize: '13px' }}>TOTAL ANNUAL ACADEMIC FEE</td>
+                    <td style={{ padding: '10px 12px', fontSize: '14px', textAlign: 'right', color: 'var(--primary)' }}>₹{totalFee.toLocaleString('en-IN')}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             {/* Transaction Ledger */}
             <div style={{ fontWeight: 800, fontSize: '14px', color: '#0f172a', marginBottom: '8px' }}>
               📜 Payment Transaction History Ledger:
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '20px' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', color: '#334155' }}>
-                  <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Transaction Ref</th>
-                  <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Date</th>
-                  <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Description</th>
-                  <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Amount</th>
-                  <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((t, i) => (
-                  <tr key={i}>
-                    <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1' }}><code>{t.txnId}</code></td>
-                    <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1' }}>{t.date}</td>
-                    <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1' }}>{t.desc}</td>
-                    <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'right', fontWeight: 700 }}>₹{t.amount.toLocaleString('en-IN')}</td>
-                    <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'center', fontWeight: 700, color: t.status.includes('SUCCESS') ? '#059669' : '#dc2626' }}>{t.status}</td>
+            <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', marginBottom: '20px', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '0' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', color: '#334155' }}>
+                    <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Transaction Ref</th>
+                    <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Date</th>
+                    <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Description</th>
+                    <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Amount</th>
+                    <th style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {transactions.map((t, i) => (
+                    <tr key={i}>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1' }}><code>{t.txnId}</code></td>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1' }}>{t.date}</td>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1' }}>{t.desc}</td>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'right', fontWeight: 700 }}>₹{t.amount.toLocaleString('en-IN')}</td>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'center', fontWeight: 700, color: t.status.includes('SUCCESS') ? '#059669' : '#dc2626' }}>{t.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {/* Official seal */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #cbd5e1' }}>
