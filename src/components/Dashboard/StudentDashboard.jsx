@@ -26,6 +26,16 @@ import { StudentResumeBuilderModal } from './StudentResumeBuilderModal';
 import { FeePassbookModal } from './FeePassbookModal';
 import { GrievanceTimelineModal } from './GrievanceTimelineModal';
 import { AIAssistantWidget } from './AIAssistantWidget';
+import { GamifiedLeaderboardModal } from './GamifiedLeaderboardModal';
+import { DeptAnalyticsDashboardModal } from './DeptAnalyticsDashboardModal';
+import { AICareerPathModal } from './AICareerPathModal';
+import { AcademicCalendarModal } from './AcademicCalendarModal';
+import { AnonymousFeedbackModal } from './AnonymousFeedbackModal';
+import { AchievementWalletModal } from './AchievementWalletModal';
+import { WellnessTrackerModal } from './WellnessTrackerModal';
+import { NotificationCommandCenterModal } from './NotificationCommandCenterModal';
+import { KanbanAssignmentModal } from './KanbanAssignmentModal';
+import { CampusMapModal } from './CampusMapModal';
 import './Dashboard.css';
 
 
@@ -51,6 +61,18 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showRiskRadarModal, setShowRiskRadarModal] = useState(false);
   const [showResumeBuilderModal, setShowResumeBuilderModal] = useState(false);
   const [showGrievanceTimelineModal, setShowGrievanceTimelineModal] = useState(false);
+
+  // ── New Premium Feature Modals ──
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [showCareerPathModal, setShowCareerPathModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [showWellnessModal, setShowWellnessModal] = useState(false);
+  const [showNotifCenterModal, setShowNotifCenterModal] = useState(false);
+  const [showKanbanModal, setShowKanbanModal] = useState(false);
+  const [showCampusMapModal, setShowCampusMapModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -412,6 +434,38 @@ export default function StudentDashboard({ onBackToHome }) {
               >
                 <Briefcase size={15} color="#67e8f9" /> T&amp;P Campus Placements 🚀
               </button>
+
+              {/* ── New Premium Features ── */}
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fcd34d', color: '#b45309', background: '#fffbeb' }} onClick={() => setShowLeaderboardModal(true)}>
+                🎮 XP Leaderboard
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #93c5fd', color: '#1e40af', background: '#eff6ff' }} onClick={() => setShowAnalyticsModal(true)}>
+                📊 Dept Analytics
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #c4b5fd', color: '#6d28d9', background: '#f5f3ff' }} onClick={() => setShowCareerPathModal(true)}>
+                🧠 Career Path AI
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #6ee7b7', color: '#047857', background: '#ecfdf5' }} onClick={() => setShowCalendarModal(true)}>
+                📅 Academic Calendar
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #f9a8d4', color: '#be185d', background: '#fdf2f8' }} onClick={() => setShowFeedbackModal(true)}>
+                💬 Anonymous Feedback
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fde68a', color: '#92400e', background: '#fffbeb' }} onClick={() => setShowAchievementModal(true)}>
+                🏆 Achievements
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fca5a5', color: '#b91c1c', background: '#fef2f2' }} onClick={() => setShowWellnessModal(true)}>
+                📱 Wellness Tracker
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fdba74', color: '#c2410c', background: '#fff7ed' }} onClick={() => setShowNotifCenterModal(true)}>
+                🔔 Command Center
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #67e8f9', color: '#0e7490', background: '#ecfeff' }} onClick={() => setShowKanbanModal(true)}>
+                📋 Assignment Board
+              </button>
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #86efac', color: '#166534', background: '#f0fdf4' }} onClick={() => setShowCampusMapModal(true)}>
+                🗺️ Campus Map
+              </button>
             </div>
           </div>
 
@@ -618,6 +672,38 @@ export default function StudentDashboard({ onBackToHome }) {
             currentUser={currentUser}
             onClose={() => setShowFeePassbookModal(false)}
           />
+        )}
+
+        {/* ── New Premium Feature Modals ── */}
+        {showLeaderboardModal && (
+          <GamifiedLeaderboardModal currentUser={currentUser} onClose={() => setShowLeaderboardModal(false)} />
+        )}
+        {showAnalyticsModal && (
+          <DeptAnalyticsDashboardModal currentUser={currentUser} onClose={() => setShowAnalyticsModal(false)} />
+        )}
+        {showCareerPathModal && (
+          <AICareerPathModal currentUser={currentUser} onClose={() => setShowCareerPathModal(false)} />
+        )}
+        {showCalendarModal && (
+          <AcademicCalendarModal currentUser={currentUser} onClose={() => setShowCalendarModal(false)} />
+        )}
+        {showFeedbackModal && (
+          <AnonymousFeedbackModal currentUser={currentUser} onClose={() => setShowFeedbackModal(false)} />
+        )}
+        {showAchievementModal && (
+          <AchievementWalletModal currentUser={currentUser} onClose={() => setShowAchievementModal(false)} />
+        )}
+        {showWellnessModal && (
+          <WellnessTrackerModal currentUser={currentUser} onClose={() => setShowWellnessModal(false)} />
+        )}
+        {showNotifCenterModal && (
+          <NotificationCommandCenterModal currentUser={currentUser} onClose={() => setShowNotifCenterModal(false)} />
+        )}
+        {showKanbanModal && (
+          <KanbanAssignmentModal currentUser={currentUser} onClose={() => setShowKanbanModal(false)} />
+        )}
+        {showCampusMapModal && (
+          <CampusMapModal currentUser={currentUser} onClose={() => setShowCampusMapModal(false)} />
         )}
 
         {/* ── Grievance Timeline Modal ── */}
