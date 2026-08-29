@@ -627,10 +627,14 @@
 /* ─── Global Mobile Responsiveness & Touch Optimization System ─── */
 @media (max-width: 768px) {
 
-  /* ═══ NUCLEAR VIEWPORT LOCK ═══ */
-  /* Every single element must obey the viewport boundary */
-  * {
+  /* ═══ VIEWPORT LOCK — top-level containers only ═══ */
+  html, body, #root,
+  .dashboard-container,
+  .container,
+  .modal-overlay,
+  section {
     max-width: 100vw !important;
+    overflow-x: hidden !important;
     box-sizing: border-box !important;
   }
 
@@ -813,15 +817,11 @@
     padding: 12px !important;
   }
 
-  /* ═══ NUCLEAR: ALL INLINE GRIDS → 1 COLUMN ═══ */
-  /* This catches ALL inline style grids in modals, dashboards, and panels */
-  .modal-overlay [style*="grid"],
-  .modal-overlay [style*="Grid"],
-  .modal-content [style*="grid"],
-  .modal-content [style*="Grid"],
-  .printable-document-container [style*="grid"],
-  .dashboard-container [style*="grid"],
-  .dashboard-panel [style*="grid"] {
+  /* ═══ INLINE GRIDS → 1 COLUMN (modals & panels only) ═══ */
+  .modal-overlay div[style*="grid"],
+  .modal-content div[style*="grid"],
+  .printable-document-container div[style*="grid"],
+  .dashboard-panel div[style*="grid"] {
     grid-template-columns: 1fr !important;
   }
 
@@ -984,8 +984,11 @@
     font-size: 14px !important;
   }
 
-  /* ═══ BUTTONS — PREVENT OVERFLOW ═══ */
-  button {
+  /* ═══ BUTTONS — PREVENT OVERFLOW (only primary action buttons) ═══ */
+  .btn,
+  .no-print button,
+  .dashboard-actions button,
+  .login-tab-bar button {
     max-width: 100% !important;
     white-space: normal !important;
     word-break: break-word !important;
