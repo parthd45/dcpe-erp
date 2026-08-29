@@ -782,6 +782,21 @@
   }
 }
 
+.student-dashboard-header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+@media (max-width: 768px) {
+  .student-dashboard-header-right {
+    flex-direction: column !important;
+    width: 100% !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+}
+
 @media (max-width: 480px) {
   .kpi-grid {
     grid-template-columns: 1fr !important;

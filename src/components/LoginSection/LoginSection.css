@@ -247,6 +247,26 @@
   .login-form-wrap { padding: 24px; }
 }
 
+@media (max-width: 768px) {
+  .login-tab-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: var(--radius-2xl) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+  .login-tab-bar button {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-radius: var(--radius-lg) !important;
+    justify-content: center !important;
+    padding: 10px !important;
+  }
+}
+
 @media (max-width: 480px) {
   .login-cards { grid-template-columns: 1fr; }
 }

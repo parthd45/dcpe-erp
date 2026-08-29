@@ -168,8 +168,8 @@ export default function LoginSection() {
               : 'Submit your enrollment details to your department HOD for verification'}
           </p>
 
-          {/* Mode Switcher Tabs */}
           <div
+            className="login-tab-bar"
             style={{
               display: 'inline-flex',
               background: 'var(--bg-white)',
