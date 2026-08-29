@@ -21,6 +21,10 @@ import { FeePaymentModal } from './FeePaymentModal';
 import { TimetableModal } from './TimetableModal';
 import { LibraryModal } from './LibraryModal';
 import { StudentLeaveModal } from './StudentLeaveModal';
+import { AttendanceRiskRadarModal } from './AttendanceRiskRadarModal';
+import { StudentResumeBuilderModal } from './StudentResumeBuilderModal';
+import { FeePassbookModal } from './FeePassbookModal';
+import { GrievanceTimelineModal } from './GrievanceTimelineModal';
 import './Dashboard.css';
 
 
@@ -38,10 +42,14 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showDocUploadModal, setShowDocUploadModal] = useState(false);
   const [showPlacementModal, setShowPlacementModal] = useState(false);
   const [showFeeModal, setShowFeeModal] = useState(false);
+  const [showFeePassbookModal, setShowFeePassbookModal] = useState(false);
   const [showTimetableModal, setShowTimetableModal] = useState(false);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showPredictorModal, setShowPredictorModal] = useState(false);
+  const [showRiskRadarModal, setShowRiskRadarModal] = useState(false);
+  const [showResumeBuilderModal, setShowResumeBuilderModal] = useState(false);
+  const [showGrievanceTimelineModal, setShowGrievanceTimelineModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -121,12 +129,12 @@ export default function StudentDashboard({ onBackToHome }) {
 
         {/* KPI Cards */}
         <div className="kpi-grid">
-          <div className="kpi-card" onClick={() => setShowMarksheetModal(true)} style={{ cursor: 'pointer' }} title="Click to view full academic marksheet">
+          <div className="kpi-card" onClick={() => setShowRiskRadarModal(true)} style={{ cursor: 'pointer' }} title="Click to open Attendance Risk Radar & Absence Calculator">
             <div className="kpi-icon success">
               <TrendingUp size={24} />
             </div>
             <div className="kpi-details">
-              <span>Overall Attendance</span>
+              <span>Overall Attendance 🔮</span>
               <h3>{attendanceStats?.overallPercentage || currentUser.attendance || '0.0%'}</h3>
             </div>
           </div>
@@ -366,14 +374,28 @@ export default function StudentDashboard({ onBackToHome }) {
               <button className="btn btn-white btn-sm" style={{ border: '1px solid #a7f3d0', color: '#047857' }} onClick={() => setShowDocUploadModal(true)}>
                 <Camera size={15} color="#059669" /> Photo &amp; Documents
               </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #bfdbfe', color: '#1d4ed8' }} onClick={() => setShowFeeModal(true)}>
-                <CreditCard size={15} color="#2563eb" /> Fees &amp; Receipt
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #bfdbfe', color: '#1d4ed8' }} onClick={() => setShowFeePassbookModal(true)}>
+                <CreditCard size={15} color="#2563eb" /> Fees Passbook 📜
               </button>
               <button className="btn btn-white btn-sm" style={{ border: '1px solid #fbcfe8', color: '#be185d' }} onClick={() => setShowLibraryModal(true)}>
                 <Library size={15} color="#db2777" /> Library Services
               </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fed7aa', color: '#c2410c' }} onClick={() => setShowLeaveModal(true)}>
-                <Clock size={15} color="#ea580c" /> Leaves &amp; Grievances 📋
+              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fed7aa', color: '#c2410c' }} onClick={() => setShowGrievanceTimelineModal(true)}>
+                <Clock size={15} color="#ea580c" /> Grievance Tracker 🛡️
+              </button>
+              <button
+                className="btn btn-white btn-sm"
+                style={{ border: '1px solid #67e8f9', color: '#0891b2', background: '#ecfeff' }}
+                onClick={() => setShowResumeBuilderModal(true)}
+              >
+                📄 ATS Resume Builder
+              </button>
+              <button
+                className="btn btn-white btn-sm"
+                style={{ border: '1px solid #a7f3d0', color: '#047857', background: '#f0fdf4' }}
+                onClick={() => setShowRiskRadarModal(true)}
+              >
+                🔮 Risk Radar
               </button>
               <button
                 className="btn btn-white btn-sm"
@@ -568,6 +590,40 @@ export default function StudentDashboard({ onBackToHome }) {
           <AcademicPredictorModal
             currentUser={currentUser}
             onClose={() => setShowPredictorModal(false)}
+          />
+        )}
+
+        {/* ── Attendance Risk Radar Modal ── */}
+        {showRiskRadarModal && (
+          <AttendanceRiskRadarModal
+            currentUser={currentUser}
+            attendanceStats={attendanceStats}
+            onClose={() => setShowRiskRadarModal(false)}
+            onOpenLeaveModal={() => setShowLeaveModal(true)}
+          />
+        )}
+
+        {/* ── ATS Resume Builder Modal ── */}
+        {showResumeBuilderModal && (
+          <StudentResumeBuilderModal
+            currentUser={currentUser}
+            onClose={() => setShowResumeBuilderModal(false)}
+          />
+        )}
+
+        {/* ── Fee Passbook Modal ── */}
+        {showFeePassbookModal && (
+          <FeePassbookModal
+            currentUser={currentUser}
+            onClose={() => setShowFeePassbookModal(false)}
+          />
+        )}
+
+        {/* ── Grievance Timeline Modal ── */}
+        {showGrievanceTimelineModal && (
+          <GrievanceTimelineModal
+            currentUser={currentUser}
+            onClose={() => setShowGrievanceTimelineModal(false)}
           />
         )}
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Library, BookOpen, Search, Clock, Calendar, CheckCircle2,
   AlertCircle, X, Bookmark, ExternalLink, Sparkles, Filter,
@@ -11,73 +11,199 @@ export function LibraryModal({ currentUser, onClose }) {
   if (!currentUser) return null;
 
   const [activeTab, setActiveTab] = useState('issued'); // 'issued' | 'catalog' | 'eresources'
-  const [issuedBooks, setIssuedBooks] = useState([
-    {
-      id: 'b1',
-      accessionNo: 'DCPE-LIB-8842',
-      title: 'The C Programming Language (2nd Edition)',
-      author: 'Brian W. Kernighan, Dennis M. Ritchie',
-      issuedDate: '10 Feb 2026',
-      dueDate: '28 Feb 2026',
-      shelfLocation: 'Rack 2A (CS Section)',
-      status: 'active',
-      fine: 0,
-    },
-    {
-      id: 'b2',
-      accessionNo: 'DCPE-LIB-9120',
-      title: 'Physiology of Sport and Exercise',
-      author: 'W. Larry Kenney, Jack H. Wilmore',
-      issuedDate: '14 Feb 2026',
-      dueDate: '02 Mar 2026',
-      shelfLocation: 'Rack 1C (Sports Science)',
-      status: 'active',
-      fine: 0,
-    },
-  ]);
+  const [issuedBooks, setIssuedBooks] = useState([]);
   const [catalog, setCatalog] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [reservedIds, setReservedIds] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const loadBooks = async () => {
-      try {
-        const { data, error } = await supabase.from('library_books').select('*');
-        if (data && data.length > 0) {
-          const mapped = data.map((b) => ({
-            id: b.id,
-            isbn: b.isbn,
-            title: b.title,
-            author: b.author,
-            category: b.category,
-            copiesAvailable: b.copies_available,
-            totalCopies: b.total_copies,
-            shelf: b.shelf,
-          }));
-          setCatalog(mapped);
-        }
-      } catch (err) {
-        console.error('Error fetching library books:', err);
+  const loadCatalog = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('library_books')
+        .select('*')
+        .order('title', { ascending: true });
+      if (error) throw error;
+      if (data) {
+        const mapped = data.map((b) => ({
+          id: b.id,
+          isbn: b.isbn,
+          title: b.title,
+          author: b.author,
+          category: b.category,
+          copiesAvailable: b.copies_available,
+          totalCopies: b.total_copies,
+          shelf: b.shelf,
+        }));
+        setCatalog(mapped);
       }
-    };
-    loadBooks();
-  }, []);
-
-  const handleRenew = (bookId) => {
-    setIssuedBooks((prev) =>
-      prev.map((b) => (b.id === bookId ? { ...b, dueDate: '15 Mar 2026' } : b))
-    );
-    setToastMessage('✅ Book renewed successfully! New due date: 15 Mar 2026');
-    setTimeout(() => setToastMessage(null), 3000);
+    } catch (err) {
+      console.error('Error fetching library catalog:', err);
+    }
   };
 
-  const handleReserve = (book) => {
-    if (reservedIds.includes(book.id)) return;
-    setReservedIds((prev) => [...prev, book.id]);
-    setToastMessage(`🎉 Reserved "${book.title}". Pick it up at Central Library Counter within 24 hours.`);
-    setTimeout(() => setToastMessage(null), 4000);
+  const loadIssuedBooks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('library_issues')
+        .select(`
+          id,
+          accession_no,
+          issued_date,
+          due_date,
+          status,
+          fine,
+          book_id,
+          library_books (
+            title,
+            author,
+            shelf
+          )
+        `)
+        .eq('student_id', currentUser.id)
+        .eq('status', 'active');
+
+      if (error) throw error;
+      if (data) {
+        const mapped = data.map((issue) => ({
+          id: issue.id,
+          bookId: issue.book_id,
+          accessionNo: issue.accession_no,
+          title: issue.library_books ? issue.library_books.title : 'Unknown Book',
+          author: issue.library_books ? issue.library_books.author : 'Unknown Author',
+          issuedDate: new Date(issue.issued_date).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          }),
+          dueDate: new Date(issue.due_date).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          }),
+          shelfLocation: issue.library_books ? issue.library_books.shelf : 'Unknown Shelf',
+          status: issue.status,
+          fine: parseFloat(issue.fine || 0),
+        }));
+        setIssuedBooks(mapped);
+      }
+    } catch (err) {
+      console.error('Error fetching issued books:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadCatalog();
+    loadIssuedBooks();
+  }, []);
+
+  const handleRenew = async (issueId) => {
+    try {
+      setIsLoading(true);
+      const today = new Date();
+      const newDueDate = new Date(today.setDate(today.getDate() + 14));
+      const newDueDateStr = newDueDate.toISOString().split('T')[0];
+
+      const { error } = await supabase
+        .from('library_issues')
+        .update({ due_date: newDueDateStr })
+        .eq('id', issueId);
+
+      if (error) throw error;
+
+      setToastMessage(`✅ Book renewed successfully! New due date: ${newDueDate.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      })}`);
+      await loadIssuedBooks();
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err) {
+      console.error('Error renewing book:', err);
+      alert('Failed to renew book. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReserve = async (book) => {
+    if (book.copiesAvailable <= 0) {
+      alert('Sorry, no copies of this book are currently available.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const today = new Date();
+      const dueDate = new Date();
+      dueDate.setDate(today.getDate() + 14);
+
+      const todayStr = today.toISOString().split('T')[0];
+      const dueDateStr = dueDate.toISOString().split('T')[0];
+      const accessionNo = `DCPE-LIB-${Math.floor(10000 + Math.random() * 90000)}`;
+
+      const { error: issueError } = await supabase
+        .from('library_issues')
+        .insert({
+          accession_no: accessionNo,
+          book_id: book.id,
+          student_id: currentUser.id,
+          issued_date: todayStr,
+          due_date: dueDateStr,
+          status: 'active',
+          fine: 0,
+        });
+
+      if (issueError) throw issueError;
+
+      const { error: bookError } = await supabase
+        .from('library_books')
+        .update({ copies_available: book.copiesAvailable - 1 })
+        .eq('id', book.id);
+
+      if (bookError) throw bookError;
+
+      setToastMessage(`🎉 Reserved "${book.title}". Pick it up at Central Library Counter within 24 hours.`);
+      await Promise.all([loadCatalog(), loadIssuedBooks()]);
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (err) {
+      console.error('Error reserving book:', err);
+      alert('Failed to reserve book. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReturn = async (issueId, bookId) => {
+    try {
+      setIsLoading(true);
+      const { error: issueError } = await supabase
+        .from('library_issues')
+        .update({ status: 'returned' })
+        .eq('id', issueId);
+
+      if (issueError) throw issueError;
+
+      const book = catalog.find((b) => b.id === bookId);
+      if (book) {
+        const { error: bookError } = await supabase
+          .from('library_books')
+          .update({ copies_available: Math.min(book.totalCopies, book.copiesAvailable + 1) })
+          .eq('id', bookId);
+
+        if (bookError) throw bookError;
+      }
+
+      setToastMessage('✅ Book returned successfully!');
+      await Promise.all([loadCatalog(), loadIssuedBooks()]);
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err) {
+      console.error('Error returning book:', err);
+      alert('Failed to return book. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredCatalog = catalog.filter((book) => {
@@ -239,13 +365,23 @@ export function LibraryModal({ currentUser, onClose }) {
                       </div>
                     </div>
 
-                    <div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         type="button"
                         className="btn btn-outline-dark btn-sm"
+                        disabled={isLoading}
                         onClick={() => handleRenew(book.id)}
                       >
                         Renew (+14 Days)
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        style={{ border: '1px solid #fee2e2', color: '#dc2626', background: 'white' }}
+                        disabled={isLoading}
+                        onClick={() => handleReturn(book.id, book.bookId)}
+                      >
+                        Return Book
                       </button>
                     </div>
                   </div>
@@ -287,7 +423,7 @@ export function LibraryModal({ currentUser, onClose }) {
               {/* Books List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {filteredCatalog.map((book) => {
-                  const isReserved = reservedIds.includes(book.id);
+                  const isReserved = issuedBooks.some((b) => b.bookId === book.id);
                   return (
                     <div
                       key={book.id}
@@ -322,10 +458,15 @@ export function LibraryModal({ currentUser, onClose }) {
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#15803d', fontSize: '12px', fontWeight: 700, background: '#dcfce7', padding: '6px 12px', borderRadius: '10px' }}>
                             <BookmarkCheck size={14} /> Reserved
                           </span>
+                        ) : book.copiesAvailable <= 0 ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#64748b', fontSize: '12px', fontWeight: 700, background: '#f1f5f9', padding: '6px 12px', borderRadius: '10px' }}>
+                            Out of Stock
+                          </span>
                         ) : (
                           <button
                             type="button"
                             className="btn btn-primary btn-sm"
+                            disabled={isLoading}
                             onClick={() => handleReserve(book)}
                           >
                             <Bookmark size={13} /> Reserve Book

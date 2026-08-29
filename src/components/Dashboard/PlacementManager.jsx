@@ -60,6 +60,21 @@ export default function PlacementManager() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleAutoShortlist = async () => {
+    let count = 0;
+    for (const app of applications) {
+      const cgpaNum = parseFloat(app.cgpa || '0');
+      const attNum = parseFloat(app.attendance || '0');
+      if (app.applicationStatus === 'Applied' && cgpaNum >= 7.0 && attNum >= 75) {
+        await updateApplicationStatus(app.id, 'Shortlisted', 'Auto-Shortlisted by T&P System Matrix (CGPA >= 7.0 & Attendance >= 75%)');
+        count++;
+      }
+    }
+    setToast({ type: 'success', text: `✨ Auto-shortlisted ${count} eligible candidates (CGPA >= 7.0 & Attendance >= 75%)!` });
+    await loadData();
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const handlePublishDrive = async (e) => {
     e.preventDefault();
     if (!newDrive.companyName || !newDrive.jobTitle || !newDrive.packageCtc) {
@@ -198,6 +213,16 @@ export default function PlacementManager() {
                   <option key={d.id} value={d.id}>{d.companyName}</option>
                 ))}
               </select>
+
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                onClick={handleAutoShortlist}
+                title="Automatically shortlist all applicants meeting eligibility thresholds (CGPA >= 7.0 & Attendance >= 75%)"
+              >
+                <Sparkles size={14} /> Auto-Shortlist Eligible Candidates
+              </button>
             </div>
           </div>
 
