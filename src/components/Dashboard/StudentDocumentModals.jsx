@@ -6,6 +6,7 @@ import {
   Image, Folder, ExternalLink, Sparkles, Scan, Percent
 } from 'lucide-react';
 import { scanDocumentMetrics } from '../../lib/documentScanner';
+import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -124,15 +125,18 @@ export function StudentIDCardModal({ currentUser, onClose }) {
               /* FRONT SIDE */
               <>
                 {/* Institution Header Banner */}
-                <div style={{ borderBottom: '2px solid var(--primary)', paddingBottom: '14px', marginBottom: '18px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                    Shree Hanuman Vyayam Prasarak Mandal's
-                  </div>
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 800, color: '#1e1b4b', margin: '2px 0' }}>
-                    DEGREE COLLEGE OF PHYSICAL EDUCATION
-                  </h3>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                    Autonomous College • HVPM Campus, Amravati - 444605 (M.S.)
+                <div style={{ borderBottom: '2px solid var(--primary)', paddingBottom: '14px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                  <OfficialHVPMLogo size={46} showTitle={false} />
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: '9.5px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                      Shree Hanuman Vyayam Prasarak Mandal's
+                    </div>
+                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 800, color: '#1e1b4b', margin: '1px 0' }}>
+                      DEGREE COLLEGE OF PHYSICAL EDUCATION
+                    </h3>
+                    <div style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                      Autonomous College • HVPM Campus, Amravati - 444605 (M.S.)
+                    </div>
                   </div>
                 </div>
 
@@ -647,15 +651,20 @@ export function DigitalMarksheetModal({ currentUser, gradeReport, onClose }) {
             }}
           >
             {/* Header */}
-            <div style={{ textAlign: 'center', borderBottom: '2px solid #1e1b4b', paddingBottom: '16px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.12em' }}>
-                SHREE HANUMAN VYAYAM PRASARAK MANDAL'S
-              </div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 800, color: '#1e1b4b', margin: '4px 0' }}>
-                DEGREE COLLEGE OF PHYSICAL EDUCATION
-              </h2>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                An Autonomous Institute • Affiliated to Sant Gadge Baba Amravati University (SGBAU)
+            <div style={{ borderBottom: '2px solid #1e1b4b', paddingBottom: '16px', marginBottom: '20px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '8px' }}>
+                <OfficialHVPMLogo size={56} showTitle={false} />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.12em' }}>
+                    SHREE HANUMAN VYAYAM PRASARAK MANDAL'S
+                  </div>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, color: '#1e1b4b', margin: '2px 0' }}>
+                    DEGREE COLLEGE OF PHYSICAL EDUCATION
+                  </h2>
+                  <div style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                    An Autonomous Institute • Affiliated to Sant Gadge Baba Amravati University (SGBAU)
+                  </div>
+                </div>
               </div>
               <div
                 style={{

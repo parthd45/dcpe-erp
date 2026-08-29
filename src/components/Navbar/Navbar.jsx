@@ -12,6 +12,8 @@ const navLinks = [
   { label: 'Contact', href: '#contact' },
 ];
 
+import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
+
 export default function Navbar({ onOpenDashboard, isDashboardActive }) {
   const { currentUser, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
@@ -45,13 +47,7 @@ export default function Navbar({ onOpenDashboard, isDashboardActive }) {
               handleNavClick('#home');
             }}
           >
-            <div className="navbar-logo">
-              <GraduationCap size={24} />
-            </div>
-            <div className="navbar-title">
-              <span className="navbar-title-main">DCPE HVPM</span>
-              <span className="navbar-title-sub">Degree College of Physical Education, Amravati</span>
-            </div>
+            <OfficialHVPMLogo size={42} showTitle={true} />
           </a>
 
           {!isDashboardActive && (
