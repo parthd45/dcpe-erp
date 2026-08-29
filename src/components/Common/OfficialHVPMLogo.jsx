@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 /**
  * Official DCPE Amravati College Emblem Component
- * Features prominent logo seal and bold Crimson Red title text ("DCPE HVPM")
- * for high contrast and ultra-high legibility on dark and light backgrounds.
+ * Renders both "DCPE HVPM" and "Degree College of Physical Education, Amravati (M.S.)"
+ * in bold, vibrant high-visibility Crimson Red for maximum legibility.
  */
 export function OfficialHVPMLogo({ size = 58, showTitle = true, isLight = false, className = '' }) {
   const [imgError, setImgError] = useState(false);
@@ -62,7 +62,7 @@ export function OfficialHVPMLogo({ size = 58, showTitle = true, isLight = false,
 
       {showTitle && (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {/* Main Name in High-Visibility Bold Crimson Red */}
+          {/* Main Title in High-Visibility Bold Crimson Red */}
           <span style={{
             fontSize: '19px',
             fontWeight: 900,
@@ -74,13 +74,13 @@ export function OfficialHVPMLogo({ size = 58, showTitle = true, isLight = false,
           }}>
             DCPE HVPM
           </span>
-          {/* Subtitle in High-Contrast Crisp White / Light Tone */}
+          {/* Subtitle also in High-Visibility Vibrant Red */}
           <span style={{
             fontSize: '11.5px',
-            fontWeight: 700,
-            color: isLight ? 'rgba(255,255,255,0.9)' : '#e2e8f0',
+            fontWeight: 800,
+            color: '#f87171', // Bright vibrant red!
             lineHeight: 1.25,
-            textShadow: '0 1px 4px rgba(0, 0, 0, 0.5)',
+            textShadow: '0 1px 4px rgba(0, 0, 0, 0.6)',
           }}>
             Degree College of Physical Education, Amravati (M.S.)
           </span>
