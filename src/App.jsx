@@ -14,6 +14,8 @@ import AdminDashboard from './components/Dashboard/AdminDashboard';
 import RealtimeNotificationToast from './components/Dashboard/RealtimeNotificationToast';
 import Footer from './components/Footer/Footer';
 
+import { AIAssistantWidget } from './components/Dashboard/AIAssistantWidget';
+
 function MainApp() {
   const { currentUser } = useAuth();
   const [viewDashboard, setViewDashboard] = useState(true);
@@ -50,6 +52,9 @@ function MainApp() {
           <LoginSection />
         </main>
       )}
+
+      {/* Global DCPE AI Genius Assistant (Available on Home Page & Dashboards) */}
+      <AIAssistantWidget currentUser={currentUser} />
 
       <Footer />
     </>

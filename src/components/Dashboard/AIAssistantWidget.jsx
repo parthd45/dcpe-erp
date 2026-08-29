@@ -6,17 +6,19 @@ import {
 import './Dashboard.css';
 
 export function AIAssistantWidget({ currentUser, onOpenModal }) {
-  if (!currentUser) return null;
-
   const [isOpen, setIsOpen] = useState(false);
   const [inputQuery, setInputQuery] = useState('');
   const [speechEnabled, setSpeechEnabled] = useState(false);
   const messagesEndRef = useRef(null);
 
+  const displayName = currentUser ? currentUser.name.split(' ')[0] : 'Visitor';
+
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
-      text: `Hello ${currentUser.name.split(' ')[0]}! 👋 I am your DCPE ERP AI Assistant. How can I assist you with your academics, attendance, fees, or library today?`,
+      text: currentUser
+        ? `Hello ${displayName}! 👋 I am your DCPE ERP AI Assistant. How can I assist you with your academics, attendance, fees, or library today?`
+        : `Welcome to DCPE HVPM Autonomous Institute! 👋 I am your Campus AI Assistant. How can I help you with courses, admissions, campus facilities, or portal login today?`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       actionKey: null,
     },
@@ -43,41 +45,59 @@ export function AIAssistantWidget({ currentUser, onOpenModal }) {
     let reply = "";
     let actionKey = null;
 
-    if (text.includes('attendance') || text.includes('absent') || text.includes('present') || text.includes('eligible')) {
-      const att = currentUser.attendance || '78.5%';
-      const attNum = parseFloat(att);
-      if (attNum >= 75) {
-        reply = `Your overall verified attendance is currently ${att} (Eligible for Exams ✓). You can use the Attendance Risk Radar to simulate future absences!`;
+    // Logged-in Student queries
+    if (currentUser) {
+      if (text.includes('attendance') || text.includes('absent') || text.includes('present') || text.includes('eligible')) {
+        const att = currentUser.attendance || '78.5%';
+        const attNum = parseFloat(att);
+        if (attNum >= 75) {
+          reply = `Your overall verified attendance is currently ${att} (Eligible for Exams ✓). You can use the Attendance Risk Radar to simulate future absences!`;
+        } else {
+          reply = `WARNING: Your attendance is currently ${att}, which is below the mandatory 75% threshold! Please open the Risk Radar to check required classes or submit medical leave.`;
+        }
+        actionKey = 'risk_radar';
+      } else if (text.includes('fee') || text.includes('paid') || text.includes('receipt') || text.includes('scholarship') || text.includes('dues')) {
+        const fees = currentUser.feesStatus || 'Paid ✓';
+        reply = `Your Semester Fee Status is marked as: "${fees}". You can view your complete transaction history ledger or print your Official Scholarship Fee Certificate.`;
+        actionKey = 'fee_passbook';
+      } else if (text.includes('library') || text.includes('book') || text.includes('isbn') || text.includes('borrow')) {
+        reply = `DCPE Central Library allows you to borrow up to 4 books simultaneously for 14 days. Check out available titles in the digital catalog or renew active borrowings!`;
+        actionKey = 'library';
+      } else if (text.includes('timetable') || text.includes('schedule') || text.includes('class') || text.includes('lecture')) {
+        reply = `Your daily timetable for ${currentUser.course} (${currentUser.departmentName}) is live-synced from the HOD portal. Click below to view today's schedule.`;
+        actionKey = 'timetable';
+      } else if (text.includes('hall ticket') || text.includes('admit card') || text.includes('exam') || text.includes('seat')) {
+        const approved = currentUser.hallTicketApproved;
+        if (approved) {
+          reply = `Your End Semester Examination Hall Ticket has been authorized by the HOD! It includes your Seat Number and verification QR code.`;
+        } else {
+          reply = `Your Hall Ticket is currently locked pending final HOD attendance & fee clearance verification.`;
+        }
+        actionKey = 'hall_ticket';
+      } else if (text.includes('resume') || text.includes('cv') || text.includes('job') || text.includes('placement')) {
+        reply = `You can generate an ATS-optimized, single-page A4 resume using our WYSIWYG Resume Studio or apply for active T&P Campus Drives!`;
+        actionKey = 'resume';
+      } else if (text.includes('grievance') || text.includes('complain') || text.includes('leave')) {
+        reply = `You can submit formal leave requests or track active grievances through our Confidential Grievance Timeline Tracker.`;
+        actionKey = 'grievance';
       } else {
-        reply = `WARNING: Your attendance is currently ${att}, which is below the mandatory 75% threshold! Please open the Risk Radar to check required classes or submit medical leave.`;
+        reply = `I can help you with your Attendance Risk Radar, Timetable, Fee Passbook, Library Catalog, Hall Ticket, or ATS Resume Studio! Click one of the quick options below or ask a specific question.`;
       }
-      actionKey = 'risk_radar';
-    } else if (text.includes('fee') || text.includes('paid') || text.includes('receipt') || text.includes('scholarship') || text.includes('dues')) {
-      const fees = currentUser.feesStatus || 'Paid ✓';
-      reply = `Your Semester Fee Status is marked as: "${fees}". You can view your complete transaction history ledger or print your Official Scholarship Fee Certificate.`;
-      actionKey = 'fee_passbook';
-    } else if (text.includes('library') || text.includes('book') || text.includes('isbn') || text.includes('borrow')) {
-      reply = `DCPE Central Library allows you to borrow up to 4 books simultaneously for 14 days. Check out available titles in the digital catalog or renew active borrowings!`;
-      actionKey = 'library';
-    } else if (text.includes('timetable') || text.includes('schedule') || text.includes('class') || text.includes('lecture')) {
-      reply = `Your daily timetable for ${currentUser.course} (${currentUser.departmentName}) is live-synced from the HOD portal. Click below to view today's schedule.`;
-      actionKey = 'timetable';
-    } else if (text.includes('hall ticket') || text.includes('admit card') || text.includes('exam') || text.includes('seat')) {
-      const approved = currentUser.hallTicketApproved;
-      if (approved) {
-        reply = `Your End Semester Examination Hall Ticket has been authorized by the HOD! It includes your Seat Number and verification QR code.`;
-      } else {
-        reply = `Your Hall Ticket is currently locked pending final HOD attendance & fee clearance verification.`;
-      }
-      actionKey = 'hall_ticket';
-    } else if (text.includes('resume') || text.includes('cv') || text.includes('job') || text.includes('placement')) {
-      reply = `You can generate an ATS-optimized, single-page A4 resume using our WYSIWYG Resume Studio or apply for active T&P Campus Drives!`;
-      actionKey = 'resume';
-    } else if (text.includes('grievance') || text.includes('complain') || text.includes('leave')) {
-      reply = `You can submit formal leave requests or track active grievances through our Confidential Grievance Timeline Tracker.`;
-      actionKey = 'grievance';
     } else {
-      reply = `I can help you with your Attendance Risk Radar, Timetable, Fee Passbook, Library Catalog, Hall Ticket, or ATS Resume Studio! Click one of the quick options below or ask a specific question.`;
+      // Home Page Public Visitor queries
+      if (text.includes('course') || text.includes('bca') || text.includes('mca') || text.includes('bped') || text.includes('mped') || text.includes('bsc')) {
+        reply = `Shree HVPM Degree College of Physical Education offers Autonomous Undergraduate & Postgraduate programs: BCA (Computer Applications), MCA, B.P.Ed, M.P.Ed, B.Sc (Physical Education), and YOGA Diplomas.`;
+      } else if (text.includes('admission') || text.includes('apply') || text.includes('register') || text.includes('enroll')) {
+        reply = `Admissions for Academic Session 2026-2027 are OPEN! You can register your student account using the 'Portal Login & Student Registration' section on this home page.`;
+      } else if (text.includes('location') || text.includes('address') || text.includes('where') || text.includes('contact')) {
+        reply = `Degree College of Physical Education is located at HVPM Campus Road, Hanuman Vyayam Nagar, Amravati, Maharashtra - 444605. Contact: +91 721 2573788.`;
+      } else if (text.includes('login') || text.includes('portal') || text.includes('sign in')) {
+        reply = `To access your ERP dashboard, scroll to the 'Portal Login' section on this page or click 'Login' in the navigation bar above. Demo logins are available for Student, Faculty, HOD, and Admin.`;
+      } else if (text.includes('facility') || text.includes('sports') || text.includes('gym') || text.includes('pool') || text.includes('lab')) {
+        reply = `HVPM Campus features Olympic-standard swimming pools, sports biomechanics laboratories, synthetic track grounds, advanced computer labs, and a 50,000+ volume Central Library.`;
+      } else {
+        reply = `Hello! I am DCPE AI Genius Assistant. Feel free to ask me about Courses Offered, Admission Registration, Campus Location, or Portal Logins!`;
+      }
     }
 
     return { reply, actionKey };
@@ -98,6 +118,10 @@ export function AIAssistantWidget({ currentUser, onOpenModal }) {
     if (!queryText) setInputQuery('');
     speakText(reply);
   };
+
+  const quickPrompts = currentUser
+    ? ['Check Attendance', 'Fee Status', 'Library Catalog', 'My Timetable', 'ATS Resume']
+    : ['Courses Offered', 'Admission Process', 'Campus Location', 'Portal Login', 'Facilities'];
 
   return (
     <>
@@ -170,7 +194,7 @@ export function AIAssistantWidget({ currentUser, onOpenModal }) {
                 <div style={{ fontWeight: 800, fontSize: '14px' }}>DCPE Genius AI</div>
                 <div style={{ fontSize: '10px', color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e' }} />
-                  Online • Voice Enabled
+                  {currentUser ? `${displayName} Mode` : 'Public Guest Mode'}
                 </div>
               </div>
             </div>
@@ -263,13 +287,7 @@ export function AIAssistantWidget({ currentUser, onOpenModal }) {
 
           {/* Quick Prompts Chips */}
           <div style={{ padding: '8px 12px', background: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '6px', overflowX: 'auto' }}>
-            {[
-              'Check Attendance',
-              'Fee Status',
-              'Library Catalog',
-              'My Timetable',
-              'ATS Resume',
-            ].map((chip) => (
+            {quickPrompts.map((chip) => (
               <button
                 key={chip}
                 type="button"
