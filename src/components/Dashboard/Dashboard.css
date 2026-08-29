@@ -724,14 +724,54 @@
     gap: 12px !important;
   }
 
-  /* Keep table responsive with horizontal scroll, instead of breaking block */
-  .table-responsive,
+  /* Prevent any table or element from going wider than viewport, forcing single vertical scroll */
+  .modal-card,
+  .modal-content,
+  .printable-document-container,
+  #printable-id-card,
+  #printable-hall-ticket,
+  #printable-marksheet,
+  #printable-sanction-order {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 4px auto !important;
+    padding: 10px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Force all tables to fit container width exactly, no horizontal scroll needed */
   table {
+    display: table !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    margin-bottom: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Override fixed inline cell widths on mobile and allow normal wrapping */
+  table td,
+  table th {
+    width: auto !important;
+    max-width: none !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    padding: 6px 4px !important;
+    font-size: 10.5px !important;
+  }
+
+  table td[style*="width"],
+  table th[style*="width"] {
+    width: auto !important;
+  }
+
+  /* Keep responsive tables outer wraps clean */
+  .table-responsive {
     display: block !important;
     width: 100% !important;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    -webkit-overflow-scrolling: touch !important;
+    overflow-x: visible !important;
     border: none !important;
   }
 

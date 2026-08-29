@@ -296,6 +296,12 @@ input, textarea, select { font-family: inherit; }
 
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
+  html, body, #root {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
   .section { padding: 50px 16px; }
   .section-title { font-size: var(--text-3xl); }
   .section-subtitle { font-size: var(--text-base); }
