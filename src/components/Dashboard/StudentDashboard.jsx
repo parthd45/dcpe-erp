@@ -603,7 +603,19 @@ export default function StudentDashboard({ onBackToHome }) {
           <AICareerPathModal currentUser={currentUser} onClose={() => setShowCareerPathModal(false)} />
         )}
         {showCalendarModal && (
-          <AcademicCalendarModal currentUser={currentUser} onClose={() => setShowCalendarModal(false)} />
+          <AcademicCalendarModal
+            currentUser={currentUser}
+            onClose={() => setShowCalendarModal(false)}
+            onOpenHallTicket={() => {
+              setShowCalendarModal(false);
+              if (currentUser.hallTicketApproved) {
+                setShowHallTicketModal(true);
+              } else {
+                setHallTicketToast('Your Examination Hall Ticket is currently locked pending HOD approval.');
+                setTimeout(() => setHallTicketToast(null), 7000);
+              }
+            }}
+          />
         )}
         {showFeedbackModal && (
           <AnonymousFeedbackModal currentUser={currentUser} onClose={() => setShowFeedbackModal(false)} />
