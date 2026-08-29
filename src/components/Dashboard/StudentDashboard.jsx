@@ -37,6 +37,7 @@ import { NotificationCommandCenterModal } from './NotificationCommandCenterModal
 import { KanbanAssignmentModal } from './KanbanAssignmentModal';
 import { CampusMapModal } from './CampusMapModal';
 import { CodeSandboxModal } from './CodeSandboxModal';
+import { TamperProofLedgerModal } from './TamperProofLedgerModal';
 import { StudentServicesSuite } from './StudentServicesSuite';
 import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
@@ -77,6 +78,7 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showKanbanModal, setShowKanbanModal] = useState(false);
   const [showCampusMapModal, setShowCampusMapModal] = useState(false);
   const [showCodeSandboxModal, setShowCodeSandboxModal] = useState(false);
+  const [showTamperLedgerModal, setShowTamperLedgerModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -390,6 +392,7 @@ export default function StudentDashboard({ onBackToHome }) {
                 if (modalKey === 'kanban') setShowKanbanModal(true);
                 if (modalKey === 'campusMap') setShowCampusMapModal(true);
                 if (modalKey === 'codeSandbox') setShowCodeSandboxModal(true);
+                if (modalKey === 'tamperLedger') setShowTamperLedgerModal(true);
               }}
             />
           </div>
@@ -645,6 +648,9 @@ export default function StudentDashboard({ onBackToHome }) {
         {showCodeSandboxModal && (
           <CodeSandboxModal currentUser={currentUser} onClose={() => setShowCodeSandboxModal(false)} />
         )}
+        {showTamperLedgerModal && (
+          <TamperProofLedgerModal currentUser={currentUser} onClose={() => setShowTamperLedgerModal(false)} />
+        )}
 
         {/* ── Grievance Timeline Modal ── */}
         {showGrievanceTimelineModal && (
@@ -682,6 +688,7 @@ export default function StudentDashboard({ onBackToHome }) {
             if (key === 'kanban') setShowKanbanModal(true);
             if (key === 'campus_map' || key === 'campusMap') setShowCampusMapModal(true);
             if (key === 'code_sandbox' || key === 'codeSandbox') setShowCodeSandboxModal(true);
+            if (key === 'tamper_ledger' || key === 'tamperLedger') setShowTamperLedgerModal(true);
             if (key === 'grievance') setShowGrievanceTimelineModal(true);
           }}
         />

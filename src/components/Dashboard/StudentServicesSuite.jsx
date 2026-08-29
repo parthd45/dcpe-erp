@@ -65,6 +65,19 @@ export function StudentServicesSuite({
       glow: 'rgba(124, 58, 237, 0.25)',
       onClick: () => onOpenModal('marksheet'),
     },
+    {
+      id: 'tamper_ledger',
+      title: 'SHA-256 Cryptographic Ledger',
+      subtitle: 'Employer Scan-to-Verify Marksheet & Hall Ticket Authenticator',
+      category: 'docs',
+      badge: '256-Bit Ledger 🔒',
+      badgeGradient: 'linear-gradient(135deg, #059669, #047857)',
+      icon: Lock,
+      color: '#059669',
+      bg: '#ecfdf5',
+      glow: 'rgba(5, 150, 105, 0.25)',
+      onClick: () => onOpenModal('tamperLedger'),
+    },
 
     // 💼 CAREER & AI INTELLIGENCE (3)
     {
