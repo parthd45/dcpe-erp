@@ -1,0 +1,25 @@
+{
+  "short_name": "DCPE ERP",
+  "name": "DCPE HVPM — Degree College of Physical Education, Amravati",
+  "description": "Official Autonomous Campus Enterprise Resource Planning & Student Management Portal",
+  "icons": [
+    {
+      "src": "/dcpe-official-logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/dcpe-official-logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#1e1b4b",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["education", "productivity", "management"]
+}

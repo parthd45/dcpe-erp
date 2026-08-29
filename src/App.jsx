@@ -15,6 +15,7 @@ import RealtimeNotificationToast from './components/Dashboard/RealtimeNotificati
 import Footer from './components/Footer/Footer';
 
 import { AIAssistantWidget } from './components/Dashboard/AIAssistantWidget';
+import { PWAInstallBanner } from './components/Common/PWAInstallBanner';
 
 function MainApp() {
   const { currentUser } = useAuth();
@@ -118,6 +119,7 @@ export default function App() {
       <AuthProvider>
         <MainApp />
         <RealtimeNotificationToast />
+        <PWAInstallBanner />
       </AuthProvider>
     </ErrorBoundary>
   );
