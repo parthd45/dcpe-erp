@@ -740,7 +740,7 @@
     overflow-x: hidden !important;
   }
 
-  /* Force all tables to fit container width exactly, no horizontal scroll needed */
+  /* Restrict outer tables to parent container by default */
   table {
     display: table !important;
     width: 100% !important;
@@ -751,28 +751,36 @@
     box-sizing: border-box !important;
   }
 
-  /* Override fixed inline cell widths on mobile and allow normal wrapping */
   table td,
   table th {
-    width: auto !important;
-    max-width: none !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-    padding: 6px 4px !important;
-    font-size: 10.5px !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
   }
 
-  table td[style*="width"],
-  table th[style*="width"] {
-    width: auto !important;
-  }
-
-  /* Keep responsive tables outer wraps clean */
+  /* Target responsive table wrappers to enable smooth side-to-side scrolling on mobile */
   .table-responsive {
     display: block !important;
     width: 100% !important;
-    overflow-x: visible !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
     border: none !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Make sure the inner table remains wide enough to trigger scrolling */
+  .table-responsive table {
+    width: max-content !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+  }
+
+  .table-responsive table td,
+  .table-responsive table th {
+    white-space: nowrap !important;
+    padding: 8px 12px !important;
+    font-size: 11.5px !important;
   }
 
   /* Adjust Modal Control Headers for small screens */
