@@ -620,8 +620,7 @@ export default function HODDashboard({ onBackToHome }) {
           </button>
 
           <button
-            className="hod-tab-btn"
-            style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', color: '#67e8f9' }}
+            className={`hod-tab-btn ${showSeatingMatrixModal ? 'active' : ''}`}
             onClick={() => setShowSeatingMatrixModal(true)}
           >
             <Building2 size={16} />

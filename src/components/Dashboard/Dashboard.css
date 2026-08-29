@@ -21,6 +21,48 @@
   gap: 20px;
 }
 
+/* HOD Tab Switcher Bar */
+.hod-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  background: var(--bg-white);
+  padding: 8px 12px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.hod-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hod-tab-btn:hover {
+  background: #f1f5f9;
+  color: var(--text-heading);
+}
+
+.hod-tab-btn.active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+  font-weight: 700;
+}
+
 .dashboard-user-info {
   display: flex;
   align-items: center;
