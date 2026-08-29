@@ -36,6 +36,7 @@ import { WellnessTrackerModal } from './WellnessTrackerModal';
 import { NotificationCommandCenterModal } from './NotificationCommandCenterModal';
 import { KanbanAssignmentModal } from './KanbanAssignmentModal';
 import { CampusMapModal } from './CampusMapModal';
+import { StudentServicesSuite } from './StudentServicesSuite';
 import './Dashboard.css';
 
 
@@ -355,118 +356,35 @@ export default function StudentDashboard({ onBackToHome }) {
               </div>
             )}
 
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button className="btn btn-primary btn-sm" onClick={() => setShowIdCardModal(true)}>
-                <Download size={15} /> Student ID Card
-              </button>
-
-              <button
-                className={`btn btn-sm ${currentUser.hallTicketApproved ? 'btn-outline-dark' : 'btn-white'}`}
-                style={{
-                  border: currentUser.hallTicketApproved ? '1px solid #1e1b4b' : '1px solid #fde68a',
-                  background: currentUser.hallTicketApproved ? undefined : '#fefce8',
-                  color: currentUser.hallTicketApproved ? undefined : '#b45309',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-                onClick={() => {
-                  if (currentUser.hallTicketApproved) {
-                    setShowHallTicketModal(true);
-                  } else {
-                    setHallTicketToast('Your Examination Hall Ticket is currently locked pending HOD approval. Once your attendance (min 75%) and semester fees are verified, HOD will grant Hall Ticket approval.');
-                    setTimeout(() => setHallTicketToast(null), 7000);
-                  }
-                }}
-                title={currentUser.hallTicketApproved ? 'HOD Approved ✓' : 'Awaiting HOD Approval'}
-              >
-                {currentUser.hallTicketApproved ? (
-                  <>
-                    <FileText size={15} color="#059669" /> Hall Ticket (Approved ✓)
-                  </>
-                ) : (
-                  <>
-                    <Lock size={14} color="#d97706" /> Hall Ticket (Locked)
-                  </>
-                )}
-              </button>
-
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid var(--border-light)' }} onClick={() => setShowMarksheetModal(true)}>
-                <Award size={15} color="var(--primary)" /> Digital Marksheet
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #a7f3d0', color: '#047857' }} onClick={() => setShowDocUploadModal(true)}>
-                <Camera size={15} color="#059669" /> Photo &amp; Documents
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #bfdbfe', color: '#1d4ed8' }} onClick={() => setShowFeePassbookModal(true)}>
-                <CreditCard size={15} color="#2563eb" /> Fees Passbook 📜
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fbcfe8', color: '#be185d' }} onClick={() => setShowLibraryModal(true)}>
-                <Library size={15} color="#db2777" /> Library Services
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fed7aa', color: '#c2410c' }} onClick={() => setShowGrievanceTimelineModal(true)}>
-                <Clock size={15} color="#ea580c" /> Grievance Tracker 🛡️
-              </button>
-              <button
-                className="btn btn-white btn-sm"
-                style={{ border: '1px solid #67e8f9', color: '#0891b2', background: '#ecfeff' }}
-                onClick={() => setShowResumeBuilderModal(true)}
-              >
-                📄 ATS Resume Builder
-              </button>
-              <button
-                className="btn btn-white btn-sm"
-                style={{ border: '1px solid #a7f3d0', color: '#047857', background: '#f0fdf4' }}
-                onClick={() => setShowRiskRadarModal(true)}
-              >
-                🔮 Risk Radar
-              </button>
-              <button
-                className="btn btn-white btn-sm"
-                style={{ border: '1px solid #c084fc', color: '#7c3aed', background: '#faf5ff' }}
-                onClick={() => setShowPredictorModal(true)}
-              >
-                🔮 CGPA Predictor
-              </button>
-              <button
-                className="btn btn-primary btn-sm"
-                style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                onClick={() => setShowPlacementModal(true)}
-              >
-                <Briefcase size={15} color="#67e8f9" /> T&amp;P Campus Placements 🚀
-              </button>
-
-              {/* ── New Premium Features ── */}
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fcd34d', color: '#b45309', background: '#fffbeb' }} onClick={() => setShowLeaderboardModal(true)}>
-                🎮 XP Leaderboard
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #93c5fd', color: '#1e40af', background: '#eff6ff' }} onClick={() => setShowAnalyticsModal(true)}>
-                📊 Dept Analytics
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #c4b5fd', color: '#6d28d9', background: '#f5f3ff' }} onClick={() => setShowCareerPathModal(true)}>
-                🧠 Career Path AI
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #6ee7b7', color: '#047857', background: '#ecfdf5' }} onClick={() => setShowCalendarModal(true)}>
-                📅 Academic Calendar
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #f9a8d4', color: '#be185d', background: '#fdf2f8' }} onClick={() => setShowFeedbackModal(true)}>
-                💬 Anonymous Feedback
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fde68a', color: '#92400e', background: '#fffbeb' }} onClick={() => setShowAchievementModal(true)}>
-                🏆 Achievements
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fca5a5', color: '#b91c1c', background: '#fef2f2' }} onClick={() => setShowWellnessModal(true)}>
-                📱 Wellness Tracker
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #fdba74', color: '#c2410c', background: '#fff7ed' }} onClick={() => setShowNotifCenterModal(true)}>
-                🔔 Command Center
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #67e8f9', color: '#0e7490', background: '#ecfeff' }} onClick={() => setShowKanbanModal(true)}>
-                📋 Assignment Board
-              </button>
-              <button className="btn btn-white btn-sm" style={{ border: '1px solid #86efac', color: '#166534', background: '#f0fdf4' }} onClick={() => setShowCampusMapModal(true)}>
-                🗺️ Campus Map
-              </button>
-            </div>
+            {/* ── Professional Student Enterprise Services Hub ── */}
+            <StudentServicesSuite
+              currentUser={currentUser}
+              hallTicketToast={hallTicketToast}
+              setHallTicketToast={setHallTicketToast}
+              onOpenModal={(modalKey) => {
+                if (modalKey === 'idCard') setShowIdCardModal(true);
+                if (modalKey === 'hallTicket') setShowHallTicketModal(true);
+                if (modalKey === 'marksheet') setShowMarksheetModal(true);
+                if (modalKey === 'docUpload') setShowDocUploadModal(true);
+                if (modalKey === 'placement') setShowPlacementModal(true);
+                if (modalKey === 'feePassbook') setShowFeePassbookModal(true);
+                if (modalKey === 'library') setShowLibraryModal(true);
+                if (modalKey === 'grievance') setShowGrievanceTimelineModal(true);
+                if (modalKey === 'resume') setShowResumeBuilderModal(true);
+                if (modalKey === 'riskRadar') setShowRiskRadarModal(true);
+                if (modalKey === 'predictor') setShowPredictorModal(true);
+                if (modalKey === 'leaderboard') setShowLeaderboardModal(true);
+                if (modalKey === 'analytics') setShowAnalyticsModal(true);
+                if (modalKey === 'careerPath') setShowCareerPathModal(true);
+                if (modalKey === 'calendar') setShowCalendarModal(true);
+                if (modalKey === 'feedback') setShowFeedbackModal(true);
+                if (modalKey === 'achievement') setShowAchievementModal(true);
+                if (modalKey === 'wellness') setShowWellnessModal(true);
+                if (modalKey === 'notifCenter') setShowNotifCenterModal(true);
+                if (modalKey === 'kanban') setShowKanbanModal(true);
+                if (modalKey === 'campusMap') setShowCampusMapModal(true);
+              }}
+            />
           </div>
 
           {/* Right Panel: Class Schedule & Notices */}
