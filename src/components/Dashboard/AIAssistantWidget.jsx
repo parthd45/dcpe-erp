@@ -318,24 +318,27 @@ export function AIAssistantWidget({ currentUser, onOpenModal }) {
 
       {/* Main AI Chat & Quiz Drawer */}
       {isOpen && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 99999,
-          width: '400px',
-          maxWidth: 'calc(100vw - 32px)',
-          height: '580px',
-          maxHeight: 'calc(100vh - 40px)',
-          background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%)',
-          borderRadius: '24px',
-          boxShadow: '0 24px 80px rgba(0, 0, 0, 0.5)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          animation: 'slideUpPWA 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}>
+        <div
+          className="ai-assistant-drawer"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 99999,
+            width: '400px',
+            maxWidth: 'calc(100vw - 32px)',
+            height: '580px',
+            maxHeight: 'calc(100vh - 40px)',
+            background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%)',
+            borderRadius: '24px',
+            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.5)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            animation: 'slideUpPWA 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
           {/* Header */}
           <div style={{
             padding: '16px 20px',

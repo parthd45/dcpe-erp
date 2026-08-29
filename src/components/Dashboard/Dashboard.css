@@ -709,12 +709,18 @@
     padding: 12px !important;
   }
 
-  /* Split grids into 1 Column on Mobile */
-  .modal-content div[style*="gridTemplateColumns"],
-  .modal-content div[style*="display: grid"],
-  .printable-document-container div[style*="gridTemplateColumns"],
-  .printable-document-container div[style*="display: grid"] {
+  /* Split grids into 1 Column on Mobile - Matches minified/unminified inline grid styles */
+  .modal-overlay [style*="grid"],
+  .modal-overlay [style*="Grid"],
+  .modal-overlay [style*="GRID"],
+  .modal-content [style*="grid"],
+  .printable-document-container [style*="grid"],
+  .modal-overlay div[style*="grid"],
+  .modal-content div[style*="grid"],
+  .printable-document-container div[style*="grid"] {
     grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
     gap: 12px !important;
   }
 
@@ -731,18 +737,23 @@
 
   /* Adjust Modal Control Headers for small screens */
   .no-print {
+    display: flex !important;
     flex-direction: column !important;
-    gap: 10px !important;
-    align-items: stretch !important;
+    gap: 12px !important;
+    align-items: center !important;
     text-align: center !important;
+    padding: 12px !important;
   }
 
-  .no-print div {
+  .no-print > div {
+    display: flex !important;
+    flex-wrap: wrap !important;
     justify-content: center !important;
+    gap: 6px !important;
   }
 
   .no-print button {
-    flex: 1 !important;
+    flex: 1 1 auto !important;
     font-size: 11px !important;
     padding: 6px 10px !important;
   }
@@ -755,6 +766,19 @@
 
   .kanban-column {
     width: 100% !important;
+  }
+
+  /* Full Screen AI Assistant drawer on Mobile */
+  .ai-assistant-drawer {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    border: none !important;
   }
 }
 
