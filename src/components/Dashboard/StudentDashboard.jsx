@@ -130,24 +130,27 @@ export default function StudentDashboard({ onBackToHome }) {
             )}
             <div className="user-meta">
               <h2>Welcome, {currentUser.name}</h2>
-              <p>
-                {currentUser.course} • {currentUser.year} • PRN: <strong>{currentUser.prn}</strong>
+              <p style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span>{currentUser.course} • {currentUser.year} • PRN: <strong>{currentUser.prn}</strong></span>
               </p>
-              <div className="user-role-tag student">
+              <div className="user-role-tag student" style={{ marginTop: '4px' }}>
                 <CheckCircle2 size={12} />
-                Student Portal — Active
+                Student Portal — Degree College of Physical Education, Amravati
               </div>
             </div>
           </div>
 
-          <div className="dashboard-actions">
-            <button className="btn btn-outline-dark btn-sm" onClick={onBackToHome}>
-              College Website
-            </button>
-            <button className="btn btn-primary btn-sm" onClick={logout}>
-              <LogOut size={16} />
-              Logout
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <OfficialHVPMLogo size={48} showTitle={false} />
+            <div className="dashboard-actions">
+              <button className="btn btn-outline-dark btn-sm" onClick={onBackToHome}>
+                College Website
+              </button>
+              <button className="btn btn-primary btn-sm" onClick={logout}>
+                <LogOut size={16} />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
