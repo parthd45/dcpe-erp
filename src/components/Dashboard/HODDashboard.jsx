@@ -1997,6 +1997,14 @@ export default function HODDashboard({ onBackToHome }) {
           />
         )}
 
+        {/* ── Exam Hall Seating Matrix Modal ── */}
+        {showSeatingMatrixModal && (
+          <ExamSeatingMatrixModal
+            currentUser={currentUser}
+            onClose={() => setShowSeatingMatrixModal(false)}
+          />
+        )}
+
       </div>
     </div>
   );
