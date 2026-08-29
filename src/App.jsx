@@ -32,14 +32,16 @@ function MainApp() {
 
       {showDashboard ? (
         <main>
-          {currentUser.userType === 'student' ? (
+          {(currentUser.userType === 'student' || currentUser.prn || (!currentUser.role && currentUser.course)) ? (
             <StudentDashboard onBackToHome={() => setViewDashboard(false)} />
-          ) : currentUser.userType === 'faculty' ? (
+          ) : (currentUser.userType === 'faculty' || currentUser.role === 'faculty') ? (
             <FacultyDashboard onBackToHome={() => setViewDashboard(false)} />
-          ) : currentUser.userType === 'admin' ? (
+          ) : (currentUser.userType === 'admin' || currentUser.role === 'admin') ? (
             <AdminDashboard onBackToHome={() => setViewDashboard(false)} />
-          ) : (
+          ) : (currentUser.userType === 'hod' || currentUser.role === 'hod') ? (
             <HODDashboard onBackToHome={() => setViewDashboard(false)} />
+          ) : (
+            <StudentDashboard onBackToHome={() => setViewDashboard(false)} />
           )}
         </main>
       ) : (
