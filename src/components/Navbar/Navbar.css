@@ -149,8 +149,19 @@
   .navbar-mobile-toggle { display: flex; }
 }
 
-@media (max-width: 480px) {
-  .navbar-title-main { font-size: var(--text-sm); }
-  .navbar-title-sub { display: none; }
-  .navbar-logo { width: 36px; height: 36px; }
+@media (max-width: 600px) {
+  .navbar {
+    padding: 10px 14px !important;
+  }
+  .navbar-brand img,
+  .navbar-brand svg {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .navbar-brand span:first-child {
+    font-size: 15px !important;
+  }
+  .navbar-brand span:last-child {
+    font-size: 9.5px !important;
+  }
 }
