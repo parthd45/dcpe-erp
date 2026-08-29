@@ -6,6 +6,7 @@ import {
   CheckCircle2, XCircle, KeyRound, Sparkles
 } from 'lucide-react';
 import StudentRegister from '../StudentRegister/StudentRegister';
+import { QuickHallTicketSearchModal } from './QuickHallTicketSearchModal';
 import './LoginSection.css';
 
 const roles = [
@@ -54,9 +55,10 @@ const DEMO_ACCOUNTS = [
 ];
 
 export default function LoginSection() {
-  const { login, changeStaffPassword } = useAuth();
+  const { login, changeStaffPassword, students } = useAuth();
 
   const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register'
+  const [showQuickLookupModal, setShowQuickLookupModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -196,8 +198,38 @@ export default function LoginSection() {
               <UserPlus size={15} />
               New Student Registration
             </button>
+
+            <button
+              type="button"
+              className="btn btn-sm"
+              style={{
+                borderRadius: 'var(--radius-full)',
+                padding: '8px 20px',
+                marginLeft: '10px',
+                background: 'linear-gradient(135deg, #1e1b4b, #312e81)',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 800,
+                boxShadow: '0 4px 14px rgba(30,27,75,0.3)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+              onClick={() => setShowQuickLookupModal(true)}
+            >
+              <Sparkles size={15} color="#fbbf24" />
+              ⚡ Quick Offline Gatepass Search (PRN)
+            </button>
           </div>
         </div>
+
+        {showQuickLookupModal && (
+          <QuickHallTicketSearchModal
+            allStudents={students}
+            onClose={() => setShowQuickLookupModal(false)}
+          />
+        )}
 
         {activeTab === 'register' ? (
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
