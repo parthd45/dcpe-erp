@@ -47,7 +47,7 @@ export default function Navbar({ onOpenDashboard, isDashboardActive }) {
               handleNavClick('#home');
             }}
           >
-            <OfficialHVPMLogo size={42} showTitle={true} />
+            <OfficialHVPMLogo size={58} showTitle={true} />
           </a>
 
           {!isDashboardActive && (

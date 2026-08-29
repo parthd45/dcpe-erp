@@ -125,8 +125,8 @@ export function StudentIDCardModal({ currentUser, onClose }) {
               /* FRONT SIDE */
               <>
                 {/* Institution Header Banner */}
-                <div style={{ borderBottom: '2px solid var(--primary)', paddingBottom: '14px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                  <OfficialHVPMLogo size={46} showTitle={false} />
+                <div style={{ borderBottom: '2px solid var(--primary)', paddingBottom: '14px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px' }}>
+                  <OfficialHVPMLogo size={62} showTitle={false} />
                   <div style={{ textAlign: 'left' }}>
                     <div style={{ fontSize: '9.5px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                       Shree Hanuman Vyayam Prasarak Mandal's
@@ -652,8 +652,8 @@ export function DigitalMarksheetModal({ currentUser, gradeReport, onClose }) {
           >
             {/* Header */}
             <div style={{ borderBottom: '2px solid #1e1b4b', paddingBottom: '16px', marginBottom: '20px', textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '8px' }}>
-                <OfficialHVPMLogo size={56} showTitle={false} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '18px', marginBottom: '8px' }}>
+                <OfficialHVPMLogo size={76} showTitle={false} />
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.12em' }}>
                     SHREE HANUMAN VYAYAM PRASARAK MANDAL'S

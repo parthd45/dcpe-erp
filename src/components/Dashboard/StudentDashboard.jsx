@@ -140,8 +140,8 @@ export default function StudentDashboard({ onBackToHome }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <OfficialHVPMLogo size={48} showTitle={false} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+            <OfficialHVPMLogo size={72} showTitle={false} />
             <div className="dashboard-actions">
               <button className="btn btn-outline-dark btn-sm" onClick={onBackToHome}>
                 College Website
