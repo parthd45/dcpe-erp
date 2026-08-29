@@ -626,22 +626,66 @@
 
 /* ─── Global Mobile Responsiveness & Touch Optimization System ─── */
 @media (max-width: 768px) {
-  .dashboard-container {
-    padding: 80px 8px 40px !important;
+
+  /* ═══ NUCLEAR VIEWPORT LOCK ═══ */
+  /* Every single element must obey the viewport boundary */
+  * {
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
   }
 
+  /* ═══ DASHBOARD CONTAINER ═══ */
+  .dashboard-container {
+    padding: 80px 8px 40px !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .container {
+    padding: 0 8px !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* ═══ DASHBOARD HEADER ═══ */
   .dashboard-header {
     padding: 16px !important;
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 14px !important;
     text-align: center !important;
+    width: 100% !important;
+    overflow: hidden !important;
   }
 
   .dashboard-user-info {
     flex-direction: column !important;
     text-align: center !important;
     gap: 10px !important;
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .user-meta h2 {
+    font-size: 18px !important;
+    word-break: break-word !important;
+  }
+
+  .user-meta p {
+    font-size: 11.5px !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
+
+  .user-role-tag {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    text-align: center !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    border-radius: var(--radius-lg) !important;
+    font-size: 10px !important;
   }
 
   .dashboard-actions {
@@ -651,6 +695,14 @@
     gap: 8px !important;
   }
 
+  .student-dashboard-header-right {
+    flex-direction: column !important;
+    width: 100% !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  /* ═══ KPI CARDS ═══ */
   .kpi-grid {
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
@@ -664,14 +716,47 @@
     font-size: 16px !important;
   }
 
-  /* Service Cards Suite Mobile 1-Column */
+  /* ═══ MAIN DASHBOARD GRID — FORCE 1 COLUMN ═══ */
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .dashboard-panel {
+    padding: 14px !important;
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .panel-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .panel-title {
+    font-size: 15px !important;
+  }
+
+  /* ═══ PROFILE DETAIL GRID ═══ */
+  .profile-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Fix span-2 items that break on 1-col grid */
+  .profile-detail-grid > [style*="span 2"],
+  .profile-detail-grid > [style*="span"] {
+    grid-column: span 1 !important;
+  }
+
+  /* ═══ SERVICE CARDS SUITE — 1 COLUMN ═══ */
   .services-suite-grid,
   .service-card-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
 
-  /* HOD Tab Switcher Bar */
+  /* ═══ HOD TAB SWITCHER BAR ═══ */
   .hod-tab-bar {
     overflow-x: auto !important;
     padding: 6px !important;
@@ -679,6 +764,7 @@
     display: flex !important;
     flex-wrap: nowrap !important;
     -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
   }
 
   .hod-tab-btn {
@@ -687,7 +773,7 @@
     flex-shrink: 0 !important;
   }
 
-  /* Modals Mobile Responsiveness */
+  /* ═══ MODALS — FULL WIDTH, FLUSH TO EDGES ═══ */
   .modal-overlay {
     padding: 8px !important;
     align-items: flex-start !important;
@@ -701,38 +787,14 @@
     max-width: 100% !important;
     margin: 8px auto !important;
     border-radius: 16px !important;
-    padding: 14px !important;
+    padding: 12px !important;
     box-sizing: border-box !important;
     max-height: none !important;
-    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
   }
 
-  /* Printable ID Card Scaler for Small Screens */
-  #printable-id-card {
-    transform: scale(0.95) !important;
-    transform-origin: top center !important;
-    padding: 12px !important;
-  }
-
-  /* Split grids into 1 Column on Mobile - Matches minified/unminified inline grid styles */
-  .modal-overlay [style*="grid"],
-  .modal-overlay [style*="Grid"],
-  .modal-overlay [style*="GRID"],
-  .modal-content [style*="grid"],
-  .printable-document-container [style*="grid"],
-  .modal-overlay div[style*="grid"],
-  .modal-content div[style*="grid"],
-  .printable-document-container div[style*="grid"] {
-    grid-template-columns: 1fr !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 12px !important;
-  }
-
-  /* Prevent any table or element from going wider than viewport, forcing single vertical scroll */
-  .modal-card,
-  .modal-content,
-  .printable-document-container,
+  /* Printable document containers */
   #printable-id-card,
   #printable-hall-ticket,
   #printable-marksheet,
@@ -745,7 +807,40 @@
     overflow-x: hidden !important;
   }
 
-  /* Restrict outer tables to parent container by default */
+  #printable-id-card {
+    transform: scale(0.95) !important;
+    transform-origin: top center !important;
+    padding: 12px !important;
+  }
+
+  /* ═══ NUCLEAR: ALL INLINE GRIDS → 1 COLUMN ═══ */
+  /* This catches ALL inline style grids in modals, dashboards, and panels */
+  .modal-overlay [style*="grid"],
+  .modal-overlay [style*="Grid"],
+  .modal-content [style*="grid"],
+  .modal-content [style*="Grid"],
+  .printable-document-container [style*="grid"],
+  .dashboard-container [style*="grid"],
+  .dashboard-panel [style*="grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ═══ NUCLEAR: ALL INLINE FLEX LAYOUTS — WRAP & STACK ═══ */
+  .modal-overlay [style*="flex"],
+  .modal-content [style*="flex"],
+  .printable-document-container [style*="flex"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* ═══ NUCLEAR: FORCE ALL FIXED-WIDTH ELEMENTS TO 100% ═══ */
+  .modal-overlay [style*="width"],
+  .modal-content [style*="width"],
+  .dashboard-panel [style*="width"],
+  .printable-document-container [style*="width"] {
+    max-width: 100% !important;
+  }
+
+  /* ═══ TABLES — FIT INSIDE CONTAINERS ═══ */
   table {
     display: table !important;
     width: 100% !important;
@@ -758,11 +853,13 @@
 
   table td,
   table th {
-    padding: 6px 8px !important;
+    padding: 6px 6px !important;
     font-size: 11px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
   }
 
-  /* Target responsive table wrappers to enable smooth side-to-side scrolling on mobile */
+  /* Table-responsive wrappers allow horizontal scrolling for wide tables */
   .table-responsive {
     display: block !important;
     width: 100% !important;
@@ -774,7 +871,6 @@
     margin-bottom: 16px !important;
   }
 
-  /* Make sure the inner table remains wide enough to trigger scrolling */
   .table-responsive table {
     width: max-content !important;
     min-width: 100% !important;
@@ -784,18 +880,18 @@
   .table-responsive table td,
   .table-responsive table th {
     white-space: nowrap !important;
-    padding: 8px 12px !important;
-    font-size: 11.5px !important;
+    padding: 8px 10px !important;
+    font-size: 11px !important;
   }
 
-  /* Adjust Modal Control Headers for small screens */
+  /* ═══ MODAL CONTROL HEADERS ═══ */
   .no-print {
     display: flex !important;
     flex-direction: column !important;
-    gap: 12px !important;
+    gap: 10px !important;
     align-items: center !important;
     text-align: center !important;
-    padding: 12px !important;
+    padding: 10px !important;
   }
 
   .no-print > div {
@@ -811,7 +907,7 @@
     padding: 6px 10px !important;
   }
 
-  /* Kanban Board columns */
+  /* ═══ KANBAN BOARD ═══ */
   .kanban-board {
     flex-direction: column !important;
     gap: 16px !important;
@@ -821,7 +917,7 @@
     width: 100% !important;
   }
 
-  /* Full Screen AI Assistant drawer on Mobile */
+  /* ═══ AI ASSISTANT DRAWER — FULLSCREEN ═══ */
   .ai-assistant-drawer {
     width: 100% !important;
     max-width: 100% !important;
@@ -834,30 +930,71 @@
     border: none !important;
   }
 
-  /* Support text wrapping for user role badges in dashboard header */
-  .user-role-tag {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    text-align: center !important;
-    justify-content: center !important;
-    white-space: normal !important;
-    line-height: 1.4 !important;
-    border-radius: var(--radius-lg) !important;
+  /* ═══ NOTICE TAG GRID ═══ */
+  .notice-tag-select-grid {
+    grid-template-columns: 1fr !important;
   }
-}
 
-.student-dashboard-header-right {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-@media (max-width: 768px) {
-  .student-dashboard-header-right {
+  /* ═══ APPROVAL STAMP CARD ═══ */
+  .approval-stamp-card {
     flex-direction: column !important;
+    text-align: center !important;
+    gap: 10px !important;
+  }
+
+  /* ═══ ACTION BUTTON GROUPS ═══ */
+  .action-btn-group {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* ═══ HOD NOTICE CARDS ═══ */
+  .hod-notice-card {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .hod-notice-card-meta {
+    flex-wrap: wrap !important;
+  }
+
+  /* ═══ GLOBAL TEXT OVERFLOW SAFETY ═══ */
+  h1, h2, h3, h4, h5, h6, p, span, strong, label, code {
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+  }
+
+  code {
+    word-break: break-all !important;
+    font-size: 10px !important;
+  }
+
+  /* ═══ FORM INPUTS — FULL WIDTH ═══ */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="tel"],
+  select,
+  textarea {
     width: 100% !important;
-    align-items: center !important;
-    gap: 12px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 14px !important;
+  }
+
+  /* ═══ BUTTONS — PREVENT OVERFLOW ═══ */
+  button {
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  /* ═══ IMAGES — CONSTRAIN ═══ */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
   }
 }
 
@@ -866,17 +1003,13 @@
     grid-template-columns: 1fr !important;
   }
 
-  .user-meta h2 {
-    font-size: 18px !important;
-  }
-
-  .user-meta p {
-    font-size: 11.5px !important;
-  }
-
   #printable-id-card {
     transform: scale(0.85) !important;
   }
 }
 
-
+.student-dashboard-header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
