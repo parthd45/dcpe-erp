@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertCircle, X, ChevronRight, Send, User,
   FileText, ExternalLink, Filter, Sparkles, ShieldCheck, Check,
   Mic, MicOff, Volume2, Sparkle, RefreshCw, BarChart2, Star, Target, Zap,
-  Video, VideoOff, Camera, Radio, Trophy, CheckSquare
+  Video, VideoOff, Camera, Radio, Trophy, CheckSquare, MessageSquare, Bot
 } from 'lucide-react';
 import { fetchPlacementDrives, applyForPlacementDrive, fetchStudentApplications } from '../../lib/placementService';
 import './Dashboard.css';
@@ -133,6 +133,14 @@ export function PlacementModal({ currentUser, onClose }) {
     };
   }, [currentUser]);
 
+  // Ensure webcam stream is assigned to video element whenever DOM mounts or stream changes
+  useEffect(() => {
+    if (webcamActive && videoRef.current && mediaStreamRef.current) {
+      videoRef.current.srcObject = mediaStreamRef.current;
+      videoRef.current.play().catch((e) => console.warn('Webcam play error:', e));
+    }
+  }, [webcamActive, activeTab]);
+
   const loadData = async () => {
     setLoading(true);
     const driveList = await fetchPlacementDrives();
@@ -145,16 +153,20 @@ export function PlacementModal({ currentUser, onClose }) {
     setLoading(false);
   };
 
-  // Webcam Controls
+  // Webcam Controls with Reliable Stream Binding
   const startWebcam = async () => {
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true });
         mediaStreamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
         setWebcamActive(true);
+
+        setTimeout(() => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch((e) => console.warn('Webcam play error:', e));
+          }
+        }, 100);
       } else {
         alert('Webcam camera access is not supported by your browser.');
       }
@@ -168,6 +180,9 @@ export function PlacementModal({ currentUser, onClose }) {
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     setWebcamActive(false);
   };
@@ -315,7 +330,7 @@ export function PlacementModal({ currentUser, onClose }) {
       const lower = candidateAnswer.toLowerCase();
       const matched = currentQuestionObj.keywords.filter((kw) => lower.includes(kw));
       const matchPct = Math.round((matched.length / currentQuestionObj.keywords.length) * 100);
-      
+
       const techScore = Math.min(100, Math.max(45, matchPct + (candidateAnswer.length > 80 ? 25 : 10)));
       const fluencyScore = Math.min(100, Math.max(50, Math.round(candidateAnswer.split(/\s+/).length * 1.8)));
       const presenceScore = webcamActive ? 95 : 70;
@@ -457,7 +472,7 @@ export function PlacementModal({ currentUser, onClose }) {
               onClick={() => setActiveTab('mock_interview')}
               style={{ fontWeight: 700, background: activeTab === 'mock_interview' ? 'linear-gradient(135deg, #4f46e5, #9333ea)' : undefined }}
             >
-              <Video size={14} /> 📹 Live AI Video &amp; Voice Interview Studio
+              <Bot size={14} /> 🤖 1-on-1 Animated Robot AI Interview Studio
             </button>
           </div>
 
@@ -617,7 +632,7 @@ export function PlacementModal({ currentUser, onClose }) {
           </div>
         )}
 
-        {/* TAB 3: LIVE AI VIDEO & VOICE INTERVIEW STUDIO */}
+        {/* TAB 3: 1-ON-1 ANIMATED ROBOT AI INTERVIEW STUDIO */}
         {activeTab === 'mock_interview' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Recruiter Track Selection */}
@@ -654,108 +669,145 @@ export function PlacementModal({ currentUser, onClose }) {
               </div>
             </div>
 
-            {/* LIVE DUAL CAMERA & AI RECRUITER DISPLAY GRID */}
+            {/* 1-ON-1 INTERVIEW STAGE: ROBOT AI RECRUITER vs CANDIDATE WEBCAM */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              {/* Left: AI Recruiter Virtual Avatar Screen */}
+              {/* Left Screen: Animated 3D Robot AI Recruiter Avatar ("Alex AI") */}
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
-                  borderRadius: '20px',
+                  background: 'radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%)',
+                  borderRadius: '24px',
                   padding: '20px',
                   color: 'white',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  minHeight: '260px',
+                  minHeight: '300px',
                   position: 'relative',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(147, 51, 234, 0.4)',
+                  boxShadow: '0 0 20px rgba(99, 102, 241, 0.2)',
+                  overflow: 'hidden',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Robot Header Status */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
-                    <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                      AI Lead Interviewer • Dr. AI Panel
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: isSpeaking ? '#a855f7' : '#10b981', boxShadow: isSpeaking ? '0 0 10px #a855f7' : '0 0 10px #10b981' }} />
+                    <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#c084fc' }}>
+                      Alex AI • Lead Recruiter
                     </span>
                   </div>
-                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.15)' }}>
-                    {currentTrackObj.company}
+                  <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.15)', fontWeight: 600 }}>
+                    1-on-1 Live Room
                   </span>
                 </div>
 
-                {/* Animated Avatar Graphic */}
-                <div style={{ textAlign: 'center', margin: '20px 0' }}>
+                {/* ANIMATED ROBOT AVATAR CHARACTER */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '20px 0', zIndex: 2 }}>
                   <div
                     style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-                      margin: '0 auto 12px',
+                      width: 100,
+                      height: 100,
+                      borderRadius: '30px',
+                      background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: isSpeaking ? '0 0 24px rgba(168, 85, 247, 0.8)' : '0 0 12px rgba(99, 102, 241, 0.4)',
-                      transition: 'all 0.3s ease',
-                      fontSize: '32px',
+                      position: 'relative',
+                      boxShadow: isSpeaking ? '0 0 35px rgba(168, 85, 247, 0.9)' : '0 0 15px rgba(56, 189, 248, 0.5)',
+                      transform: isSpeaking ? 'scale(1.04)' : 'scale(1)',
+                      transition: 'all 0.2s ease',
+                      border: '3px solid rgba(255,255,255,0.3)',
                     }}
                   >
-                    🤖
+                    {/* Robot Digital Face Details */}
+                    <div style={{ width: '80%', height: '80%', background: '#090d16', borderRadius: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px' }}>
+                      {/* Eyes */}
+                      <div style={{ display: 'flex', gap: '16px' }}>
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: isSpeaking ? '#f0abfc' : '#38bdf8', boxShadow: '0 0 8px currentColor' }} />
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: isSpeaking ? '#f0abfc' : '#38bdf8', boxShadow: '0 0 8px currentColor' }} />
+                      </div>
+                      {/* Animated Equalizer Lip-Sync Mouth */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '16px' }}>
+                        {[12, 18, 8, 20, 14, 10].map((h, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              width: '4px',
+                              height: isSpeaking ? `${Math.floor(Math.random() * 14) + 6}px` : `${h}px`,
+                              background: isSpeaking ? '#f472b6' : '#38bdf8',
+                              borderRadius: '2px',
+                              transition: 'all 0.1s ease',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
-                    {isSpeaking ? '🔊 Asking Question Aloud...' : 'Listening & Observing Response'}
+
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'white', marginTop: '10px' }}>
+                    {isSpeaking ? '🔊 Alex AI Asking Question Aloud...' : isListening ? '👂 Listening to Your Answer...' : '🤖 Ready for Next Question'}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: '10px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                  <span style={{ fontSize: '11px', opacity: 0.7 }}>Q{currentQIndex + 1} of {currentTrackObj.questions.length}</span>
+                {/* Controls */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', zIndex: 2 }}>
+                  <span style={{ fontSize: '11px', opacity: 0.7 }}>Track: {currentTrackObj.company}</span>
                   <button
                     type="button"
                     onClick={handleSpeakQuestion}
-                    style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}
+                    style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
                   >
-                    <Volume2 size={13} /> {isSpeaking ? 'Speaking...' : 'Ask Question Aloud 🔊'}
+                    <Volume2 size={13} /> {isSpeaking ? 'Speaking...' : 'Ask Aloud 🔊'}
                   </button>
                 </div>
               </div>
 
-              {/* Right: Candidate Live Camera Viewport */}
+              {/* Right Screen: Candidate Live Webcam Viewport */}
               <div
                 style={{
-                  background: '#0f172a',
-                  borderRadius: '20px',
+                  background: '#090d16',
+                  borderRadius: '24px',
                   overflow: 'hidden',
                   position: 'relative',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minHeight: '260px',
+                  minHeight: '300px',
                   border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.4)',
                 }}
               >
-                {webcamActive ? (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                ) : (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: webcamActive ? 'block' : 'none',
+                  }}
+                />
+
+                {!webcamActive && (
                   <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
-                    <Camera size={40} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'white' }}>Candidate Camera Feed Offline</div>
-                    <div style={{ fontSize: '11px', marginTop: '4px' }}>Enable webcam to evaluate eye contact &amp; camera presence</div>
+                    <Camera size={44} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>Candidate Camera Feed</div>
+                    <div style={{ fontSize: '11px', marginTop: '4px', maxWidth: '220px' }}>
+                      Click "Turn On Webcam" to enable your live 1-to-1 camera stream
+                    </div>
                   </div>
                 )}
 
-                {/* Camera Overlay Badge */}
-                <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.6)', padding: '4px 10px', borderRadius: 99, color: 'white', fontSize: '11px', fontWeight: 700 }}>
+                {/* Camera Overlay Status */}
+                <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.65)', padding: '4px 12px', borderRadius: 99, color: 'white', fontSize: '11px', fontWeight: 700, backdropFilter: 'blur(4px)' }}>
                   <Radio size={12} color={webcamActive ? '#10b981' : '#ef4444'} />
-                  {webcamActive ? 'REC • 1080p Stream Active' : 'Camera Muted'}
+                  {webcamActive ? 'LIVE 1080p Candidate Stream' : 'Camera Muted'}
                 </div>
 
+                {/* Webcam Toggle Button */}
                 <div style={{ position: 'absolute', bottom: '12px', right: '12px' }}>
                   <button
                     type="button"
@@ -764,27 +816,28 @@ export function PlacementModal({ currentUser, onClose }) {
                       background: webcamActive ? '#dc2626' : '#059669',
                       color: 'white',
                       border: 'none',
-                      padding: '6px 14px',
+                      padding: '8px 16px',
                       borderRadius: '10px',
                       fontSize: '11px',
-                      fontWeight: 700,
+                      fontWeight: 800,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                     }}
                   >
-                    {webcamActive ? <VideoOff size={13} /> : <Video size={13} />}
-                    {webcamActive ? 'Stop Webcam' : 'Turn On Webcam 📹'}
+                    {webcamActive ? <VideoOff size={14} /> : <Video size={14} />}
+                    {webcamActive ? 'Turn Off Camera' : 'Turn On Webcam 📹'}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Question Text Box */}
+            {/* Question Text Card */}
             <div style={{ background: '#f8fafc', border: '1px solid var(--border-light)', borderRadius: '16px', padding: '18px' }}>
               <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                Interviewer Question:
+                Question {currentQIndex + 1}:
               </div>
               <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-heading)', lineHeight: 1.5 }}>
                 "{currentQuestionObj.q}"
@@ -821,7 +874,7 @@ export function PlacementModal({ currentUser, onClose }) {
 
               <textarea
                 rows={4}
-                placeholder="Click 'Speak Your Answer (Mic)' to speak aloud, or type your technical answer here..."
+                placeholder="Click 'Speak Your Answer (Mic)' to answer in voice, or type your answer here..."
                 value={candidateAnswer}
                 onChange={(e) => setCandidateAnswer(e.target.value)}
                 style={{
@@ -859,7 +912,7 @@ export function PlacementModal({ currentUser, onClose }) {
                     gap: '6px',
                   }}
                 >
-                  <Sparkles size={15} /> {isEvaluating ? 'AI Examining Interview & Marking...' : 'Examine Interview & Award Marks 🚀'}
+                  <Sparkles size={15} /> {isEvaluating ? 'Alex AI Examining Interview & Awarding Marks...' : 'Examine Interview & Award Marks 🚀'}
                 </button>
               </div>
             </div>
@@ -870,10 +923,10 @@ export function PlacementModal({ currentUser, onClose }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #a7f3d0' }}>
                   <div>
                     <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#065f46' }}>
-                      🎓 AI Interview Examination Marksheet
+                      🎓 Alex AI Official Interview Marksheet
                     </h4>
                     <span style={{ fontSize: '12px', color: '#047857' }}>
-                      Evaluated for {currentTrackObj.company} • {currentUser?.name || 'Candidate'}
+                      Evaluated for {currentTrackObj.company} • Candidate: {currentUser?.name || 'Student'}
                     </span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
