@@ -201,6 +201,67 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     }
   };
 
+  const [playerAccuracy, setPlayerAccuracy] = useState(null);
+  const [opponentAccuracy, setOpponentAccuracy] = useState(null);
+
+  const evaluateAccuracyScore = (problem, code, selectedOpt, timeRemaining) => {
+    let accuracy = 0;
+
+    if (problem.category === 'trivia') {
+      if (selectedOpt === problem.correctIdx) {
+        accuracy = 100;
+      } else if (selectedOpt !== null) {
+        accuracy = 25;
+      }
+    } else {
+      const cleanCode = code.trim();
+      try {
+        if (cleanCode.includes('return') || cleanCode.includes('reverse') || cleanCode.includes('Math.max') || cleanCode.includes('fib')) {
+          let testFn = new Function(`return ${cleanCode}`)();
+          if (typeof testFn === 'function') {
+            if (problem.id === 'reverse_string') {
+              const res = testFn("HVPM DCPE");
+              if (res === "EPCD MPHV" || (res && res.includes("EPCD"))) accuracy = 100;
+              else if (res) accuracy = 75;
+              else accuracy = 40;
+            } else if (problem.id === 'fibonacci_seq') {
+              const res = testFn(10);
+              if (res === 55) accuracy = 100;
+              else if (res) accuracy = 70;
+              else accuracy = 40;
+            } else {
+              accuracy = 90;
+            }
+          } else {
+            accuracy = 60;
+          }
+        } else {
+          accuracy = 30;
+        }
+      } catch (err) {
+        accuracy = cleanCode.length > 20 ? 40 : 20;
+      }
+    }
+
+    const speedBonus = Math.round((timeRemaining / 60) * 5);
+    return Math.min(100, accuracy + speedBonus);
+  };
+
+  const determineWinner = (myScore, oppScore) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (myScore > oppScore) {
+      playSound('victory');
+      setBattleWinner('player');
+    } else if (oppScore > myScore) {
+      playSound('hit');
+      setBattleWinner('opponent');
+    } else {
+      playSound('victory');
+      setBattleWinner('player');
+    }
+    setArenaState('results');
+  };
+
   const handleIncomingSignal = (data) => {
     if (data.targetPrn && data.targetPrn !== currentUser?.prn) return;
 
@@ -217,14 +278,12 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     } else if (data.type === 'emote_sent') {
       setOpponentEmote(data.emote);
       setTimeout(() => setOpponentEmote(null), 3000);
-    } else if (data.type === 'player_submitted') {
-      setScreenShake(true);
-      setTimeout(() => setScreenShake(false), 500);
-      playSound('hit');
-      setPlayerHp(0);
-      setBattleWinner('opponent');
-      setArenaState('results');
-      if (timerRef.current) clearInterval(timerRef.current);
+    } else if (data.type === 'player_submitted_accuracy') {
+      setOpponentAccuracy(data.accuracyScore);
+      setOpponentProgress(100);
+      if (playerAccuracy !== null) {
+        determineWinner(playerAccuracy, data.accuracyScore);
+      }
     }
   };
 
@@ -283,14 +342,17 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
       }
     }
 
-    // Verified correct solution!
-    if (timerRef.current) clearInterval(timerRef.current);
-    playSound('victory');
-    setFloatingDamage('CRITICAL HIT! -100 HP ⚡');
-    sendSignal('player_submitted');
-    setOpponentHp(0);
-    setBattleWinner('player');
-    setArenaState('results');
+    // Compute solution accuracy score
+    const score = evaluateAccuracyScore(currentProblem, userCode, userSelectedOption, timeLeft);
+    setPlayerAccuracy(score);
+
+    sendSignal('player_submitted_accuracy', { accuracyScore: score, timeUsed: 60 - timeLeft });
+
+    if (opponentAccuracy !== null) {
+      determineWinner(score, opponentAccuracy);
+    } else {
+      setSubmissionError(`✅ Solution submitted with ${score}% Accuracy Score! Waiting for opponent's accuracy score...`);
+    }
   };
 
   const filteredOnlinePlayers = genuineOnlineUsers.filter((std) => {
@@ -690,8 +752,20 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
               <Trophy size={38} color="white" />
             </div>
             <h3 style={{ fontSize: '24px', fontWeight: 900, color: battleWinner === 'player' ? '#34d399' : '#f87171', margin: '0 0 6px 0' }}>
-              {battleWinner === 'player' ? '🏆 DUEL VICTORY!' : 'DEFEAT IN DUEL'}
+              {battleWinner === 'player' ? '🏆 DUEL VICTORY (HIGHER ACCURACY)!' : 'DEFEAT IN DUEL'}
             </h3>
+
+            {/* Accuracy Score Comparison Cards */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '16px 0' }}>
+              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '12px 20px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>Your Solution Accuracy</div>
+                <div style={{ fontSize: '22px', fontWeight: 900, color: '#38bdf8' }}>{playerAccuracy || 0}%</div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '12px 20px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>{opponent?.name || 'Opponent'} Accuracy</div>
+                <div style={{ fontSize: '22px', fontWeight: 900, color: '#f87171' }}>{opponentAccuracy || 0}%</div>
+              </div>
+            </div>
 
             <button
               type="button"
