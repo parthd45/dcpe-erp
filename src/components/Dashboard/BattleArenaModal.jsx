@@ -44,21 +44,15 @@ const BATTLE_PROBLEMS = [
   },
 ];
 
-// Seeded active students list for instant online discovery
-const SAMPLE_ONLINE_STUDENTS = [
-  { prn: 'DCPE-101', name: 'Parth Deshmukh', course: 'BCA (Comp Sci)', status: 'online' },
-  { prn: 'DCPE-102', name: 'Aarav Sharma', course: 'MCA (Computer Apps)', status: 'online' },
-  { prn: 'DCPE-103', name: 'Ananya Patil', course: 'B.P.Ed (Physical Ed)', status: 'online' },
-  { prn: 'DCPE-104', name: 'Vikram Singh', course: 'M.P.Ed (Sports Science)', status: 'online' },
-  { prn: 'DCPE-105', name: 'Rohan Kulkarni', course: 'B.Sc Computer Science', status: 'online' },
-];
-
 export function BattleArenaModal({ currentUser, onClose }) {
   const [arenaState, setArenaState] = useState('lobby'); // 'lobby' | 'online_players' | 'room_created' | 'join_room' | 'battle' | 'results'
   const [roomCode, setRoomCode] = useState('');
   const [inputRoomCode, setInputRoomCode] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [challengeSentTo, setChallengeSentTo] = useState(null);
+  
+  // 100% Genuine Supabase Realtime Online Presence List
+  const [genuineOnlineUsers, setGenuineOnlineUsers] = useState([]);
   
   const [opponent, setOpponent] = useState(null);
   const [currentProblem, setCurrentProblem] = useState(BATTLE_PROBLEMS[0]);
@@ -71,18 +65,80 @@ export function BattleArenaModal({ currentUser, onClose }) {
   const [battleWinner, setBattleWinner] = useState(null);
 
   const channelRef = useRef(null);
+  const presenceChannelRef = useRef(null);
   const broadcastChannelRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Filter online players
-  const filteredOnlinePlayers = SAMPLE_ONLINE_STUDENTS.filter((std) => {
-    if (std.prn === currentUser?.prn) return false;
+  // 100% Genuine Supabase Presence Subscription
+  useEffect(() => {
+    const userPrn = currentUser?.prn || 'guest_' + Math.floor(Math.random() * 10000);
+    const userName = currentUser?.name || 'Student';
+    const userCourse = currentUser?.course || 'DCPE Student';
+
+    try {
+      const presenceChannel = supabase.channel('dcpe_realtime_presence_room', {
+        config: { presence: { key: userPrn } },
+      });
+
+      presenceChannel
+        .on('presence', { event: 'sync' }, () => {
+          const state = presenceChannel.presenceState();
+          const activeList = [];
+
+          Object.keys(state).forEach((key) => {
+            const presences = state[key];
+            if (presences && presences.length > 0) {
+              const p = presences[0];
+              if (p.prn !== userPrn) {
+                activeList.push({
+                  prn: p.prn || key,
+                  name: p.name || 'Active Student',
+                  course: p.course || 'DCPE Autonomous',
+                });
+              }
+            }
+          });
+
+          setGenuineOnlineUsers(activeList);
+        })
+        .on('presence', { event: 'join' }, ({ newPresences }) => {
+          console.log('New genuine player online:', newPresences);
+        })
+        .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+          console.log('Player went offline:', leftPresences);
+        });
+
+      presenceChannel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({
+            prn: userPrn,
+            name: userName,
+            course: userCourse,
+            onlineAt: new Date().toISOString(),
+          });
+        }
+      });
+
+      presenceChannelRef.current = presenceChannel;
+    } catch (err) {
+      console.warn('Supabase Presence Error:', err);
+    }
+
+    return () => {
+      if (presenceChannelRef.current) {
+        supabase.removeChannel(presenceChannelRef.current);
+      }
+    };
+  }, [currentUser]);
+
+  // Filter genuine online players
+  const filteredOnlinePlayers = genuineOnlineUsers.filter((std) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return std.name.toLowerCase().includes(q) || std.course.toLowerCase().includes(q) || std.prn.toLowerCase().includes(q);
   });
 
-  // Initialize Real-Time Sync Channel
+  // Initialize Real-Time Battle Channel
   const initRealtimeChannel = (code) => {
     const channelName = `battle_room_${code}`;
 
@@ -129,12 +185,12 @@ export function BattleArenaModal({ currentUser, onClose }) {
     if (data.sender === (currentUser?.prn || '')) return;
 
     if (data.type === 'player_joined' || data.type === 'challenge_accepted') {
-      setOpponent({ name: data.senderName, prn: data.sender, course: 'Real Online Student' });
+      setOpponent({ name: data.senderName, prn: data.sender, course: 'Genuine Online Human' });
       setArenaState('battle');
       sendSignal('battle_start_ack');
       startTimer();
     } else if (data.type === 'battle_start_ack') {
-      setOpponent({ name: data.senderName, prn: data.sender, course: 'Real Online Student' });
+      setOpponent({ name: data.senderName, prn: data.sender, course: 'Genuine Online Human' });
       setArenaState('battle');
       startTimer();
     } else if (data.type === 'progress_update') {
@@ -152,7 +208,6 @@ export function BattleArenaModal({ currentUser, onClose }) {
     setChallengeSentTo(player);
     initRealtimeChannel(code);
 
-    // Send challenge signal
     setTimeout(() => {
       sendSignal('challenge_invite', { targetPrn: player.prn, code });
       setArenaState('room_created');
@@ -258,14 +313,14 @@ export function BattleArenaModal({ currentUser, onClose }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, margin: 0, color: 'white' }}>
-                  DCPE Real-Time Online Player Challenge Arena
+                  DCPE 100% Genuine Online Player Arena
                 </h3>
                 <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: 99, background: '#10b981', color: 'white', fontWeight: 700 }}>
-                  🟢 LIVE PLAYER DISCOVERY
+                  🟢 {genuineOnlineUsers.length} GENUINE PLAYERS ONLINE
                 </span>
               </div>
               <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                Search active online classmates &amp; challenge them to a 1-on-1 duel!
+                Real-Time Supabase WebSocket Presence Tracker • Zero Fake Bots
               </span>
             </div>
           </div>
@@ -282,10 +337,10 @@ export function BattleArenaModal({ currentUser, onClose }) {
             </div>
 
             <h3 style={{ fontSize: '24px', fontWeight: 900, margin: '0 0 8px 0', color: 'white' }}>
-              100% Real Online Player Discovery
+              Genuine Real-Time Human Multiplayer
             </h3>
             <p style={{ fontSize: '13px', color: '#94a3b8', maxWidth: '520px', margin: '0 auto 28px', lineHeight: 1.6 }}>
-              Search for your online classmates, send direct 1-on-1 battle invitations, or join via Room Code!
+              Challenge actual logged-in students currently online via WebSockets, or create a private Room Code to pair with a friend!
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', maxWidth: '780px', margin: '0 auto' }}>
@@ -309,7 +364,7 @@ export function BattleArenaModal({ currentUser, onClose }) {
                 }}
               >
                 <Search size={22} />
-                <span>🔍 Search &amp; Challenge Online Players</span>
+                <span>🔍 Online Players ({genuineOnlineUsers.length})</span>
               </button>
 
               <button
@@ -365,9 +420,9 @@ export function BattleArenaModal({ currentUser, onClose }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
                 <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'white' }}>
-                  🟢 Active Online Students ({filteredOnlinePlayers.length})
+                  🟢 Genuine Online Students ({filteredOnlinePlayers.length})
                 </h4>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Select any student to send a live 1-on-1 duel challenge</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Real human users currently logged into DCPE ERP via WebSockets</span>
               </div>
               <button
                 type="button"
@@ -383,7 +438,7 @@ export function BattleArenaModal({ currentUser, onClose }) {
               <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
               <input
                 type="text"
-                placeholder="Search online student by name, PRN, or course (e.g. Aarav, BCA)..."
+                placeholder="Search genuine online student by name or PRN..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -400,61 +455,78 @@ export function BattleArenaModal({ currentUser, onClose }) {
               />
             </div>
 
-            {/* Online Players Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxHeight: '340px', overflowY: 'auto' }}>
-              {filteredOnlinePlayers.map((player) => (
-                <div
-                  key={player.prn}
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '16px',
-                    padding: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
+            {/* Genuine Online Players Grid */}
+            {filteredOnlinePlayers.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                <Users size={36} color="#64748b" style={{ margin: '0 auto 10px' }} />
+                <div style={{ fontSize: '15px', fontWeight: 700, color: 'white' }}>No Other Genuine Students Currently Online</div>
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px', maxWidth: '420px', margin: '6px auto 16px' }}>
+                  Open this app on another browser tab, phone, or laptop to see your own second session appear live in 100% real-time!
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCreateRoom}
+                  style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 800, fontSize: '13px', cursor: 'pointer' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                        {player.name.charAt(0)}
-                      </div>
-                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981', position: 'absolute', bottom: 0, right: 0, border: '2px solid #0f172a' }} />
-                    </div>
-
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>{player.name}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{player.course} • <code>{player.prn}</code></div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleChallengePlayer(player)}
+                  Create Room Code to Invite a Friend 🎮
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxHeight: '340px', overflowY: 'auto' }}>
+                {filteredOnlinePlayers.map((player) => (
+                  <div
+                    key={player.prn}
                     style={{
-                      background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 14px',
-                      borderRadius: '10px',
-                      fontSize: '12px',
-                      fontWeight: 800,
-                      cursor: 'pointer',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '16px',
+                      padding: '14px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
+                      justifyContent: 'space-between',
                     }}
                   >
-                    <Swords size={14} /> Challenge
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ position: 'relative' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                          {player.name.charAt(0)}
+                        </div>
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981', position: 'absolute', bottom: 0, right: 0, border: '2px solid #0f172a' }} />
+                      </div>
+
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>{player.name}</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{player.course} • <code>{player.prn}</code></div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleChallengePlayer(player)}
+                      style={{
+                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 14px',
+                        borderRadius: '10px',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <Swords size={14} /> Challenge
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* ROOM CREATED / CHALLENGE SENT STATE */}
+        {/* ROOM CREATED STATE */}
         {arenaState === 'room_created' && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
@@ -475,7 +547,7 @@ export function BattleArenaModal({ currentUser, onClose }) {
 
             <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '18px', padding: '24px', maxWidth: '480px', margin: '0 auto', border: '1px solid rgba(255,255,255,0.1)' }}>
               <RefreshCw size={32} color="#10b981" style={{ animation: 'spin 1.5s linear infinite', margin: '0 auto 12px' }} />
-              <div style={{ fontSize: '15px', fontWeight: 800, color: 'white' }}>Waiting for {challengeSentTo?.name || 'Classmate'} to Accept...</div>
+              <div style={{ fontSize: '15px', fontWeight: 800, color: 'white' }}>Waiting for Genuine Human Player to Connect...</div>
               <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
                 Open this app on another browser tab or share Room Code <strong>{roomCode}</strong> to pair instantly!
               </div>
@@ -526,7 +598,7 @@ export function BattleArenaModal({ currentUser, onClose }) {
                 onClick={handleJoinRoom}
                 style={{ flex: 2, background: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 900 }}
               >
-                Connect &amp; Accept Challenge 🚀
+                Connect to Room 🚀
               </button>
             </div>
           </div>
