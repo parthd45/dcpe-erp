@@ -40,6 +40,8 @@ import { CodeSandboxModal } from './CodeSandboxModal';
 import { TamperProofLedgerModal } from './TamperProofLedgerModal';
 import { SkillTreeModal } from './SkillTreeModal';
 import { BiomechanicsTrackerModal } from './BiomechanicsTrackerModal';
+import { VoiceNavigationHUD } from './VoiceNavigationHUD';
+import { ResumeATSScannerModal } from './ResumeATSScannerModal';
 import { StudentServicesSuite } from './StudentServicesSuite';
 import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
@@ -83,6 +85,7 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showTamperLedgerModal, setShowTamperLedgerModal] = useState(false);
   const [showSkillTreeModal, setShowSkillTreeModal] = useState(false);
   const [showBiomechanicsModal, setShowBiomechanicsModal] = useState(false);
+  const [showAtsScannerModal, setShowAtsScannerModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -663,6 +666,32 @@ export default function StudentDashboard({ onBackToHome }) {
         {showBiomechanicsModal && (
           <BiomechanicsTrackerModal currentUser={currentUser} onClose={() => setShowBiomechanicsModal(false)} />
         )}
+        {showAtsScannerModal && (
+          <ResumeATSScannerModal
+            currentUser={currentUser}
+            onOpenResumeBuilder={() => setShowResumeBuilderModal(true)}
+            onClose={() => setShowAtsScannerModal(false)}
+          />
+        )}
+
+        {/* ── Global AI Voice Navigation HUD ── */}
+        <VoiceNavigationHUD
+          onOpenModal={(key) => {
+            if (key === 'riskRadar') setShowRiskRadarModal(true);
+            if (key === 'hallTicket') setShowHallTicketModal(true);
+            if (key === 'marksheet') setShowMarksheetModal(true);
+            if (key === 'placement') setShowPlacementModal(true);
+            if (key === 'feePassbook') setShowFeePassbookModal(true);
+            if (key === 'resume') setShowResumeBuilderModal(true);
+            if (key === 'atsScanner') setShowAtsScannerModal(true);
+            if (key === 'codeSandbox') setShowCodeSandboxModal(true);
+            if (key === 'skillTree') setShowSkillTreeModal(true);
+            if (key === 'biomechanics') setShowBiomechanicsModal(true);
+            if (key === 'tamperLedger') setShowTamperLedgerModal(true);
+            if (key === 'campusMap') setShowCampusMapModal(true);
+            if (key === 'leave') setShowLeaveModal(true);
+          }}
+        />
 
         {/* ── Grievance Timeline Modal ── */}
         {showGrievanceTimelineModal && (
@@ -688,6 +717,7 @@ export default function StudentDashboard({ onBackToHome }) {
             if (key === 'timetable') setShowTimetableModal(true);
             if (key === 'leave') setShowLeaveModal(true);
             if (key === 'resume') setShowResumeBuilderModal(true);
+            if (key === 'ats_scanner' || key === 'atsScanner') setShowAtsScannerModal(true);
             if (key === 'predictor') setShowPredictorModal(true);
             if (key === 'leaderboard') setShowLeaderboardModal(true);
             if (key === 'analytics') setShowAnalyticsModal(true);
