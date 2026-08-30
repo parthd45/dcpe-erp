@@ -16,7 +16,7 @@ const EXTREME_BATTLE_PROBLEMS = [
     discipline: '💻 Cyber Code War',
     difficulty: 'Warrior',
     problemText: 'Write a function reverseString(str) that returns the reversed version of str.',
-    initialCode: 'function reverseString(str) {\n  // Type your solution here\n  return str.split("").reverse().join("");\n}',
+    initialCode: 'function reverseString(str) {\n  // Write your solution here...\n  \n}',
     expectedOutput: 'EPCD MPHV',
   },
   {
@@ -26,7 +26,7 @@ const EXTREME_BATTLE_PROBLEMS = [
     discipline: '💻 Cyber Code War',
     difficulty: 'Grandmaster',
     problemText: 'Write a function fib(n) that returns the N-th Fibonacci number.',
-    initialCode: 'function fib(n) {\n  if (n <= 1) return n;\n  return fib(n - 1) + fib(n - 2);\n}',
+    initialCode: 'function fib(n) {\n  // Write your solution here...\n  \n}',
     expectedOutput: '55',
   },
   {
@@ -143,6 +143,15 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [currentUser]);
+
+  // Auto-start battle timer when preSetOpponent is accepted
+  useEffect(() => {
+    if (preSetOpponent) {
+      setOpponent({ name: preSetOpponent.opponentName, prn: preSetOpponent.opponentPrn, course: 'Genuine Online Human' });
+      setArenaState('battle');
+      startTimer();
+    }
+  }, [preSetOpponent]);
 
   const initGlobalBattleChannel = () => {
     if ('BroadcastChannel' in window) {
