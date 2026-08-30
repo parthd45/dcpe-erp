@@ -22,6 +22,15 @@ export function VoiceNavigationHUD({ onOpenModal }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Auto-start speech recognition when Voice HUD opens
+  useEffect(() => {
+    if (hudOpen) {
+      startListening();
+    } else {
+      stopListening();
+    }
+  }, [hudOpen]);
+
   const speakConfirmation = (text) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
