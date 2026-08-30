@@ -1257,5 +1257,16 @@
   .modal-backdrop textarea {
     font-size: 12px !important;
   }
+
+  /* Battle Arena & Challenge Toast Mobile Overrides */
+  .battle-challenge-toast {
+    right: 10px !important;
+    left: 10px !important;
+    bottom: 12px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    padding: 14px 16px !important;
+    border-radius: 16px !important;
+  }
 }
 

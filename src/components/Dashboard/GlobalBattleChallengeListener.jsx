@@ -88,6 +88,7 @@ export function GlobalBattleChallengeListener({ currentUser, onAcceptChallenge }
 
   return (
     <div
+      className="battle-challenge-toast"
       style={{
         position: 'fixed',
         bottom: '24px',
