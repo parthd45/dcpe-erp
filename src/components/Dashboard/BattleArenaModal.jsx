@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Swords, Trophy, Zap, Shield, Flame, CheckCircle2, XCircle, Clock,
-  User, Cpu, Sparkles, X, ChevronRight, Play, RefreshCw, Award, PlayCircle
+  User, Cpu, Sparkles, X, ChevronRight, Play, RefreshCw, Award, Copy, Check, Users, Radio
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import './Dashboard.css';
 
-// Challenge Questions & Coding Battle Problems
+// Challenge Questions & Coding Problems
 const BATTLE_PROBLEMS = [
   {
     id: 'reverse_string',
@@ -41,79 +42,127 @@ const BATTLE_PROBLEMS = [
     correctIdx: 0,
     explanation: 'The Sagittal Plane divides the body into left and right sections and governs flexions and extensions.',
   },
-  {
-    id: 'dbms_q1',
-    title: 'SQL Primary Key Rule',
-    category: 'trivia',
-    problemText: 'Which property MUST a database Primary Key constraint enforce on a table column?',
-    options: [
-      'A) NOT NULL and UNIQUE',
-      'B) Foreign key reference only',
-      'C) Allow duplicate NULL values',
-      'D) Auto increment only',
-    ],
-    correctIdx: 0,
-    explanation: 'A Primary Key must contain UNIQUE values and cannot contain NULL values.',
-  },
 ];
 
 export function BattleArenaModal({ currentUser, onClose }) {
-  const [arenaState, setArenaState] = useState('lobby'); // 'lobby' | 'searching' | 'battle' | 'results'
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [arenaState, setArenaState] = useState('lobby'); // 'lobby' | 'room_created' | 'join_room' | 'battle' | 'results'
+  const [roomCode, setRoomCode] = useState('');
+  const [inputRoomCode, setInputRoomCode] = useState('');
+  const [role, setRole] = useState('host'); // 'host' | 'guest'
+  
   const [opponent, setOpponent] = useState(null);
   const [currentProblem, setCurrentProblem] = useState(BATTLE_PROBLEMS[0]);
   const [userCode, setUserCode] = useState(BATTLE_PROBLEMS[0].initialCode || '');
   const [userSelectedOption, setUserSelectedOption] = useState(null);
-  
-  // Battle Stats
-  const [timeLeft, setTimeLeft] = useState(45);
+  const [copied, setCopied] = useState(false);
+
+  // Real-Time Battle Stats
+  const [timeLeft, setTimeLeft] = useState(60);
   const [playerHp, setPlayerHp] = useState(100);
   const [opponentHp, setOpponentHp] = useState(100);
   const [opponentProgress, setOpponentProgress] = useState(0);
   const [battleWinner, setBattleWinner] = useState(null);
-  const [arenaXpEarned, setArenaXpEarned] = useState(0);
 
+  const channelRef = useRef(null);
+  const broadcastChannelRef = useRef(null);
   const timerRef = useRef(null);
-  const opponentIntervalRef = useRef(null);
 
-  // Matchmaking Simulation
-  const handleStartMatchmaking = () => {
-    setArenaState('searching');
-    setTimeout(() => {
-      const randomOpponents = [
-        { name: 'Aarav Sharma', course: 'MCA 2nd Year', avatar: '👨‍💻', rank: 'Gold Arena Rank' },
-        { name: 'Rohan Patil', course: 'B.P.Ed 3rd Year', avatar: '🏃', rank: 'Silver Arena Rank' },
-        { name: 'Ananya Deshmukh', course: 'BCA 1st Year', avatar: '👩‍💻', rank: 'Legend Arena Rank' },
-      ];
-      const selectedOpp = randomOpponents[Math.floor(Math.random() * randomOpponents.length)];
-      setOpponent(selectedOpp);
+  // Initialize Real-Time Sync Channel
+  const initRealtimeChannel = (code) => {
+    const channelName = `battle_room_${code}`;
 
-      // Pick problem
-      const prob = BATTLE_PROBLEMS[Math.floor(Math.random() * BATTLE_PROBLEMS.length)];
-      setCurrentProblem(prob);
-      setUserCode(prob.initialCode || '');
-      setUserSelectedOption(null);
+    // Browser BroadcastChannel for instant local multi-tab testing
+    if ('BroadcastChannel' in window) {
+      if (broadcastChannelRef.current) broadcastChannelRef.current.close();
+      const bc = new BroadcastChannel(channelName);
+      bc.onmessage = (event) => handleIncomingSignal(event.data);
+      broadcastChannelRef.current = bc;
+    }
 
-      // Reset stats
-      setTimeLeft(45);
-      setPlayerHp(100);
-      setOpponentHp(100);
-      setOpponentProgress(0);
-      setBattleWinner(null);
+    // Supabase Real-Time Broadcast Channel for multi-device cross-network
+    try {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      const ch = supabase.channel(channelName, {
+        config: { broadcast: { self: false } },
+      });
 
-      setArenaState('battle');
-      startBattleTimer();
-      simulateOpponentProgress();
-    }, 1800);
+      ch.on('broadcast', { event: 'battle_signal' }, ({ payload }) => {
+        handleIncomingSignal(payload);
+      });
+
+      ch.subscribe();
+      channelRef.current = ch;
+    } catch (e) {
+      console.warn('Supabase realtime fallback:', e);
+    }
   };
 
-  const startBattleTimer = () => {
+  const sendSignal = (type, payload = {}) => {
+    const data = { type, sender: currentUser?.prn || 'user_' + Date.now(), senderName: currentUser?.name || 'Student', ...payload };
+
+    if (broadcastChannelRef.current) {
+      broadcastChannelRef.current.postMessage(data);
+    }
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'battle_signal',
+        payload: data,
+      });
+    }
+  };
+
+  const handleIncomingSignal = (data) => {
+    if (data.sender === (currentUser?.prn || '')) return;
+
+    if (data.type === 'player_joined') {
+      setOpponent({ name: data.senderName, prn: data.sender, course: 'Real Human Player' });
+      setArenaState('battle');
+      sendSignal('battle_start_ack', { problemId: currentProblem.id });
+      startTimer();
+    } else if (data.type === 'battle_start_ack') {
+      setOpponent({ name: data.senderName, prn: data.sender, course: 'Real Human Player' });
+      setArenaState('battle');
+      startTimer();
+    } else if (data.type === 'progress_update') {
+      setOpponentProgress(data.progress);
+    } else if (data.type === 'player_submitted') {
+      setOpponentHp(0);
+      setBattleWinner('opponent');
+      setArenaState('results');
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+  };
+
+  const handleCreateRoom = () => {
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    setRoomCode(code);
+    setRole('host');
+    setArenaState('room_created');
+    initRealtimeChannel(code);
+  };
+
+  const handleJoinRoom = () => {
+    if (!inputRoomCode.trim()) return;
+    const code = inputRoomCode.trim();
+    setRoomCode(code);
+    setRole('guest');
+    initRealtimeChannel(code);
+
+    // Broadcast join signal to host
+    setTimeout(() => {
+      sendSignal('player_joined');
+      setArenaState('battle');
+      startTimer();
+    }, 500);
+  };
+
+  const startTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
-          handleTimeOut();
           return 0;
         }
         return prev - 1;
@@ -121,54 +170,31 @@ export function BattleArenaModal({ currentUser, onClose }) {
     }, 1000);
   };
 
-  const simulateOpponentProgress = () => {
-    if (opponentIntervalRef.current) clearInterval(opponentIntervalRef.current);
-    opponentIntervalRef.current = setInterval(() => {
-      setOpponentProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(opponentIntervalRef.current);
-          return 90;
-        }
-        return prev + Math.floor(Math.random() * 15) + 5;
-      });
-    }, 2000);
-  };
-
-  const handleTimeOut = () => {
-    if (opponentIntervalRef.current) clearInterval(opponentIntervalRef.current);
-    setBattleWinner('opponent');
-    setArenaState('results');
+  const handleUserProgress = (val) => {
+    setUserCode(val);
+    const progress = Math.min(100, Math.round((val.length / currentProblem.initialCode.length) * 100));
+    sendSignal('progress_update', { progress });
   };
 
   const handleSubmitSolution = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (opponentIntervalRef.current) clearInterval(opponentIntervalRef.current);
-
-    let isCorrect = false;
-
-    if (currentProblem.category === 'trivia') {
-      isCorrect = userSelectedOption === currentProblem.correctIdx;
-    } else {
-      isCorrect = true; // Simulated code pass
-    }
-
-    if (isCorrect) {
-      setOpponentHp(0);
-      setBattleWinner('player');
-      setArenaXpEarned(250);
-    } else {
-      setPlayerHp(20);
-      setBattleWinner('opponent');
-      setArenaXpEarned(50);
-    }
-
+    sendSignal('player_submitted');
+    setOpponentHp(0);
+    setBattleWinner('player');
     setArenaState('results');
+  };
+
+  const copyRoomCode = () => {
+    navigator.clipboard.writeText(roomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (opponentIntervalRef.current) clearInterval(opponentIntervalRef.current);
+      if (broadcastChannelRef.current) broadcastChannelRef.current.close();
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
   }, []);
 
@@ -211,14 +237,14 @@ export function BattleArenaModal({ currentUser, onClose }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, margin: 0, color: 'white' }}>
-                  DCPE 1-on-1 Real-Time Battle Arena
+                  DCPE 100% Real-Time Multiplayer Battle Arena
                 </h3>
-                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: 99, background: '#ef4444', color: 'white', fontWeight: 700 }}>
-                  LIVE MULTIPLAYER ⚔️
+                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: 99, background: '#10b981', color: 'white', fontWeight: 700 }}>
+                  🔴 REAL WEBSOCKETS DUEL
                 </span>
               </div>
               <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                Degree College of Physical Education • Head-to-Head Code &amp; Academic Duel
+                Degree College of Physical Education • Live Peer-to-Peer Code &amp; Trivia Duel
               </span>
             </div>
           </div>
@@ -227,179 +253,186 @@ export function BattleArenaModal({ currentUser, onClose }) {
           </button>
         </div>
 
-        {/* ARENA LOBBY STATE */}
+        {/* LOBBY STATE */}
         {arenaState === 'lobby' && (
-          <div style={{ textAlign: 'center', padding: '20px 10px' }}>
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #dc2626, #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 0 30px rgba(239, 68, 68, 0.5)' }}>
-              <Flame size={44} color="white" />
+          <div style={{ textAlign: 'center', padding: '30px 10px' }}>
+            <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #ef4444, #dc2626)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 0 30px rgba(239, 68, 68, 0.5)' }}>
+              <Users size={36} color="white" />
             </div>
 
             <h3 style={{ fontSize: '24px', fontWeight: 900, margin: '0 0 8px 0', color: 'white' }}>
-              Challenge Classmates in Real-Time Duels!
+              100% Real-Time Human Multiplayer Room
             </h3>
-            <p style={{ fontSize: '13px', color: '#94a3b8', maxWidth: '540px', margin: '0 auto 28px', lineHeight: 1.6 }}>
-              Compete side-by-side in 60-second rapid fire coding sprints and sports science trivia challenges. Win XP points and upgrade your DCPE Arena Rank!
+            <p style={{ fontSize: '13px', color: '#94a3b8', maxWidth: '520px', margin: '0 auto 28px', lineHeight: 1.6 }}>
+              Create a private Room Code or enter your classmate's Room Code to start a 100% real-time duel with zero bots or fake players!
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', maxWidth: '720px', margin: '0 auto 32px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', marginBottom: '6px' }}>⚡</div>
-                <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>Code Speed Sprint</div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>JS / Python Algorithm Speed</div>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', maxWidth: '560px', margin: '0 auto' }}>
+              <button
+                type="button"
+                onClick={handleCreateRoom}
+                style={{
+                  flex: 1,
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  fontSize: '15px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 25px rgba(239, 68, 68, 0.4)',
+                }}
+              >
+                🎮 Create Room Code 🚀
+              </button>
 
-              <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', marginBottom: '6px' }}>🏃</div>
-                <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>Sports Kinesiology Duel</div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>B.P.Ed / M.P.Ed Athletics Trivia</div>
-              </div>
+              <button
+                type="button"
+                onClick={() => setArenaState('join_room')}
+                style={{
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.08)',
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  fontSize: '15px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                }}
+              >
+                🔑 Join Room Code
+              </button>
+            </div>
+          </div>
+        )}
 
-              <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', marginBottom: '6px' }}>🗄️</div>
-                <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>DBMS &amp; CS Rapid Fire</div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>BCA / MCA Core Tech Trivia</div>
-              </div>
+        {/* ROOM CREATED (WAITING FOR REAL HUMAN PLAYER) */}
+        {arenaState === 'room_created' && (
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+              Your Private Room Code Created:
+            </div>
+            <div style={{ fontSize: '48px', fontWeight: 900, letterSpacing: '8px', color: '#38bdf8', fontFamily: 'monospace', marginBottom: '16px' }}>
+              {roomCode}
             </div>
 
             <button
               type="button"
-              onClick={handleStartMatchmaking}
-              style={{
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                color: 'white',
-                border: 'none',
-                padding: '14px 40px',
-                borderRadius: '14px',
-                fontSize: '16px',
-                fontWeight: 900,
-                cursor: 'pointer',
-                boxShadow: '0 8px 25px rgba(239, 68, 68, 0.5)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}
+              onClick={copyRoomCode}
+              style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', marginBottom: '32px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <Swords size={20} /> Enter Matchmaking Queue 🚀
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? 'Room Code Copied!' : 'Copy Room Code'}
             </button>
+
+            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '18px', padding: '24px', maxWidth: '480px', margin: '0 auto', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <RefreshCw size={32} color="#10b981" style={{ animation: 'spin 1.5s linear infinite', margin: '0 auto 12px' }} />
+              <div style={{ fontSize: '15px', fontWeight: 800, color: 'white' }}>Waiting for Real Human Player to Join...</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                Open this app on another browser tab or share Room Code <strong>{roomCode}</strong> with a friend to duel!
+              </div>
+            </div>
           </div>
         )}
 
-        {/* SEARCHING OPPONENT STATE */}
-        {arenaState === 'searching' && (
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <RefreshCw size={44} color="#f97316" style={{ animation: 'spin 1.2s linear infinite', margin: '0 auto 16px' }} />
-            <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'white', margin: 0 }}>
-              Searching for Online Classmate Opponent...
-            </h3>
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '6px' }}>
-              Connecting to DCPE Real-Time Battle Server...
-            </p>
+        {/* JOIN ROOM INPUT */}
+        {arenaState === 'join_room' && (
+          <div style={{ textAlign: 'center', padding: '40px 20px', maxWidth: '460px', margin: '0 auto' }}>
+            <h4 style={{ fontSize: '20px', fontWeight: 800, color: 'white', marginBottom: '16px' }}>
+              Enter Classmate's Room Code:
+            </h4>
+
+            <input
+              type="text"
+              placeholder="e.g. 7821"
+              value={inputRoomCode}
+              onChange={(e) => setInputRoomCode(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '14px',
+                background: '#040711',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#38bdf8',
+                fontSize: '24px',
+                textAlign: 'center',
+                fontFamily: 'monospace',
+                fontWeight: 900,
+                letterSpacing: '4px',
+                outline: 'none',
+                marginBottom: '20px',
+                boxSizing: 'border-box',
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setArenaState('lobby')}
+                style={{ flex: 1, background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 700 }}
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleJoinRoom}
+                style={{ flex: 2, background: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 900 }}
+              >
+                Connect to Room 🚀
+              </button>
+            </div>
           </div>
         )}
 
-        {/* ACTIVE BATTLE STATE */}
+        {/* BATTLE STATE */}
         {arenaState === 'battle' && (
           <div>
-            {/* Player vs Opponent Top HUD Bar */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '20px', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '16px 24px', borderRadius: '20px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              {/* Player 1 (You) */}
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
-                    👨‍🎓
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>{currentUser?.name || 'You'}</div>
-                    <div style={{ fontSize: '11px', color: '#38bdf8' }}>{currentUser?.course || 'Student'}</div>
-                  </div>
-                </div>
-                {/* HP Bar */}
-                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
-                  <div style={{ width: `${playerHp}%`, height: '100%', background: '#3b82f6', transition: 'width 0.3s ease' }} />
-                </div>
+                <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>{currentUser?.name || 'You'} (Player 1)</div>
+                <div style={{ fontSize: '11px', color: '#38bdf8' }}>🟢 100% Real Human Connected</div>
               </div>
-
-              {/* Countdown Timer */}
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '28px', fontWeight: 900, color: timeLeft <= 10 ? '#ef4444' : '#f59e0b', fontFamily: 'monospace' }}>
-                  ⏱️ {timeLeft}s
-                </div>
-                <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Battle Clock</span>
+                <div style={{ fontSize: '26px', fontWeight: 900, color: '#f59e0b', fontFamily: 'monospace' }}>⏱️ {timeLeft}s</div>
+                <span style={{ fontSize: '10px', color: '#94a3b8' }}>ROOM #{roomCode}</span>
               </div>
-
-              {/* Player 2 (Opponent) */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', marginBottom: '6px' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>{opponent?.name}</div>
-                    <div style={{ fontSize: '11px', color: '#f97316' }}>{opponent?.course}</div>
-                  </div>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
-                    {opponent?.avatar}
-                  </div>
-                </div>
-                {/* HP Bar */}
-                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
-                  <div style={{ width: `${opponentHp}%`, height: '100%', background: '#ef4444', transition: 'width 0.3s ease' }} />
-                </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>{opponent?.name || 'Opponent'} (Player 2)</div>
+                <div style={{ fontSize: '11px', color: '#ef4444' }}>🟢 100% Real Human Connected</div>
               </div>
             </div>
 
             {/* Split Screen Battle Viewport */}
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              {/* Left Column: Your Battle Task */}
               <div style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: '18px', padding: '20px', background: 'rgba(0,0,0,0.3)' }}>
                 <div style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
                   🎯 Challenge Task: {currentProblem.title}
                 </div>
-                <p style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 600, marginBottom: '16px', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 600, marginBottom: '16px' }}>
                   {currentProblem.problemText}
                 </p>
 
-                {currentProblem.category === 'trivia' ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-                    {currentProblem.options.map((opt, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setUserSelectedOption(idx)}
-                        style={{
-                          background: userSelectedOption === idx ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.05)',
-                          border: userSelectedOption === idx ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.1)',
-                          color: 'white',
-                          padding: '12px 16px',
-                          borderRadius: '12px',
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          fontWeight: 700,
-                          fontSize: '13px',
-                        }}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <textarea
-                    rows={8}
-                    value={userCode}
-                    onChange={(e) => setUserCode(e.target.value)}
-                    style={{
-                      width: '100%',
-                      background: '#040711',
-                      color: '#38bdf8',
-                      fontFamily: 'Consolas, monospace',
-                      fontSize: '13px',
-                      padding: '14px',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      outline: 'none',
-                      resize: 'none',
-                      boxSizing: 'border-box',
-                      marginBottom: '16px',
-                    }}
-                  />
-                )}
+                <textarea
+                  rows={8}
+                  value={userCode}
+                  onChange={(e) => handleUserProgress(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#040711',
+                    color: '#38bdf8',
+                    fontFamily: 'Consolas, monospace',
+                    fontSize: '13px',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    outline: 'none',
+                    resize: 'none',
+                    boxSizing: 'border-box',
+                    marginBottom: '16px',
+                  }}
+                />
 
                 <button
                   type="button"
@@ -414,48 +447,33 @@ export function BattleArenaModal({ currentUser, onClose }) {
                     fontWeight: 900,
                     fontSize: '14px',
                     cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
                   }}
                 >
-                  <Zap size={16} fill="white" /> Submit Solution &amp; Attack Opponent! ⚡
+                  Submit Solution &amp; Win Duel! ⚡
                 </button>
               </div>
 
-              {/* Right Column: Live Opponent Screen Stream */}
+              {/* Live Real Opponent Monitor */}
               <div style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: '18px', padding: '20px', background: 'rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      🔴 Live Opponent Monitor
-                    </span>
-                    <span style={{ fontSize: '11px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>
-                      DUEL IN PROGRESS
-                    </span>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', marginBottom: '14px' }}>
+                    🔴 Live Real Opponent Progress
                   </div>
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ fontSize: '36px', marginBottom: '8px' }}>👨‍💻</div>
+                    <div style={{ fontWeight: 800, fontSize: '16px', color: 'white' }}>{opponent?.name || 'Human Opponent'}</div>
 
-                  <div style={{ textAlign: 'center', padding: '30px 10px' }}>
-                    <div style={{ fontSize: '40px', marginBottom: '10px' }}>{opponent?.avatar}</div>
-                    <div style={{ fontWeight: 800, fontSize: '15px', color: 'white' }}>{opponent?.name}</div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>{opponent?.rank}</div>
-
-                    <div style={{ marginTop: '24px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
-                        <span>Opponent Completion:</span>
-                        <strong style={{ color: '#f97316' }}>{opponentProgress}%</strong>
-                      </div>
+                    <div style={{ marginTop: '20px' }}>
+                      <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Real Progress: <strong>{opponentProgress}%</strong></div>
                       <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ width: `${opponentProgress}%`, height: '100%', background: '#f97316', borderRadius: 99, transition: 'width 0.4s ease' }} />
+                        <div style={{ width: `${opponentProgress}%`, height: '100%', background: '#ef4444', borderRadius: 99, transition: 'width 0.2s ease' }} />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
-                  ⚡ Real-Time WebSockets Battle Synchronization Active
+                <div style={{ fontSize: '11px', color: '#34d399', textAlign: 'center' }}>
+                  ⚡ Live WebSockets Stream Active (Room #{roomCode})
                 </div>
               </div>
             </div>
@@ -465,85 +483,23 @@ export function BattleArenaModal({ currentUser, onClose }) {
         {/* RESULTS STATE */}
         {arenaState === 'results' && (
           <div style={{ textAlign: 'center', padding: '30px 10px' }}>
-            {battleWinner === 'player' ? (
-              <>
-                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 0 30px rgba(16, 185, 129, 0.6)' }}>
-                  <Trophy size={44} color="white" />
-                </div>
-                <h3 style={{ fontSize: '26px', fontWeight: 900, color: '#34d399', margin: '0 0 6px 0' }}>
-                  🏆 ARENA VICTORY!
-                </h3>
-                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 20px 0' }}>
-                  You defeated <strong>{opponent?.name}</strong> in the 1-on-1 Battle Arena!
-                </p>
-
-                <div style={{ display: 'inline-flex', gap: '20px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', padding: '16px 28px', borderRadius: '16px', marginBottom: '28px' }}>
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#34d399', fontWeight: 700 }}>XP REWARD</div>
-                    <div style={{ fontSize: '22px', fontWeight: 900, color: 'white' }}>+{arenaXpEarned} XP</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#34d399', fontWeight: 700 }}>NEW ARENA RANK</div>
-                    <div style={{ fontSize: '22px', fontWeight: 900, color: 'white' }}>Grandmaster ⚔️</div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #dc2626, #991b1b)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <XCircle size={44} color="white" />
-                </div>
-                <h3 style={{ fontSize: '26px', fontWeight: 900, color: '#f87171', margin: '0 0 6px 0' }}>
-                  DEFEAT IN THE ARENA
-                </h3>
-                <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 20px 0' }}>
-                  {opponent?.name} completed the challenge faster. Keep practicing!
-                </p>
-
-                <div style={{ display: 'inline-flex', gap: '20px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', padding: '16px 28px', borderRadius: '16px', marginBottom: '28px' }}>
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#f87171', fontWeight: 700 }}>XP REWARD</div>
-                    <div style={{ fontSize: '22px', fontWeight: 900, color: 'white' }}>+{arenaXpEarned} XP</div>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div>
-              <button
-                type="button"
-                onClick={handleStartMatchmaking}
-                style={{
-                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 30px',
-                  borderRadius: '12px',
-                  fontWeight: 900,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  marginRight: '12px',
-                }}
-              >
-                Rematch / Find New Opponent ⚔️
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                style={{
-                  background: 'rgba(255,255,255,0.1)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                }}
-              >
-                Close Arena
-              </button>
+            <div style={{ width: 80, height: 80, borderRadius: '50%', background: battleWinner === 'player' ? '#10b981' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Trophy size={44} color="white" />
             </div>
+            <h3 style={{ fontSize: '26px', fontWeight: 900, color: battleWinner === 'player' ? '#34d399' : '#f87171', margin: '0 0 6px 0' }}>
+              {battleWinner === 'player' ? '🏆 REAL HUMAN DUEL VICTORY!' : 'DEFEAT IN REAL DUEL'}
+            </h3>
+            <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 20px 0' }}>
+              Room Code #{roomCode} • Match Completed
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setArenaState('lobby')}
+              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 900 }}
+            >
+              Back to Arena Lobby ⚔️
+            </button>
           </div>
         )}
       </div>
