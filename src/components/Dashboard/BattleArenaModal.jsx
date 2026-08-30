@@ -149,9 +149,28 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     if (preSetOpponent) {
       setOpponent({ name: preSetOpponent.opponentName, prn: preSetOpponent.opponentPrn, course: 'Genuine Online Human' });
       setArenaState('battle');
-      startTimer();
     }
   }, [preSetOpponent]);
+
+  // Guaranteed Battle Timer Loop on any device
+  useEffect(() => {
+    if (arenaState === 'battle') {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            return 0;
+          }
+          const nextVal = prev - 1;
+          sendSignal('timer_tick', { timeLeft: nextVal });
+          return nextVal;
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+  }, [arenaState]);
 
   const initGlobalBattleChannel = () => {
     if ('BroadcastChannel' in window) {
@@ -196,10 +215,11 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     if (data.type === 'challenge_accepted') {
       setOpponent({ name: data.senderName, prn: data.sender, course: 'Genuine Online Human' });
       setArenaState('battle');
-      startTimer();
     } else if (data.type === 'challenge_rejected') {
       setRejectNotice(`${data.senderName} declined the challenge.`);
       setArenaState('online_players');
+    } else if (data.type === 'timer_tick' && data.timeLeft !== undefined) {
+      setTimeLeft(data.timeLeft);
     } else if (data.type === 'progress_update') {
       setOpponentProgress(data.progress);
     } else if (data.type === 'emote_sent') {
