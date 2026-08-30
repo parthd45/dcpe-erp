@@ -42,6 +42,7 @@ import { BiomechanicsTrackerModal } from './BiomechanicsTrackerModal';
 import { VoiceNavigationHUD } from './VoiceNavigationHUD';
 import { ResumeATSScannerModal } from './ResumeATSScannerModal';
 import { BattleArenaModal } from './BattleArenaModal';
+import { GlobalBattleChallengeListener } from './GlobalBattleChallengeListener';
 import { StudentServicesSuite } from './StudentServicesSuite';
 import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
@@ -677,8 +678,24 @@ export default function StudentDashboard({ onBackToHome }) {
           />
         )}
         {showBattleArenaModal && (
-          <BattleArenaModal currentUser={currentUser} onClose={() => setShowBattleArenaModal(false)} />
+          <BattleArenaModal
+            currentUser={currentUser}
+            preSetOpponent={battleOpponentData}
+            onClose={() => {
+              setShowBattleArenaModal(false);
+              setBattleOpponentData(null);
+            }}
+          />
         )}
+
+        {/* ── Global Battle Challenge Popup Listener ── */}
+        <GlobalBattleChallengeListener
+          currentUser={currentUser}
+          onAcceptChallenge={(challengeData) => {
+            setBattleOpponentData(challengeData);
+            setShowBattleArenaModal(true);
+          }}
+        />
 
         {/* ── Global AI Voice Navigation HUD ── */}
         <VoiceNavigationHUD

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Swords, Trophy, Zap, Shield, Flame, CheckCircle2, XCircle, Clock,
-  User, Cpu, Sparkles, X, ChevronRight, Play, RefreshCw, Award, Copy, Check, Users, Radio, Search, Send
+  User, Cpu, Sparkles, X, ChevronRight, Play, RefreshCw, Award, Search, Users, Check
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import './Dashboard.css';
@@ -44,20 +44,18 @@ const BATTLE_PROBLEMS = [
   },
 ];
 
-export function BattleArenaModal({ currentUser, onClose }) {
-  const [arenaState, setArenaState] = useState('lobby'); // 'lobby' | 'online_players' | 'room_created' | 'join_room' | 'battle' | 'results'
-  const [roomCode, setRoomCode] = useState('');
-  const [inputRoomCode, setInputRoomCode] = useState('');
+export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
+  const [arenaState, setArenaState] = useState(preSetOpponent ? 'battle' : 'online_players'); // 'online_players' | 'waiting_accept' | 'battle' | 'results'
   const [searchQuery, setSearchQuery] = useState('');
   const [challengeSentTo, setChallengeSentTo] = useState(null);
   
   // 100% Genuine Supabase Realtime Online Presence List
   const [genuineOnlineUsers, setGenuineOnlineUsers] = useState([]);
   
-  const [opponent, setOpponent] = useState(null);
+  const [opponent, setOpponent] = useState(preSetOpponent ? { name: preSetOpponent.opponentName, prn: preSetOpponent.opponentPrn } : null);
   const [currentProblem, setCurrentProblem] = useState(BATTLE_PROBLEMS[0]);
   const [userCode, setUserCode] = useState(BATTLE_PROBLEMS[0].initialCode || '');
-  const [copied, setCopied] = useState(false);
+  const [rejectNotice, setRejectNotice] = useState(null);
 
   // Real-Time Battle Stats
   const [timeLeft, setTimeLeft] = useState(60);
@@ -101,57 +99,42 @@ export function BattleArenaModal({ currentUser, onClose }) {
 
           setGenuineOnlineUsers(activeList);
         })
-        .on('presence', { event: 'join' }, ({ newPresences }) => {
-          console.log('New genuine player online:', newPresences);
-        })
-        .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-          console.log('Player went offline:', leftPresences);
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await presenceChannel.track({
+              prn: userPrn,
+              name: userName,
+              course: userCourse,
+              onlineAt: new Date().toISOString(),
+            });
+          }
         });
-
-      presenceChannel.subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await presenceChannel.track({
-            prn: userPrn,
-            name: userName,
-            course: userCourse,
-            onlineAt: new Date().toISOString(),
-          });
-        }
-      });
 
       presenceChannelRef.current = presenceChannel;
     } catch (err) {
       console.warn('Supabase Presence Error:', err);
     }
 
+    // Global battle channel listener
+    initGlobalBattleChannel();
+
     return () => {
-      if (presenceChannelRef.current) {
-        supabase.removeChannel(presenceChannelRef.current);
-      }
+      if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [currentUser]);
 
-  // Filter genuine online players
-  const filteredOnlinePlayers = genuineOnlineUsers.filter((std) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return std.name.toLowerCase().includes(q) || std.course.toLowerCase().includes(q) || std.prn.toLowerCase().includes(q);
-  });
-
-  // Initialize Real-Time Battle Channel
-  const initRealtimeChannel = (code) => {
-    const channelName = `battle_room_${code}`;
-
+  const initGlobalBattleChannel = () => {
     if ('BroadcastChannel' in window) {
       if (broadcastChannelRef.current) broadcastChannelRef.current.close();
-      const bc = new BroadcastChannel(channelName);
+      const bc = new BroadcastChannel('global_dcpe_battle_channel');
       bc.onmessage = (event) => handleIncomingSignal(event.data);
       broadcastChannelRef.current = bc;
     }
 
     try {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
-      const ch = supabase.channel(channelName, {
+      const ch = supabase.channel('global_dcpe_battle_channel', {
         config: { broadcast: { self: false } },
       });
 
@@ -162,16 +145,13 @@ export function BattleArenaModal({ currentUser, onClose }) {
       ch.subscribe();
       channelRef.current = ch;
     } catch (e) {
-      console.warn('Supabase realtime fallback:', e);
+      console.warn('Global battle channel error:', e);
     }
   };
 
   const sendSignal = (type, payload = {}) => {
-    const data = { type, sender: currentUser?.prn || 'user_' + Date.now(), senderName: currentUser?.name || 'Student', ...payload };
-
-    if (broadcastChannelRef.current) {
-      broadcastChannelRef.current.postMessage(data);
-    }
+    const data = { type, sender: currentUser?.prn, senderName: currentUser?.name, ...payload };
+    if (broadcastChannelRef.current) broadcastChannelRef.current.postMessage(data);
     if (channelRef.current) {
       channelRef.current.send({
         type: 'broadcast',
@@ -182,17 +162,15 @@ export function BattleArenaModal({ currentUser, onClose }) {
   };
 
   const handleIncomingSignal = (data) => {
-    if (data.sender === (currentUser?.prn || '')) return;
+    if (data.targetPrn && data.targetPrn !== currentUser?.prn) return;
 
-    if (data.type === 'player_joined' || data.type === 'challenge_accepted') {
-      setOpponent({ name: data.senderName, prn: data.sender, course: 'Genuine Online Human' });
-      setArenaState('battle');
-      sendSignal('battle_start_ack');
-      startTimer();
-    } else if (data.type === 'battle_start_ack') {
+    if (data.type === 'challenge_accepted') {
       setOpponent({ name: data.senderName, prn: data.sender, course: 'Genuine Online Human' });
       setArenaState('battle');
       startTimer();
+    } else if (data.type === 'challenge_rejected') {
+      setRejectNotice(`${data.senderName} declined the challenge.`);
+      setArenaState('online_players');
     } else if (data.type === 'progress_update') {
       setOpponentProgress(data.progress);
     } else if (data.type === 'player_submitted') {
@@ -202,36 +180,12 @@ export function BattleArenaModal({ currentUser, onClose }) {
     }
   };
 
-  const handleChallengePlayer = (player) => {
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-    setRoomCode(code);
+  const handleSendChallenge = (player) => {
     setChallengeSentTo(player);
-    initRealtimeChannel(code);
+    setRejectNotice(null);
+    setArenaState('waiting_accept');
 
-    setTimeout(() => {
-      sendSignal('challenge_invite', { targetPrn: player.prn, code });
-      setArenaState('room_created');
-    }, 400);
-  };
-
-  const handleCreateRoom = () => {
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-    setRoomCode(code);
-    setArenaState('room_created');
-    initRealtimeChannel(code);
-  };
-
-  const handleJoinRoom = () => {
-    if (!inputRoomCode.trim()) return;
-    const code = inputRoomCode.trim();
-    setRoomCode(code);
-    initRealtimeChannel(code);
-
-    setTimeout(() => {
-      sendSignal('player_joined');
-      setArenaState('battle');
-      startTimer();
-    }, 500);
+    sendSignal('challenge_invite', { targetPrn: player.prn });
   };
 
   const startTimer = () => {
@@ -260,19 +214,11 @@ export function BattleArenaModal({ currentUser, onClose }) {
     setArenaState('results');
   };
 
-  const copyRoomCode = () => {
-    navigator.clipboard.writeText(roomCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (broadcastChannelRef.current) broadcastChannelRef.current.close();
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-    };
-  }, []);
+  const filteredOnlinePlayers = genuineOnlineUsers.filter((std) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return std.name.toLowerCase().includes(q) || std.course.toLowerCase().includes(q) || std.prn.toLowerCase().includes(q);
+  });
 
   return (
     <div
@@ -313,14 +259,14 @@ export function BattleArenaModal({ currentUser, onClose }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, margin: 0, color: 'white' }}>
-                  DCPE 100% Genuine Online Player Arena
+                  DCPE Direct Online Battle Arena
                 </h3>
                 <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: 99, background: '#10b981', color: 'white', fontWeight: 700 }}>
-                  🟢 {genuineOnlineUsers.length} GENUINE PLAYERS ONLINE
+                  🟢 {genuineOnlineUsers.length} ONLINE NOW
                 </span>
               </div>
               <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                Real-Time Supabase WebSocket Presence Tracker • Zero Fake Bots
+                Instant Challenge &amp; Accept Flow • Zero Room Codes Needed
               </span>
             </div>
           </div>
@@ -329,92 +275,14 @@ export function BattleArenaModal({ currentUser, onClose }) {
           </button>
         </div>
 
-        {/* LOBBY STATE */}
-        {arenaState === 'lobby' && (
-          <div style={{ textAlign: 'center', padding: '20px 10px' }}>
-            <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #ef4444, #dc2626)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 0 30px rgba(239, 68, 68, 0.5)' }}>
-              <Users size={36} color="white" />
-            </div>
-
-            <h3 style={{ fontSize: '24px', fontWeight: 900, margin: '0 0 8px 0', color: 'white' }}>
-              Genuine Real-Time Human Multiplayer
-            </h3>
-            <p style={{ fontSize: '13px', color: '#94a3b8', maxWidth: '520px', margin: '0 auto 28px', lineHeight: 1.6 }}>
-              Challenge actual logged-in students currently online via WebSockets, or create a private Room Code to pair with a friend!
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', maxWidth: '780px', margin: '0 auto' }}>
-              <button
-                type="button"
-                onClick={() => setArenaState('online_players')}
-                style={{
-                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '20px 14px',
-                  borderRadius: '16px',
-                  fontSize: '14px',
-                  fontWeight: 900,
-                  cursor: 'pointer',
-                  boxShadow: '0 8px 25px rgba(239, 68, 68, 0.4)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                <Search size={22} />
-                <span>🔍 Online Players ({genuineOnlineUsers.length})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleCreateRoom}
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  color: 'white',
-                  border: '1px solid rgba(255,255,255,0.18)',
-                  padding: '20px 14px',
-                  borderRadius: '16px',
-                  fontSize: '14px',
-                  fontWeight: 900,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                <Zap size={22} color="#f59e0b" />
-                <span>🎮 Create Room Code</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setArenaState('join_room')}
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  color: 'white',
-                  border: '1px solid rgba(255,255,255,0.18)',
-                  padding: '20px 14px',
-                  borderRadius: '16px',
-                  fontSize: '14px',
-                  fontWeight: 900,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                <Radio size={22} color="#38bdf8" />
-                <span>🔑 Enter Room Code</span>
-              </button>
-            </div>
+        {/* REJECT NOTICE BANNER */}
+        {rejectNotice && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '12px 16px', borderRadius: '12px', marginBottom: '16px', fontSize: '13px', fontWeight: 700 }}>
+            ⚠️ {rejectNotice}
           </div>
         )}
 
-        {/* ONLINE PLAYERS SEARCH & CHALLENGE LOBBY */}
+        {/* ONLINE PLAYERS LOBBY */}
         {arenaState === 'online_players' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -422,23 +290,16 @@ export function BattleArenaModal({ currentUser, onClose }) {
                 <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'white' }}>
                   🟢 Genuine Online Students ({filteredOnlinePlayers.length})
                 </h4>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Real human users currently logged into DCPE ERP via WebSockets</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Click "⚔️ Challenge" on any student to send a live pop-up request</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setArenaState('lobby')}
-                style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 700 }}
-              >
-                Back to Arena
-              </button>
             </div>
 
-            {/* Search Input */}
+            {/* Search Bar */}
             <div style={{ position: 'relative', marginBottom: '16px' }}>
               <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
               <input
                 type="text"
-                placeholder="Search genuine online student by name or PRN..."
+                placeholder="Search online student by name, PRN, or course..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -460,16 +321,9 @@ export function BattleArenaModal({ currentUser, onClose }) {
               <div style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
                 <Users size={36} color="#64748b" style={{ margin: '0 auto 10px' }} />
                 <div style={{ fontSize: '15px', fontWeight: 700, color: 'white' }}>No Other Genuine Students Currently Online</div>
-                <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px', maxWidth: '420px', margin: '6px auto 16px' }}>
-                  Open this app on another browser tab, phone, or laptop to see your own second session appear live in 100% real-time!
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px', maxWidth: '420px', margin: '6px auto 0' }}>
+                  Open this app on another browser tab, phone, or laptop to see your second session appear live in 100% real-time!
                 </p>
-                <button
-                  type="button"
-                  onClick={handleCreateRoom}
-                  style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 800, fontSize: '13px', cursor: 'pointer' }}
-                >
-                  Create Room Code to Invite a Friend 🎮
-                </button>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxHeight: '340px', overflowY: 'auto' }}>
@@ -502,12 +356,12 @@ export function BattleArenaModal({ currentUser, onClose }) {
 
                     <button
                       type="button"
-                      onClick={() => handleChallengePlayer(player)}
+                      onClick={() => handleSendChallenge(player)}
                       style={{
                         background: 'linear-gradient(135deg, #ef4444, #dc2626)',
                         color: 'white',
                         border: 'none',
-                        padding: '8px 14px',
+                        padding: '8px 16px',
                         borderRadius: '10px',
                         fontSize: '12px',
                         fontWeight: 800,
@@ -515,9 +369,10 @@ export function BattleArenaModal({ currentUser, onClose }) {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
+                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
                       }}
                     >
-                      <Swords size={14} /> Challenge
+                      <Swords size={14} /> Challenge 🚀
                     </button>
                   </div>
                 ))}
@@ -526,81 +381,23 @@ export function BattleArenaModal({ currentUser, onClose }) {
           </div>
         )}
 
-        {/* ROOM CREATED STATE */}
-        {arenaState === 'room_created' && (
-          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-              {challengeSentTo ? `Challenge Invitation Sent to ${challengeSentTo.name}:` : 'Your Private Room Code:'}
-            </div>
-            <div style={{ fontSize: '48px', fontWeight: 900, letterSpacing: '8px', color: '#38bdf8', fontFamily: 'monospace', marginBottom: '16px' }}>
-              {roomCode}
-            </div>
-
+        {/* WAITING FOR ACCEPTANCE */}
+        {arenaState === 'waiting_accept' && (
+          <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+            <RefreshCw size={40} color="#10b981" style={{ animation: 'spin 1.4s linear infinite', margin: '0 auto 16px' }} />
+            <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'white', margin: '0 0 6px 0' }}>
+              Sending Live Challenge to {challengeSentTo?.name}...
+            </h3>
+            <p style={{ fontSize: '13px', color: '#94a3b8' }}>
+              A popup notification has appeared on {challengeSentTo?.name}'s screen. Waiting for them to Accept or Reject...
+            </p>
             <button
               type="button"
-              onClick={copyRoomCode}
-              style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', marginBottom: '32px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => setArenaState('online_players')}
+              style={{ marginTop: '20px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
             >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? 'Room Code Copied!' : 'Copy Room Code'}
+              Cancel Challenge
             </button>
-
-            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '18px', padding: '24px', maxWidth: '480px', margin: '0 auto', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <RefreshCw size={32} color="#10b981" style={{ animation: 'spin 1.5s linear infinite', margin: '0 auto 12px' }} />
-              <div style={{ fontSize: '15px', fontWeight: 800, color: 'white' }}>Waiting for Genuine Human Player to Connect...</div>
-              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                Open this app on another browser tab or share Room Code <strong>{roomCode}</strong> to pair instantly!
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* JOIN ROOM INPUT */}
-        {arenaState === 'join_room' && (
-          <div style={{ textAlign: 'center', padding: '40px 20px', maxWidth: '460px', margin: '0 auto' }}>
-            <h4 style={{ fontSize: '20px', fontWeight: 800, color: 'white', marginBottom: '16px' }}>
-              Enter Room Code:
-            </h4>
-
-            <input
-              type="text"
-              placeholder="e.g. 7821"
-              value={inputRoomCode}
-              onChange={(e) => setInputRoomCode(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '16px',
-                borderRadius: '14px',
-                background: '#040711',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: '#38bdf8',
-                fontSize: '24px',
-                textAlign: 'center',
-                fontFamily: 'monospace',
-                fontWeight: 900,
-                letterSpacing: '4px',
-                outline: 'none',
-                marginBottom: '20px',
-                boxSizing: 'border-box',
-              }}
-            />
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                type="button"
-                onClick={() => setArenaState('lobby')}
-                style={{ flex: 1, background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 700 }}
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleJoinRoom}
-                style={{ flex: 2, background: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 900 }}
-              >
-                Connect to Room 🚀
-              </button>
-            </div>
           </div>
         )}
 
@@ -614,7 +411,7 @@ export function BattleArenaModal({ currentUser, onClose }) {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '26px', fontWeight: 900, color: '#f59e0b', fontFamily: 'monospace' }}>⏱️ {timeLeft}s</div>
-                <span style={{ fontSize: '10px', color: '#94a3b8' }}>ROOM #{roomCode}</span>
+                <span style={{ fontSize: '10px', color: '#34d399' }}>LIVE WEBSOCKETS DUEL</span>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 800, fontSize: '14px', color: 'white' }}>{opponent?.name || 'Online Opponent'}</div>
@@ -691,7 +488,7 @@ export function BattleArenaModal({ currentUser, onClose }) {
                 </div>
 
                 <div style={{ fontSize: '11px', color: '#34d399', textAlign: 'center' }}>
-                  ⚡ Live WebSockets Stream Active (Room #{roomCode})
+                  ⚡ Real-Time WebSockets Synchronization Active
                 </div>
               </div>
             </div>
@@ -707,16 +504,13 @@ export function BattleArenaModal({ currentUser, onClose }) {
             <h3 style={{ fontSize: '26px', fontWeight: 900, color: battleWinner === 'player' ? '#34d399' : '#f87171', margin: '0 0 6px 0' }}>
               {battleWinner === 'player' ? '🏆 REAL HUMAN DUEL VICTORY!' : 'DEFEAT IN REAL DUEL'}
             </h3>
-            <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 20px 0' }}>
-              Room Code #{roomCode} • Match Completed
-            </p>
 
             <button
               type="button"
-              onClick={() => setArenaState('lobby')}
-              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 900 }}
+              onClick={() => setArenaState('online_players')}
+              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 900, cursor: 'pointer' }}
             >
-              Back to Arena Lobby ⚔️
+              Back to Online Players Lobby ⚔️
             </button>
           </div>
         )}
