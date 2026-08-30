@@ -144,7 +144,11 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     }
   }, [preSetOpponent]);
 
-  // Guaranteed Battle Timer Loop
+  const [selectedTimerDuration, setSelectedTimerDuration] = useState(60);
+  const [playerAccuracy, setPlayerAccuracy] = useState(null);
+  const [opponentAccuracy, setOpponentAccuracy] = useState(null);
+
+  // Guaranteed Battle Timer Loop with Auto-Submit on Expiry
   useEffect(() => {
     if (arenaState === 'battle') {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -152,6 +156,7 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current);
+            handleAutoSubmitOnExpiry();
             return 0;
           }
           const nextVal = prev - 1;
@@ -201,8 +206,32 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     }
   };
 
-  const [playerAccuracy, setPlayerAccuracy] = useState(null);
-  const [opponentAccuracy, setOpponentAccuracy] = useState(null);
+  const handleAutoSubmitOnExpiry = () => {
+    let score = 0;
+    const cleanCode = (userCode || '').trim();
+    const initial = (currentProblem.initialCode || '').trim();
+
+    if (currentProblem.category === 'trivia') {
+      if (userSelectedOption === currentProblem.correctIdx) score = 100;
+      else if (userSelectedOption !== null) score = 25;
+      else score = 0; // Wrote/selected nothing!
+    } else {
+      if (!cleanCode || cleanCode === initial) {
+        score = 0; // Wrote nothing!
+      } else {
+        score = evaluateAccuracyScore(currentProblem, userCode, userSelectedOption, 0);
+      }
+    }
+
+    setPlayerAccuracy(score);
+    sendSignal('player_submitted_accuracy', { accuracyScore: score, timeUsed: selectedTimerDuration });
+
+    if (opponentAccuracy !== null) {
+      determineWinner(score, opponentAccuracy);
+    } else {
+      setSubmissionError(`⏱️ Time expired! Auto-submitted with ${score}% Accuracy Score. Waiting for opponent...`);
+    }
+  };
 
   const evaluateAccuracyScore = (problem, code, selectedOpt, timeRemaining) => {
     let accuracy = 0;
@@ -297,7 +326,7 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     setChallengeSentTo(player);
     setRejectNotice(null);
     setArenaState('waiting_accept');
-    sendSignal('challenge_invite', { targetPrn: player.prn });
+    sendSignal('challenge_invite', { targetPrn: player.prn, timerDuration: selectedTimerDuration });
   };
 
   const handleUserProgress = (val) => {
@@ -501,6 +530,33 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
                 ))}
               </div>
             )}
+
+            {/* Match Duration Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', background: 'rgba(255,255,255,0.04)', padding: '10px 14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#f59e0b' }}>⏱️ Match Duration:</span>
+              {[30, 60, 120].map((dur) => (
+                <button
+                  key={dur}
+                  type="button"
+                  onClick={() => {
+                    setSelectedTimerDuration(dur);
+                    setTimeLeft(dur);
+                  }}
+                  style={{
+                    background: selectedTimerDuration === dur ? '#ef4444' : 'rgba(255,255,255,0.08)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {dur}s {dur === 30 ? '⚡ Blitz' : dur === 60 ? '⚡ Standard' : '⚡ Long'}
+                </button>
+              ))}
+            </div>
 
             {/* Search Bar */}
             <div style={{ position: 'relative', marginBottom: '14px' }}>
