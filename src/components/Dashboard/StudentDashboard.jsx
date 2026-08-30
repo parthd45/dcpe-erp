@@ -88,6 +88,7 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showBiomechanicsModal, setShowBiomechanicsModal] = useState(false);
   const [showAtsScannerModal, setShowAtsScannerModal] = useState(false);
   const [showBattleArenaModal, setShowBattleArenaModal] = useState(false);
+  const [battleOpponentData, setBattleOpponentData] = useState(null);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
