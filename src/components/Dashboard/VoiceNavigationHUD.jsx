@@ -1,6 +1,145 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, Sparkles, X, Command, Zap, CheckCircle2 } from 'lucide-react';
+import { Mic, MicOff, Volume2, Sparkles, X, Command, Zap, CheckCircle2, Search } from 'lucide-react';
 import './Dashboard.css';
+
+// ALL 25+ COMPREHENSIVE ERP VOICE INTENT COMMAND MAPPINGS
+const VOICE_COMMAND_MAP = [
+  {
+    key: 'riskRadar',
+    aliases: ['attendance', 'bunk', 'risk radar', '75', 'absent', 'lecture count', 'check attendance'],
+    label: '📊 Attendance Risk Radar',
+  },
+  {
+    key: 'hallTicket',
+    aliases: ['hall ticket', 'admit card', 'exam pass', 'gatepass', 'seat allocation', 'exam card'],
+    label: '🎫 Exam Hall Ticket',
+  },
+  {
+    key: 'marksheet',
+    aliases: ['marksheet', 'grade', 'cgpa', 'sgpa', 'result', 'transcript', 'marks'],
+    label: '📜 Digital Marksheet',
+  },
+  {
+    key: 'idCard',
+    aliases: ['id card', 'student id', 'identity card', 'smart id', 'barcode card', 'id'],
+    label: '🪪 Digital Student ID Card',
+  },
+  {
+    key: 'placement',
+    aliases: ['placement', 'job', 'tcs', 'infosys', 'drive', 'campus recruitment', 'career', 'interview'],
+    label: '💼 T&P Placement Hub',
+  },
+  {
+    key: 'feePassbook',
+    aliases: ['fee', 'fees', 'payment', 'passbook', 'receipt', 'due', 'tuition fee'],
+    label: '💳 Fees Passbook & Receipts',
+  },
+  {
+    key: 'timetable',
+    aliases: ['timetable', 'time table', 'schedule', 'routine', 'class time', 'lectures'],
+    label: '📅 Class Timetable',
+  },
+  {
+    key: 'library',
+    aliases: ['library', 'book', 'catalog', 'issue book', 'author', 'delnet'],
+    label: '📚 Central Library',
+  },
+  {
+    key: 'leave',
+    aliases: ['leave', 'sick leave', 'application', 'duty leave', 'leave letter', 'condonation'],
+    label: '📝 Leave Application',
+  },
+  {
+    key: 'resume',
+    aliases: ['resume', 'cv', 'builder', 'ats resume', 'resume editor'],
+    label: '📄 ATS Resume Builder',
+  },
+  {
+    key: 'atsScanner',
+    aliases: ['scanner', 'ats scanner', 'pdf upload', 'resume audit', 'resume scan'],
+    label: '🔍 PDF ATS Resume Scanner',
+  },
+  {
+    key: 'codeSandbox',
+    aliases: ['code', 'python', 'compiler', 'sandbox', 'repl', 'javascript', 'sql', 'coder'],
+    label: '⚡ WASM Code REPL Sandbox',
+  },
+  {
+    key: 'skillTree',
+    aliases: ['skill', 'tree', 'rank', 'level', 'xp', 'competency', 'rpg'],
+    label: '🏆 RPG Competency Skill Tree',
+  },
+  {
+    key: 'biomechanics',
+    aliases: ['sports', 'biomechanics', 'kinesiology', 'motion', 'sprint', 'jump', 'athletics'],
+    label: '🏃 Biomechanics Motion Capture',
+  },
+  {
+    key: 'tamperLedger',
+    aliases: ['ledger', 'verify', 'hash', 'sha', 'crypto', 'authenticity'],
+    label: '🔒 Cryptographic Ledger',
+  },
+  {
+    key: 'campusMap',
+    aliases: ['map', 'campus', 'building', 'pool', 'gym', 'navigation', 'location'],
+    label: '🗺️ Interactive Campus Map',
+  },
+  {
+    key: 'leaderboard',
+    aliases: ['leaderboard', 'rankings', 'top students', 'xp leaderboard'],
+    label: '🎮 Gamified XP Leaderboard',
+  },
+  {
+    key: 'analytics',
+    aliases: ['analytics', 'department analytics', 'stats', 'dept report'],
+    label: '📈 Department Analytics',
+  },
+  {
+    key: 'careerPath',
+    aliases: ['career path', 'roadmap', 'salary fit', 'career predictor'],
+    label: '🧠 AI Career Path Predictor',
+  },
+  {
+    key: 'calendar',
+    aliases: ['calendar', 'academic calendar', 'events', 'holidays', 'exam dates'],
+    label: '📆 Academic Calendar',
+  },
+  {
+    key: 'feedback',
+    aliases: ['feedback', 'anonymous feedback', 'suggestion', 'complaint'],
+    label: '💬 Anonymous Feedback',
+  },
+  {
+    key: 'achievement',
+    aliases: ['achievement', 'wallet', 'badges', 'trophies', 'certificates'],
+    label: '🏅 Achievement Wallet',
+  },
+  {
+    key: 'wellness',
+    aliases: ['wellness', 'health', 'fitness', 'bmi', 'workout', 'tracker'],
+    label: '❤️ Wellness & Health Tracker',
+  },
+  {
+    key: 'notifCenter',
+    aliases: ['notification', 'notifications', 'alerts', 'command center', 'broadcasts'],
+    label: '🔔 Notification Center',
+  },
+  {
+    key: 'kanban',
+    aliases: ['kanban', 'assignment', 'tasks', 'assignments', 'todo', 'projects'],
+    label: '📋 Kanban Assignment Board',
+  },
+  {
+    key: 'predictor',
+    aliases: ['predictor', 'cgpa predictor', 'calculator', 'target sgpa'],
+    label: '🎯 SGPA/CGPA Predictor',
+  },
+  {
+    key: 'docUpload',
+    aliases: ['upload', 'documents', 'photo upload', 'certificate upload'],
+    label: '📤 Document Upload Vault',
+  },
+];
 
 export function VoiceNavigationHUD({ onOpenModal }) {
   const [isListening, setIsListening] = useState(false);
@@ -43,59 +182,25 @@ export function VoiceNavigationHUD({ onOpenModal }) {
     const norm = cmdText.toLowerCase().trim();
     setTranscript(cmdText);
 
-    let modalKey = null;
-    let feedback = '';
+    let matchedCmd = null;
 
-    if (norm.includes('attendance') || norm.includes('bunk') || norm.includes('75')) {
-      modalKey = 'riskRadar';
-      feedback = 'Opening Attendance Risk Radar';
-    } else if (norm.includes('hall ticket') || norm.includes('admit card') || norm.includes('exam pass')) {
-      modalKey = 'hallTicket';
-      feedback = 'Opening Examination Hall Ticket';
-    } else if (norm.includes('marksheet') || norm.includes('grade') || norm.includes('cgpa') || norm.includes('result')) {
-      modalKey = 'marksheet';
-      feedback = 'Opening Digital Marksheet Vault';
-    } else if (norm.includes('placement') || norm.includes('job') || norm.includes('tcs') || norm.includes('infosys') || norm.includes('drive')) {
-      modalKey = 'placement';
-      feedback = 'Opening Training and Placement Hub';
-    } else if (norm.includes('fee') || norm.includes('payment') || norm.includes('passbook') || norm.includes('receipt')) {
-      modalKey = 'feePassbook';
-      feedback = 'Opening Fees Passbook and Receipts';
-    } else if (norm.includes('resume') || norm.includes('ats')) {
-      modalKey = 'resume';
-      feedback = 'Opening ATS Resume Builder Studio';
-    } else if (norm.includes('scanner') || norm.includes('ats scanner') || norm.includes('pdf')) {
-      modalKey = 'atsScanner';
-      feedback = 'Opening Drag and Drop PDF ATS Scanner';
-    } else if (norm.includes('code') || norm.includes('python') || norm.includes('compiler') || norm.includes('sandbox')) {
-      modalKey = 'codeSandbox';
-      feedback = 'Opening WASM Code REPL Sandbox';
-    } else if (norm.includes('skill') || norm.includes('tree') || norm.includes('rank') || norm.includes('level')) {
-      modalKey = 'skillTree';
-      feedback = 'Opening RPG Competency Skill Tree';
-    } else if (norm.includes('sports') || norm.includes('biomechanics') || norm.includes('kinesiology') || norm.includes('motion')) {
-      modalKey = 'biomechanics';
-      feedback = 'Opening Biomechanics Motion Capture Studio';
-    } else if (norm.includes('ledger') || norm.includes('verify') || norm.includes('hash') || norm.includes('crypto')) {
-      modalKey = 'tamperLedger';
-      feedback = 'Opening SHA-256 Cryptographic Ledger';
-    } else if (norm.includes('map') || norm.includes('campus') || norm.includes('building')) {
-      modalKey = 'campusMap';
-      feedback = 'Opening Interactive Campus Map';
-    } else if (norm.includes('leave') || norm.includes('application') || norm.includes('sick')) {
-      modalKey = 'leave';
-      feedback = 'Opening Leave Application Studio';
+    for (const cmd of VOICE_COMMAND_MAP) {
+      if (cmd.aliases.some((alias) => norm.includes(alias))) {
+        matchedCmd = cmd;
+        break;
+      }
     }
 
-    if (modalKey) {
+    if (matchedCmd) {
+      const feedback = `Opening ${matchedCmd.label}`;
       setLastAction(feedback);
       speakConfirmation(feedback);
-      onOpenModal(modalKey);
+      onOpenModal(matchedCmd.key);
       setTimeout(() => {
         setIsListening(false);
-      }, 1200);
+      }, 1000);
     } else {
-      setLastAction(`Command not recognized: "${cmdText}"`);
+      setLastAction(`Unrecognized phrase: "${cmdText}". Try speaking "Attendance", "Marksheet", "Placement", etc.`);
     }
   };
 
@@ -108,7 +213,7 @@ export function VoiceNavigationHUD({ onOpenModal }) {
 
     try {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
@@ -119,9 +224,12 @@ export function VoiceNavigationHUD({ onOpenModal }) {
       };
 
       recognition.onresult = (e) => {
-        const current = e.results[0][0].transcript;
-        setTranscript(current);
-        if (e.results[0].isFinal) {
+        let current = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          current += e.results[i][0].transcript;
+        }
+        if (current) {
+          setTranscript(current);
           processVoiceCommand(current);
         }
       };
@@ -189,59 +297,88 @@ export function VoiceNavigationHUD({ onOpenModal }) {
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 1001,
-            background: 'rgba(15, 23, 42, 0.92)',
-            backdropFilter: 'blur(12px)',
+            background: 'rgba(15, 23, 42, 0.94)',
+            backdropFilter: 'blur(16px)',
             color: 'white',
             borderRadius: '24px',
-            padding: '16px 28px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-            border: '1px solid rgba(255,255,255,0.15)',
+            padding: '20px 28px',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
+            border: '1px solid rgba(255,255,255,0.18)',
             display: 'flex',
-            alignItems: 'center',
-            gap: '20px',
-            minWidth: '460px',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
+            gap: '14px',
+            maxWidth: '680px',
+            width: '90%',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <button
-              type="button"
-              onClick={isListening ? stopListening : startListening}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: isListening ? '#dc2626' : 'linear-gradient(135deg, #10b981, #059669)',
-                border: 'none',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: isListening ? '0 0 20px #dc2626' : '0 0 15px #10b981',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {isListening ? <MicOff size={20} /> : <Mic size={20} />}
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <button
+                type="button"
+                onClick={isListening ? stopListening : startListening}
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '50%',
+                  background: isListening ? '#dc2626' : 'linear-gradient(135deg, #10b981, #059669)',
+                  border: 'none',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: isListening ? '0 0 24px #dc2626' : '0 0 16px #10b981',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {isListening ? <MicOff size={22} /> : <Mic size={22} />}
+              </button>
 
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: isListening ? '#ef4444' : '#34d399' }}>
-                {isListening ? '🎙️ Listening... Speak Command' : 'DCPE Voice Control HUD'}
-              </div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'white', marginTop: '2px' }}>
-                {transcript ? `"${transcript}"` : lastAction || 'Try: "Open Attendance", "Check Marksheet", "TCS Placement"'}
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: isListening ? '#ef4444' : '#34d399' }}>
+                  {isListening ? '🎙️ Listening... Speak Any Feature Name' : 'DCPE Voice Control HUD'}
+                </div>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: 'white', marginTop: '2px' }}>
+                  {transcript ? `"${transcript}"` : lastAction || 'Speak any feature name: "Attendance", "Hall Ticket", "Marksheet", "Placement", "Compiler"...'}
+                </div>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setHudOpen(false)}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer' }}
+            >
+              <X size={16} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setHudOpen(false)}
-            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer' }}
-          >
-            <X size={16} />
-          </button>
+          {/* Quick Command Suggestion Chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', pt: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            {VOICE_COMMAND_MAP.slice(0, 10).map((cmd) => (
+              <button
+                key={cmd.key}
+                type="button"
+                onClick={() => {
+                  setLastAction(`Opening ${cmd.label}`);
+                  speakConfirmation(`Opening ${cmd.label}`);
+                  onOpenModal(cmd.key);
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  color: '#e2e8f0',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  padding: '4px 10px',
+                  borderRadius: 99,
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {cmd.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </>
