@@ -386,6 +386,7 @@ export default function StudentDashboard({ onBackToHome }) {
                 if (modalKey === 'library') setShowLibraryModal(true);
                 if (modalKey === 'grievance') setShowGrievanceTimelineModal(true);
                 if (modalKey === 'resume') setShowResumeBuilderModal(true);
+                if (modalKey === 'atsScanner' || modalKey === 'ats_scanner') setShowAtsScannerModal(true);
                 if (modalKey === 'riskRadar') setShowRiskRadarModal(true);
                 if (modalKey === 'predictor') setShowPredictorModal(true);
                 if (modalKey === 'leaderboard') setShowLeaderboardModal(true);
