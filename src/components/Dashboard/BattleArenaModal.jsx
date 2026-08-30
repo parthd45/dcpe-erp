@@ -4,6 +4,7 @@ import {
   User, Cpu, Sparkles, X, ChevronRight, Play, RefreshCw, Award, Copy, Check, Users, Radio, Search, Send, Volume2, VolumeX, MessageSquare
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { subscribeToGlobalOnlineUsers } from './GlobalOnlinePresenceTracker';
 import './Dashboard.css';
 
 // AAA-LEVEL BATTLE PROBLEMS ACROSS DISCIPLINES
@@ -129,58 +130,16 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     } catch (e) {}
   };
 
-  // 100% Genuine Supabase Presence Subscription
+  // 100% Genuine Global Supabase Online Users Subscription
   useEffect(() => {
-    const userPrn = currentUser?.prn || 'guest_' + Math.floor(Math.random() * 10000);
-    const userName = currentUser?.name || 'Student';
-    const userCourse = currentUser?.course || 'DCPE Student';
-
-    try {
-      const presenceChannel = supabase.channel('dcpe_realtime_presence_room', {
-        config: { presence: { key: userPrn } },
-      });
-
-      presenceChannel
-        .on('presence', { event: 'sync' }, () => {
-          const state = presenceChannel.presenceState();
-          const activeList = [];
-
-          Object.keys(state).forEach((key) => {
-            const presences = state[key];
-            if (presences && presences.length > 0) {
-              const p = presences[0];
-              if (p.prn !== userPrn) {
-                activeList.push({
-                  prn: p.prn || key,
-                  name: p.name || 'Active Student',
-                  course: p.course || 'DCPE Autonomous',
-                });
-              }
-            }
-          });
-
-          setGenuineOnlineUsers(activeList);
-        })
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            await presenceChannel.track({
-              prn: userPrn,
-              name: userName,
-              course: userCourse,
-              onlineAt: new Date().toISOString(),
-            });
-          }
-        });
-
-      presenceChannelRef.current = presenceChannel;
-    } catch (err) {
-      console.warn('Supabase Presence Error:', err);
-    }
+    const unsubscribe = subscribeToGlobalOnlineUsers((users) => {
+      setGenuineOnlineUsers(users);
+    });
 
     initGlobalBattleChannel();
 
     return () => {
-      if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
+      unsubscribe();
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [currentUser]);

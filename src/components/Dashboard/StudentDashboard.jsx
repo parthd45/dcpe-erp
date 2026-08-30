@@ -43,6 +43,7 @@ import { VoiceNavigationHUD } from './VoiceNavigationHUD';
 import { ResumeATSScannerModal } from './ResumeATSScannerModal';
 import { BattleArenaModal } from './BattleArenaModal';
 import { GlobalBattleChallengeListener } from './GlobalBattleChallengeListener';
+import { GlobalOnlinePresenceTracker } from './GlobalOnlinePresenceTracker';
 import { StudentServicesSuite } from './StudentServicesSuite';
 import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
@@ -689,7 +690,8 @@ export default function StudentDashboard({ onBackToHome }) {
           />
         )}
 
-        {/* ── Global Battle Challenge Popup Listener ── */}
+        {/* ── Global Online Presence & Battle Challenge Listeners ── */}
+        <GlobalOnlinePresenceTracker currentUser={currentUser} />
         <GlobalBattleChallengeListener
           currentUser={currentUser}
           onAcceptChallenge={(challengeData) => {
