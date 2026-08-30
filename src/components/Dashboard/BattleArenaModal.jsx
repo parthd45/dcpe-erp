@@ -247,7 +247,43 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
     sendSignal('progress_update', { progress });
   };
 
+  const [submissionError, setSubmissionError] = useState(null);
+
   const handleSubmitSolution = () => {
+    setSubmissionError(null);
+
+    // 1. Trivia Question Validation
+    if (currentProblem.category === 'trivia') {
+      if (userSelectedOption === null) {
+        setSubmissionError('⚠️ Please select an answer option before submitting!');
+        playSound('hit');
+        return;
+      }
+      if (userSelectedOption !== currentProblem.correctIdx) {
+        setSubmissionError('❌ Incorrect answer! -20 HP damage taken. Try again!');
+        setPlayerHp((prev) => Math.max(0, prev - 20));
+        playSound('hit');
+        return;
+      }
+    } else {
+      // 2. Code Challenge Validation
+      const code = userCode.trim();
+      const initial = (currentProblem.initialCode || '').trim();
+
+      if (!code || code === initial) {
+        setSubmissionError('⚠️ Please write your solution code before submitting!');
+        playSound('hit');
+        return;
+      }
+
+      if (!code.includes('return') && !code.includes('console.log') && code.length < initial.length + 5) {
+        setSubmissionError('⚠️ Your code logic is incomplete! Please write the solution algorithm.');
+        playSound('hit');
+        return;
+      }
+    }
+
+    // Verified correct solution!
     if (timerRef.current) clearInterval(timerRef.current);
     playSound('victory');
     setFloatingDamage('CRITICAL HIT! -100 HP ⚡');
@@ -617,6 +653,12 @@ export function BattleArenaModal({ currentUser, preSetOpponent, onClose }) {
                     marginBottom: '14px',
                   }}
                 />
+              )}
+
+              {submissionError && (
+                <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#f87171', padding: '10px 14px', borderRadius: '12px', marginBottom: '12px', fontSize: '12px', fontWeight: 800 }}>
+                  {submissionError}
+                </div>
               )}
 
               <button
