@@ -70,6 +70,11 @@ const VOICE_COMMAND_MAP = [
     label: '🏆 RPG Competency Skill Tree',
   },
   {
+    key: 'battleArena',
+    aliases: ['battle', 'arena', 'duel', 'fight', 'multiplayer', 'quiz battle', 'code battle'],
+    label: '⚔️ 1-on-1 Battle Arena',
+  },
+  {
     key: 'biomechanics',
     aliases: ['sports', 'biomechanics', 'kinesiology', 'motion', 'sprint', 'jump', 'athletics'],
     label: '🏃 Biomechanics Motion Capture',

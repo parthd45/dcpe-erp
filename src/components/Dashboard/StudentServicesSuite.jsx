@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   FileText, Award, CreditCard, Briefcase,
   Search, Lock, ArrowUpRight, Zap, Trophy,
-  Brain, Calendar, Sparkles, UserCheck, CheckCircle2, Flame
+  Brain, Calendar, Sparkles, UserCheck, CheckCircle2, Flame, Swords
 } from 'lucide-react';
 
 export function StudentServicesSuite({
@@ -145,6 +145,19 @@ export function StudentServicesSuite({
       bg: '#fffbeb',
       glow: 'rgba(245, 158, 11, 0.25)',
       onClick: () => onOpenModal('skillTree'),
+    },
+    {
+      id: 'battle_arena',
+      title: '1-on-1 Battle Arena',
+      subtitle: 'Real-Time Multiplayer Code & Academic Trivia Duels',
+      category: 'academic',
+      badge: 'LIVE DUEL ⚔️',
+      badgeGradient: 'linear-gradient(135deg, #ef4444, #dc2626)',
+      icon: Swords,
+      color: '#ef4444',
+      bg: '#fef2f2',
+      glow: 'rgba(239, 68, 68, 0.25)',
+      onClick: () => onOpenModal('battleArena'),
     },
     {
       id: 'code_sandbox',

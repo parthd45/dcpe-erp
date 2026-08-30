@@ -41,6 +41,7 @@ import { SkillTreeModal } from './SkillTreeModal';
 import { BiomechanicsTrackerModal } from './BiomechanicsTrackerModal';
 import { VoiceNavigationHUD } from './VoiceNavigationHUD';
 import { ResumeATSScannerModal } from './ResumeATSScannerModal';
+import { BattleArenaModal } from './BattleArenaModal';
 import { StudentServicesSuite } from './StudentServicesSuite';
 import { OfficialHVPMLogo } from '../Common/OfficialHVPMLogo';
 import './Dashboard.css';
@@ -85,6 +86,7 @@ export default function StudentDashboard({ onBackToHome }) {
   const [showSkillTreeModal, setShowSkillTreeModal] = useState(false);
   const [showBiomechanicsModal, setShowBiomechanicsModal] = useState(false);
   const [showAtsScannerModal, setShowAtsScannerModal] = useState(false);
+  const [showBattleArenaModal, setShowBattleArenaModal] = useState(false);
 
   // Hall ticket lock toast
   const [hallTicketToast, setHallTicketToast] = useState(null);
@@ -402,6 +404,7 @@ export default function StudentDashboard({ onBackToHome }) {
                 if (modalKey === 'tamperLedger') setShowTamperLedgerModal(true);
                 if (modalKey === 'skillTree') setShowSkillTreeModal(true);
                 if (modalKey === 'biomechanics') setShowBiomechanicsModal(true);
+                if (modalKey === 'battleArena' || modalKey === 'battle_arena') setShowBattleArenaModal(true);
               }}
             />
           </div>
@@ -673,6 +676,9 @@ export default function StudentDashboard({ onBackToHome }) {
             onClose={() => setShowAtsScannerModal(false)}
           />
         )}
+        {showBattleArenaModal && (
+          <BattleArenaModal currentUser={currentUser} onClose={() => setShowBattleArenaModal(false)} />
+        )}
 
         {/* ── Global AI Voice Navigation HUD ── */}
         <VoiceNavigationHUD
@@ -688,6 +694,7 @@ export default function StudentDashboard({ onBackToHome }) {
             if (key === 'skillTree') setShowSkillTreeModal(true);
             if (key === 'biomechanics') setShowBiomechanicsModal(true);
             if (key === 'tamperLedger') setShowTamperLedgerModal(true);
+            if (key === 'battleArena' || key === 'battle_arena') setShowBattleArenaModal(true);
             if (key === 'campusMap') setShowCampusMapModal(true);
             if (key === 'leave') setShowLeaveModal(true);
           }}
